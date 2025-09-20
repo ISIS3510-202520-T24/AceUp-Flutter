@@ -7,59 +7,60 @@ class HolidaysScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFE7EEF6),
+        leading: IconButton(
+          icon: const Icon(Icons.menu),
+          onPressed: () {},
+        ),
         title: const Text(
-          'Holidays',
+          "Holidays",
           style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF201E1B), // Dark neutral for title
           ),
         ),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {
-            Scaffold.of(context).openDrawer();
-          },
-        ),
+        backgroundColor: Color(0xFFEAF4FF), // Light blue secondary
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFF201E1B)), // dark icons
       ),
+
       body: ListView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: 7, // 7 placeholders like your mockup
+        padding: const EdgeInsets.all(16.0),
+        itemCount: 7, // example items
         itemBuilder: (context, index) {
           return Card(
-            margin: const EdgeInsets.symmetric(vertical: 6),
+            elevation: 0,
+            margin: const EdgeInsets.symmetric(vertical: 6.0),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
+              side: const BorderSide(color: Color(0xFFEDEAE4)), // light neutral border
             ),
             child: ListTile(
-              contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               title: const Text(
-                '[Holiday Name]',
+                "[Holiday Name]",
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  fontSize: 16,
+                  color: Color(0xFF201E1B), // dark text
                 ),
               ),
               subtitle: const Text(
-                '[Date]\n[Start Date] - [End Date]',
-                style: TextStyle(fontSize: 14, color: Colors.black54),
+                "[Date] or [Start Date] - [End Date]",
+                style: TextStyle(
+                  color: Color(0xFF797671), // neutral gray for subtitles
+                ),
               ),
-              isThreeLine: true,
-              trailing: IconButton(
-                icon: const Icon(Icons.edit, size: 20, color: Colors.black54),
-                onPressed: () {},
-              ),
+              trailing: const Icon(Icons.edit, size: 18, color: Color(0xFF797671)),
             ),
           );
         },
       ),
+
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF2ED5AE),
+        backgroundColor: const Color(0xFF50E3C2), // Primary green/teal
         onPressed: () {},
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(Icons.add, size: 28, color: Colors.white),
       ),
     );
   }
 }
+

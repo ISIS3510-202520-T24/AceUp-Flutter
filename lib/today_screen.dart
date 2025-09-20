@@ -13,12 +13,15 @@ class TodayScreen extends StatelessWidget {
         ),
         title: const Text(
           "Today",
-          style: TextStyle(fontWeight: FontWeight.w600, color: Colors.black),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF201E1B), // dark text
+          ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: Color(0xFFEAF4FF), // light blue secondary
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: const IconThemeData(color: Color(0xFF201E1B)),
       ),
       body: Column(
         children: [
@@ -28,19 +31,22 @@ class TodayScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text("Exams", style: TextStyle(color: Colors.grey[600])),
+                Text("Exams", style: TextStyle(color: Color(0xFF797671))),
                 const SizedBox(width: 16),
-                Text("Timetable", style: TextStyle(color: Colors.grey[600])),
+                Text("Timetable", style: TextStyle(color: Color(0xFF797671))),
                 const SizedBox(width: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.tealAccent[700],
+                    color: Color(0xFF50E3C2), // primary
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Text(
                     "Assignments",
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -54,10 +60,10 @@ class TodayScreen extends StatelessWidget {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: Colors.blue[50],
+              color: Color(0xFFEAF4FF), // same blue background
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.image, size: 40, color: Colors.grey),
+            child: const Icon(Icons.image, size: 40, color: Color(0xFF97948E)),
           ),
 
           const SizedBox(height: 24),
@@ -69,17 +75,17 @@ class TodayScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: Colors.black87,
+              color: Color(0xFF201E1B), // dark
             ),
           ),
 
           const SizedBox(height: 8),
 
-          Text(
+          const Text(
             "Time to work on a hobby of yours!",
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[600],
+              color: Color(0xFF797671), // neutral gray
             ),
           ),
         ],
@@ -87,10 +93,11 @@ class TodayScreen extends StatelessWidget {
 
       // Floating Add Button
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.tealAccent[700],
+        backgroundColor: const Color(0xFF50E3C2),
         onPressed: () {},
-        child: const Icon(Icons.add, size: 28),
+        child: const Icon(Icons.add, size: 28, color: Colors.white),
       ),
     );
   }
 }
+
