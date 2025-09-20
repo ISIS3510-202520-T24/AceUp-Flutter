@@ -1,6 +1,7 @@
 // lib/shared_screen.dart
 
 import 'package:flutter/material.dart';
+import 'group_detail_screen.dart';
 
 // Data model to represent a group
 class SharedGroup {
@@ -139,10 +140,19 @@ class _SharedScreenState extends State<SharedScreen> {
     );
   }
 
-  // Widget for each group list item
-  Widget _buildGroupListItem(SharedGroup group) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
+Widget _buildGroupListItem(SharedGroup group) {
+  return InkWell(
+    onTap: () {
+      // Lógica de navegación a la pantalla de detalle
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => GroupDetailScreen(groupName: group.name),
+        ),
+      );
+    },
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: 16.0, top: 8.0, left: 4.0, right: 4.0),
       child: Row(
         children: [
           Container(
@@ -185,6 +195,7 @@ class _SharedScreenState extends State<SharedScreen> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
