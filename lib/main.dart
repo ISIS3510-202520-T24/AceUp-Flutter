@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (_) => const LoginScreen(),
         '/signup': (_) => const SignUpScreen(),
-        '/biometric': (_) => const BiometricScreen(),   // <- nueva
+        '/biometric': (_) => const BiometricScreen(),
         '/shared': (_) => const SharedScreen(),
       },
     );
