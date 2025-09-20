@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'biometric_screen.dart';
+import 'shared_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
         '/': (_) => const LoginScreen(),
         '/signup': (_) => const SignUpScreen(),
         '/biometric': (_) => const BiometricScreen(),   // <- nueva
+        '/shared': (_) => const SharedScreen(),
       },
     );
   }
@@ -127,7 +129,7 @@ class LoginScreen extends StatelessWidget {
                           final result = await Navigator.pushNamed(context, '/biometric');
                           if (result == true) {
                             // Autenticado: aquí navegas a tu Home real
-                            // Navigator.pushReplacementNamed(context, '/home');
+                            Navigator.pushReplacementNamed(context, '/shared');
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Autenticación biométrica OK')),
                             );
@@ -144,7 +146,7 @@ class LoginScreen extends StatelessWidget {
                   width: double.infinity,
                   height: 52,
                   child: FilledButton(
-                    onPressed: () {},
+                    onPressed: () => Navigator.pushReplacementNamed(context, '/shared'),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTheme.mint,
                       foregroundColor: Colors.white,
@@ -316,7 +318,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   width: double.infinity,
                   height: 52,
                   child: FilledButton(
-                    onPressed: () {},
+                    onPressed: () => Navigator.pushReplacementNamed(context, '/shared'),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTheme.mint,
                       foregroundColor: Colors.white,
