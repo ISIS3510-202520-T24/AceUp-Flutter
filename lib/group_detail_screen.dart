@@ -1,9 +1,9 @@
 // lib/group_detail_screen.dart
 
 import 'package:flutter/material.dart';
-import 'dart:ui'; // Necesario para FontFeature
+import 'dart:ui'; // Needed for FontFeature
 
-// Modelo simple para un día de la semana
+// Simple model for a day of the week
 class Day {
   final String shortName;
   final int dayNumber;
@@ -22,12 +22,12 @@ class GroupDetailScreen extends StatefulWidget {
 }
 
 class _GroupDetailScreenState extends State<GroupDetailScreen> {
-  // Datos de ejemplo para la semana
+  // Sample data for the week
   final List<Day> weekDays = [
     Day(shortName: 'MON', dayNumber: 19),
     Day(shortName: 'TUE', dayNumber: 20),
     Day(shortName: 'WED', dayNumber: 21),
-    Day(shortName: 'THU', dayNumber: 22, isSelected: true), // El día seleccionado
+    Day(shortName: 'THU', dayNumber: 22, isSelected: true), // Selected day
     Day(shortName: 'FRI', dayNumber: 23),
     Day(shortName: 'SAT', dayNumber: 24),
     Day(shortName: 'SUN', dayNumber: 25),
@@ -38,14 +38,14 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFC3D2E4), // Color de la barra principal
+        backgroundColor: const Color(0xFFC3D2E4), // Main app bar color
         elevation: 0,
-        // Icono de menú a la izquierda
+        // Menu icon on the left
         leading: IconButton(
           icon: const Icon(Icons.menu, color: Color(0xFF2C3E50)),
           onPressed: () {},
         ),
-        // Título de la pantalla principal
+        // Main screen title
         title: const Text(
           'Shared',
           style: TextStyle(
@@ -54,7 +54,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
           ),
         ),
         centerTitle: true,
-        // Botón de "Edit" a la derecha
+        // "Edit" button on the right
         actions: [
           TextButton(
             onPressed: () {},
@@ -64,20 +64,20 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
             ),
           ),
         ],
-        // --- BARRA SECUNDARIA CON EL NOMBRE DEL GRUPO ---
+        // --- SECONDARY BAR WITH THE GROUP NAME ---
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(50.0), // Altura de la barra secundaria
+          preferredSize: const Size.fromHeight(50.0), // Height of the secondary bar
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             decoration: const BoxDecoration(
-              color: Color(0xFFE0E7F3), // Color de la barra secundaria
+              color: Color(0xFFE0E7F3), // Secondary bar color
               border: Border(top: BorderSide(color: Colors.black12, width: 0.5)),
             ),
             child: Row(
               children: [
                 IconButton(
                   icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2C3E50), size: 20),
-                  onPressed: () => Navigator.of(context).pop(), // Para regresar
+                  onPressed: () => Navigator.of(context).pop(), // Go back
                 ),
                 Text(
                   widget.groupName,
@@ -103,7 +103,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     );
   }
 
-  // Widget para la barra con los días de la semana
+  // Widget for the bar with the days of the week
   Widget _buildWeekSelector() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20.0),
@@ -115,7 +115,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     );
   }
 
-  // Widget para cada día individual
+  // Widget for each individual day
   Widget _buildDayItem(Day day) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -148,14 +148,14 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     );
   }
 
-  // Widget para la línea de tiempo con las líneas horizontales
+  // Widget for the timeline with horizontal lines
   Widget _buildTimeline() {
     return ListView.builder(
       padding: EdgeInsets.zero,
-      itemCount: 12, // Número de líneas a mostrar
+      itemCount: 12, // Number of lines to display
       itemBuilder: (context, index) {
         return Container(
-          height: 60, // Altura de cada bloque de hora
+          height: 60, // Height of each hour block
           decoration: BoxDecoration(
             border: Border(
               top: BorderSide(color: Colors.grey.shade200, width: 1.0),
