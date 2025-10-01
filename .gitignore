@@ -43,3 +43,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Archivos generados por el registro de plugins de Flutter.
+# Estos se regeneran automáticamente durante la compilación.
+**/ios/Flutter/GeneratedPluginRegistrant.*
+**/macos/Flutter/GeneratedPluginRegistrant.*
+**/windows/GeneratedPluginRegistrant.*
+**/linux/GeneratedPluginRegistrant.*
