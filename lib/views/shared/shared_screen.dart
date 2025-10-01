@@ -89,10 +89,10 @@ class _SharedScreenState extends State<SharedScreen> {
           // Action to add a new group
         },
         backgroundColor: const Color(0xFF66DDC5),
-        child: const Icon(Icons.add, color: Colors.black),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.0),
         ),
+        child: const Icon(Icons.add, color: Colors.black),
       ),
     );
   }

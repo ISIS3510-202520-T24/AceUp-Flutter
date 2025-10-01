@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../widgets/burger_menu.dart';
-import '../auth/signup_screen.dart';
-import '../auth/biometric_screen.dart';
-import '../../main.dart'; // for AppTheme
+import '../../main.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
@@ -17,8 +16,7 @@ class LoginScreen extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 40),
-                Image.asset('assets/logo.png', height: 120),
-                const SizedBox(height: 8),
+                SvgPicture.asset('assets/logos/t_blue.svg', height: 250),
                 RichText(
                   textAlign: TextAlign.center,
                   text: const TextSpan(
@@ -30,9 +28,8 @@ class LoginScreen extends StatelessWidget {
                       height: 1.1,
                     ),
                     children: [
-                      TextSpan(text: 'Ace'),
                       TextSpan(
-                        text: 'Up',
+                        text: 'AceUp',
                         style: TextStyle(fontWeight: FontWeight.w900),
                       ),
                     ],
