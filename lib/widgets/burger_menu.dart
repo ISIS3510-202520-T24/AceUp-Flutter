@@ -27,10 +27,8 @@ class BurgerMenu extends StatelessWidget {
           ListTile(
             title: const Text("Shared"),
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const SharedScreen()),
-              );
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, '/shared');
             },
           ),
           ListTile(
