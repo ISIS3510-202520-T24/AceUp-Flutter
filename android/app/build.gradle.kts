@@ -11,12 +11,12 @@ plugins {
 
 android {
     namespace = "com.aceup.aceup_clean"  // tu namespace real
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.aceup.aceup_clean"
-        minSdk = 23
-        targetSdk = 35
+        minSdk = flutter.minSdkVersion
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
     }
