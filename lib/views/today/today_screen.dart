@@ -1,31 +1,23 @@
 import 'package:flutter/material.dart';
 import '../../widgets/burger_menu.dart';
+import '../../widgets/top_bar.dart';
+import '../../themes/app_colors.dart';
 
 class TodayScreen extends StatelessWidget {
   const TodayScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final textStyles = theme.textTheme;
+
     return Scaffold(
       drawer: const BurgerMenu(),
-      appBar: AppBar(
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
-        title: const Text(
-          "Today",
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF201E1B), // dark text
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFFEAF4FF), // light blue secondary
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF201E1B)),
+      appBar: TopBar(
+        title: "Today",
+        leftControlType: LeftControlType.menu,
+        rightControlType: RightControlType.none,
       ),
       body: Column(
         children: [
@@ -35,20 +27,20 @@ class TodayScreen extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text("Exams", style: TextStyle(color: Color(0xFF797671))),
+                const Text("Exams", style: TextStyle(color: AppColors.darkLightest)),
                 const SizedBox(width: 16),
-                const Text("Timetable", style: TextStyle(color: Color(0xFF797671))),
+                const Text("Timetable", style: TextStyle(color: AppColors.darkLightest)),
                 const SizedBox(width: 16),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF50E3C2), // primary
+                    color: AppColors.mintDark,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Text(
                     "Assignments",
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.blueDarkest,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -64,22 +56,22 @@ class TodayScreen extends StatelessWidget {
             width: 120,
             height: 120,
             decoration: BoxDecoration(
-              color: const Color(0xFFEAF4FF), // same blue background
+              color: AppColors.blueLightest,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.image, size: 40, color: Color(0xFF97948E)),
+            child: const Icon(Icons.image, size: 40, color: AppColors.blueLight),
           ),
 
           const SizedBox(height: 24),
 
           // Texts
           const Text(
-            "You have no assignments\ndue for the next 7 days",
+            "You have no assignments due for the next 7 days",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF201E1B), // dark
+              color: AppColors.blueDarkest,
             ),
           ),
 
@@ -89,17 +81,16 @@ class TodayScreen extends StatelessWidget {
             "Time to work on a hobby of yours!",
             style: TextStyle(
               fontSize: 14,
-              color: Color(0xFF797671), // neutral gray
+              color: AppColors.blueDark,
             ),
           ),
         ],
       ),
 
-      // Floating Add Button
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF50E3C2),
+        backgroundColor: AppColors.mintDark,
         onPressed: () {},
-        child: const Icon(Icons.add, size: 28, color: Colors.white),
+        child: const Icon(Icons.add, size: 28, color: AppColors.blueDarkest),
       ),
     );
   }

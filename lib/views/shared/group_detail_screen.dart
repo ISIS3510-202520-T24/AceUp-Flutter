@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/event_model.dart';
+import '../../themes/app_icons.dart';
 import '../../viewmodels/group_detail_view_model.dart';
 import '../../viewmodels/shared_view_model.dart';
 import '../../widgets/burger_menu.dart';
+import '../../widgets/top_bar.dart';
+import '../../themes/app_typography.dart';
 
 
 // Wrapper para proveer el ViewModel. No necesita cambios.
@@ -89,31 +92,36 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     final viewModel = context.read<GroupDetailViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFC3D2E4),
-        elevation: 0,
-        title: const Text('Shared', style: TextStyle(color: Color(0xFF2C3E50), fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        leading: Builder(builder: (context) => IconButton(icon: const Icon(Icons.menu, color: Color(0xFF2C3E50)), onPressed: () => Scaffold.of(context).openDrawer())),
-        actions: const [SizedBox(width: 50)], // Placeholder para que el título quede centrado
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(50.0),
-          child: Container(
+      drawer: const BurgerMenu(),
+      appBar: TopBar(
+        title: "Shared",
+        leftControlType: LeftControlType.menu,
+        rightControlType: RightControlType.edit,
+        onRightPressed: () {
+          // TODO
+        },
+      ),
+      body: Column(
+        children: [
+          Container(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            color: const Color(0xFFE0E7F3),
+            color: Theme.of(context).colorScheme.secondaryContainer,
             child: Row(
               children: [
-                IconButton(icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF2C3E50), size: 20), onPressed: () => Navigator.of(context).pop()),
-                Text(widget.groupName, style: const TextStyle(color: Color(0xFF2C3E50), fontWeight: FontWeight.bold, fontSize: 18)),
+                IconButton(
+                  icon: Icon(AppIcons.arrowLeft, size: 20),
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                Text(
+                  widget.groupName,
+                  style: AppTypography.h4.copyWith(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+                ),
               ],
             ),
           ),
-        ),
-      ),
-      drawer: const BurgerMenu(),
-      body: Column(
-        children: [
           _buildWeekSelector(),
           Expanded(
             child: PageView.builder(

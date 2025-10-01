@@ -20,7 +20,7 @@ class SharedViewModel extends ChangeNotifier {
     fetchGroups();
   }
 
-  // Método privado para cambiar el estado y notificar a la UI
+  // Metodo privado para cambiar el estado y notificar a la UI
   void _setState(ViewState viewState) {
     _state = viewState;
     notifyListeners();
@@ -45,7 +45,7 @@ class SharedViewModel extends ChangeNotifier {
   Future<void> addGroup(String name, List<String> members) async {
     try {
       await _groupService.addGroup(name, members);
-      await fetchGroups(); // Volvemos a cargar todo para obtener el nuevo grupo con su ID de Firebase
+      await fetchGroups(); // Volvemos a cargar para obtener el nuevo grupo con su ID de Firebase
     } catch (e) {
       print('Error adding group: $e');
       // Opcional: podrías establecer un estado de error aquí
