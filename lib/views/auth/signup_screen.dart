@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import '../../main.dart'; // for AppTheme
+
+import '../../themes/app_icons.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -12,9 +13,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _agree = false;
 
   Widget _termsSection(BuildContext context) {
-    final textStyle = Theme.of(context).textTheme.bodySmall;
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.bodySmall;
+    final colors = theme.colorScheme;
     final linkStyle = textStyle?.copyWith(
-      color: AppTheme.mint,
+      color: colors.primary,
       fontWeight: FontWeight.w600,
     );
 
@@ -54,11 +57,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(
-        surfaceTintColor: Colors.transparent,
-        backgroundColor: Colors.transparent,
-      ),
+      backgroundColor: colors.surfaceDim,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -66,23 +69,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: Column(
-                    children: [
-                      Image.asset('assets/logo.png', height: 120),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'AceUp',
-                        style: TextStyle(
-                          color: Color(0xFF0F2C4C),
-                          fontWeight: FontWeight.w800,
-                          fontSize: 22,
-                          letterSpacing: .2,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
                 const SizedBox(height: 16),
                 Text(
                   'Sign up',
@@ -97,7 +83,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   style: Theme.of(context)
                       .textTheme
                       .bodySmall
-                      ?.copyWith(color: Colors.grey[600]),
+                  ?.copyWith(color: colors.onPrimary),
                 ),
                 const SizedBox(height: 18),
                 const TextField(
@@ -120,7 +106,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     labelText: 'Password',
                     suffixIcon: IconButton(
                       onPressed: null,
-                      icon: const Icon(Icons.visibility_off),
+                      icon: Icon(AppIcons.visibilityOff),
                     ),
                   ),
                 ),
@@ -131,7 +117,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     labelText: 'Confirm password',
                     suffixIcon: IconButton(
                       onPressed: null,
-                      icon: const Icon(Icons.visibility_off),
+                      icon: Icon(AppIcons.visibilityOff),
                     ),
                   ),
                 ),
@@ -144,8 +130,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   child: FilledButton(
                     onPressed: () => Navigator.pushReplacementNamed(context, '/today'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.mint,
-                      foregroundColor: Colors.white,
+                      backgroundColor: colors.primary,
+                      foregroundColor: colors.onPrimary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),

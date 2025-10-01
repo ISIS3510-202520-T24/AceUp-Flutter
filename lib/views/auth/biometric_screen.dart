@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../themes/app_icons.dart';
+
 class BiometricScreen extends StatelessWidget {
   const BiometricScreen({super.key});
 
@@ -11,7 +13,7 @@ class BiometricScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.fingerprint, size: 100, color: Colors.teal),
+            Icon(AppIcons.fingerprint, size: 100, color: Colors.teal),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {

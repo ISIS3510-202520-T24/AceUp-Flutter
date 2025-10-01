@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../views/today/today_screen.dart';
-import '../views/shared/shared_screen.dart';
 import '../views/holidays/holidays_screen.dart';
 
 class BurgerMenu extends StatelessWidget {
@@ -8,12 +7,15 @@ class BurgerMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return Drawer(
       child: ListView(
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.blue),
-            child: Text("Menu", style: TextStyle(color: Colors.white, fontSize: 20)),
+          DrawerHeader(
+            decoration: BoxDecoration(color: colors.onPrimaryContainer),
+            child: Text("Menu", style: TextStyle(color: colors.primaryContainer, fontSize: 20)),
           ),
           ListTile(
             title: const Text("Today"),
@@ -34,10 +36,8 @@ class BurgerMenu extends StatelessWidget {
           ListTile(
             title: const Text("Holidays"),
             onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const HolidaysScreen()),
-              );
+              Navigator.pop(context);
+              Navigator.pushReplacementNamed(context, '/holidays');
             },
           ),
         ],

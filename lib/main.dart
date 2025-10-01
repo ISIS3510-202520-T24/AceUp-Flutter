@@ -6,21 +6,11 @@ import 'views/auth/signup_screen.dart';
 import 'views/auth/biometric_screen.dart';
 import 'views/holidays/holidays_screen.dart';
 import 'views/today/today_screen.dart';
-import 'views/shared/shared_screen.dart'; 
+import 'views/shared/shared_screen.dart';
+import 'themes/app_theme.dart';
+import 'package:provider/provider.dart';
 
-class AppTheme {
-  static const Color mint = Color(0xFF2ED5AE);
-  static const Color pastelBg = Color(0xFFF5F3ED);
-
-  static ThemeData theme = ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: mint,
-      primary: mint,
-    ),
-    scaffoldBackgroundColor: Color(0xFFF8F6F0),
-  );
-}
+import 'viewmodels/holidays_viewmodel.dart';
 
 Future<void> main() async {
   // Asegúrate de que Flutter esté listo
@@ -31,7 +21,14 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform, // <-- 2. USA LAS OPCIONES AQUÍ
   );
   
-  runApp(const MyApp());
+  runApp(
+      MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => HolidaysViewModel()),
+          ],
+          child: const MyApp(),
+      ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -42,7 +39,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'AceUp',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.theme,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+
       routes: {
         '/': (context) => const LoginScreen(),
         '/signup': (context) => const SignUpScreen(),

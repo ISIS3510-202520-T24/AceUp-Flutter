@@ -6,6 +6,7 @@ import '../../models/group_model.dart';
 import '../../viewmodels/shared_view_model.dart';
 import '../../widgets/burger_menu.dart';
 import 'group_detail_screen.dart';
+import '../../widgets/top_bar.dart';
 
 // Wrapper para proveer el ViewModel (sin cambios)
 class SharedScreenWrapper extends StatelessWidget {
@@ -26,16 +27,16 @@ class SharedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<SharedViewModel>();
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFC3D2E4),
-        elevation: 0,
-        title: const Text('Shared', style: TextStyle(color: Color(0xFF2C3E50), fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        //leading: IconButton(icon: const Icon(Icons.menu, color: Color(0xFF2C3E50)), onPressed: () {}),
-      ),
       drawer: const BurgerMenu(),
+      appBar: TopBar(
+        title: "Shared",
+        leftControlType: LeftControlType.menu,
+        rightControlType: RightControlType.none,
+      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
         child: Column(
@@ -50,10 +51,9 @@ class SharedScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddOrUpdateGroupDialog(context, viewModel),
-        backgroundColor: const Color(0xFF66DDC5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-        child: const Icon(Icons.add, color: Colors.black),
+        backgroundColor: colors.primary,
+        onPressed: () {},
+        child: Icon(Icons.add, size: 28, color: colors.onPrimary),
       ),
     );
   }
