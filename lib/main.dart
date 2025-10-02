@@ -9,7 +9,13 @@ import 'views/holidays/holidays_screen.dart';
 import 'views/today/today_screen.dart';
 import 'views/shared/shared_screen.dart';
 import 'themes/app_theme.dart';
+import 'services/auth_service.dart';
+import 'viewmodels/login_viewmodel.dart';
+import 'viewmodels/signup_viewmodel.dart';
+import 'viewmodels/holidays_viewmodel.dart';
+import 'package:firebase_auth/firebase_auth.dart'; //ignore: uri_does_not_exist
 
+//ignore_for_file: non_type_as_type_argument
 import 'package:provider/provider.dart';
 import 'viewmodels/holidays_viewmodel.dart';
 
@@ -21,6 +27,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -28,9 +35,7 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        // Lo que ya tenías
         ChangeNotifierProvider(create: (_) => HolidaysViewModel()),
-        // >>> NUEVO: auth
         Provider<AuthService>(create: (_) => AuthService()),
         ChangeNotifierProvider<LoginViewModel>(
           create: (ctx) => LoginViewModel(ctx.read<AuthService>()),
@@ -38,7 +43,6 @@ Future<void> main() async {
         Provider<SignUpViewModel>(
           create: (ctx) => SignUpViewModel(ctx.read<AuthService>()),
         ),
-        // Opcional: escuchar cambios de sesión
         StreamProvider<User?>(
           create: (ctx) => ctx.read<AuthService>().authStateChanges,
           initialData: null,

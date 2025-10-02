@@ -7,51 +7,87 @@ class BurgerMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    final currentRoute = ModalRoute.of(context)?.settings.name;
+
     return Drawer(
-      child: SafeArea(
-        child: Column(
-          children: [
-            // Header (como lo tengas, o simple)
-            ListTile(
-              title: Text('Menu', style: Theme.of(context).textTheme.titleLarge),
-            ),
-            const Divider(height: 1),
-
-            // Navegación principal
-            Expanded(
-              child: ListView(
-                children: [
-                  ListTile(
-                    title: const Text('Today'),
-                    onTap: () => Navigator.pushReplacementNamed(context, '/today'),
+      child: Column(
+        children: [
+          // Menu items
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                DrawerHeader(
+                  decoration: BoxDecoration(color: colors.onPrimaryContainer),
+                  child: Text(
+                    "AceUp",
+                    style: TextStyle(
+                      color: colors.primaryContainer,
+                      fontSize: 20,
+                    ),
                   ),
-                  ListTile(
-                    title: const Text('Shared'),
-                    onTap: () => Navigator.pushReplacementNamed(context, '/shared'),
-                  ),
-                  ListTile(
-                    title: const Text('Holidays'),
-                    onTap: () => Navigator.pushReplacementNamed(context, '/holidays'),
-                  ),
-                ],
-              ),
+                ),
+                _buildMenuItem(
+                  context: context,
+                  title: "Today",
+                  route: '/today',
+                  isSelected: currentRoute == '/today',
+                  colors: colors,
+                ),
+                _buildMenuItem(
+                  context: context,
+                  title: "Shared",
+                  route: '/shared',
+                  isSelected: currentRoute == '/shared',
+                  colors: colors,
+                ),
+                _buildMenuItem(
+                  context: context,
+                  title: "Holidays",
+                  route: '/holidays',
+                  isSelected: currentRoute == '/holidays',
+                  colors: colors,
+                ),
+              ],
             ),
+          ),
 
-            const Divider(height: 1),
-
-            // Logout pegado abajo
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
-              onTap: () async {
-                await context.read<AuthService>().signOut();
-                if (!context.mounted) return;
-                Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
-              },
-            ),
-          ],
-        ),
+          // Logout button pinned at the bottom
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Logout'),
+            onTap: () async {
+              await context.read<AuthService>().signOut();
+              if (!context.mounted) return;
+              Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
+            },
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildMenuItem({
+    required BuildContext context,
+    required String title,
+    required String route,
+    required bool isSelected,
+    required ColorScheme colors,
+  }) {
+    return ListTile(
+      title: Text(title),
+      selected: isSelected,
+      selectedTileColor: colors.primaryContainer.withValues(alpha: 0.1),
+      onTap: () {
+        Navigator.pop(context);
+
+        if (!isSelected) {
+          Navigator.pushReplacementNamed(context, route);
+        }
+      },
     );
   }
 }
