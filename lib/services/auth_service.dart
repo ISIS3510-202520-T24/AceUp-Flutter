@@ -1,51 +1,95 @@
-import 'package:firebase_auth/firebase_auth.dart'; // ignore: uri_does_not_exist
-
-// ignore_for_file: undefined_identifier, non_type_as_type_argument, undefined_class, non_type_in_catch_clause
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // ---- Estado actual / stream ----
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
-  bool get isSignedIn => _auth.currentUser != null;
-  bool get isEmailVerified => _auth.currentUser?.emailVerified == true;
+  bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
 
-  // ---- Sign up / Sign in ----
+  // ---------- SIGN UP (email/clave) ----------
   Future<UserCredential> signUpEmailPassword({
     required String email,
     required String password,
-    String? displayName,
+    String? displayName, // nuestro "nick"
   }) async {
-    try {
-      final cred = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      if (displayName != null && displayName.trim().isNotEmpty) {
-        await cred.user?.updateDisplayName(displayName.trim());
-      }
-      return cred;
-    } on FirebaseAuthException catch (e) {
-      throw _map(e);
+    final cred = await _auth.createUserWithEmailAndPassword(
+      email: email.trim(),
+      password: password.trim(),
+    );
+
+    // Opcional: guardar nick como displayName en Auth
+    if (displayName != null && displayName.trim().isNotEmpty) {
+      await cred.user?.updateDisplayName(displayName.trim());
     }
+
+    // 🔹 Asegura perfil en Firestore
+    await _ensureUserDoc(
+      cred.user!,
+      nickname: displayName,
+    );
+
+    // Puedes enviar verificación si quieres
+    // await sendEmailVerification();
+
+    return cred;
   }
 
+  // ---------- SIGN IN (email/clave) ----------
   Future<UserCredential> signInEmailPassword({
     required String email,
     required String password,
   }) async {
-    try {
-      return await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-    } on FirebaseAuthException catch (e) {
-      throw _map(e);
+    final cred = await _auth.signInWithEmailAndPassword(
+      email: email.trim(),
+      password: password.trim(),
+    );
+
+    // 🔹 Si el doc de perfil no existe (usuarios antiguos), lo creamos
+    await _ensureUserDoc(cred.user!);
+
+    return cred;
+  }
+
+  // ---------- PERFIL EN FIRESTORE ----------
+  Future<void> _ensureUserDoc(
+    User user, {
+    String? nickname,
+  }) async {
+    final uid = user.uid;
+    final ref = _db.collection('users').doc(uid);
+    final snap = await ref.get();
+
+    if (!snap.exists) {
+      // Crear documento inicial
+      await ref.set({
+        'uid': uid,
+        'email': user.email,
+        'nick': nickname ?? user.displayName ?? '',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } else {
+      // Actualizar campos importantes sin pisar lo demás
+      await ref.set({
+        'email': user.email,
+        if (nickname != null && nickname.isNotEmpty) 'nick': nickname,
+      }, SetOptions(merge: true));
     }
   }
 
-  // ---- Verificación de correo ----
+  // (Opcional) actualizar el nick más tarde
+  Future<void> updateNickname(String newNick) async {
+    final u = _auth.currentUser;
+    if (u == null) return;
+    await _db.collection('users').doc(u.uid).set({
+      'nick': newNick.trim(),
+    }, SetOptions(merge: true));
+    await u.updateDisplayName(newNick.trim());
+  }
+
+  // ---------- UTILIDADES ----------
   Future<void> sendEmailVerification() async {
     final u = _auth.currentUser;
     if (u != null && !u.emailVerified) {
@@ -53,39 +97,12 @@ class AuthService {
     }
   }
 
-  // ---- Utilidades de sesión ----
   Future<void> reloadUser() async => _auth.currentUser?.reload();
 
-  Future<void> signOut() => _auth.signOut();
-
-  // ---- Forgot password ----
   Future<void> requestPasswordReset(String email) async {
-    try {
-      await _auth.setLanguageCode('en'); // Cambia a 'es' si prefieres
-      await _auth.sendPasswordResetEmail(email: email);
-    } on FirebaseAuthException catch (e) {
-      throw _map(e);
-    }
+    await _auth.setLanguageCode('en'); // o 'es'
+    await _auth.sendPasswordResetEmail(email: email.trim());
   }
 
-  // ---- Mapeo de errores a mensajes amigables ----
-  Exception _map(FirebaseAuthException e) {
-    switch (e.code) {
-      case 'invalid-email':
-        return Exception('Enter a valid email.');
-      case 'user-not-found':
-        return Exception('No account found with that email.');
-      case 'wrong-password':
-      case 'invalid-credential':
-        return Exception('Wrong email or password.');
-      case 'email-already-in-use':
-        return Exception('That email is already registered.');
-      case 'weak-password':
-        return Exception('Password is too weak.');
-      case 'too-many-requests':
-        return Exception('Too many attempts. Try again in a few minutes.');
-      default:
-        return Exception('Unexpected error. Please try again.');
-    }
-  }
+  Future<void> signOut() => _auth.signOut();
 }
