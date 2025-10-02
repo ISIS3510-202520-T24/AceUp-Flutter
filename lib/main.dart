@@ -14,16 +14,9 @@ import 'viewmodels/login_viewmodel.dart';
 import 'viewmodels/signup_viewmodel.dart';
 import 'viewmodels/holidays_viewmodel.dart';
 import 'package:firebase_auth/firebase_auth.dart'; //ignore: uri_does_not_exist
+import 'package:provider/provider.dart';
 
 //ignore_for_file: non_type_as_type_argument
-import 'package:provider/provider.dart';
-import 'viewmodels/holidays_viewmodel.dart';
-
-// >>> NUEVO: Auth service + viewmodels de auth
-import 'services/auth_service.dart';
-import 'viewmodels/login_viewmodel.dart';
-import 'viewmodels/signup_viewmodel.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
