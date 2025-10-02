@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'viewmodels/holidays_viewmodel.dart';
 import 'views/auth/logout_screen.dart';
 import 'views/auth/login_screen.dart';
 import 'views/auth/signup_screen.dart';
@@ -10,20 +9,25 @@ import 'views/holidays/holidays_screen.dart';
 import 'views/today/today_screen.dart';
 import 'views/shared/shared_screen.dart';
 import 'themes/app_theme.dart';
-import 'package:provider/provider.dart';
-
 import 'services/auth_service.dart';
 import 'viewmodels/login_viewmodel.dart';
 import 'viewmodels/signup_viewmodel.dart';
+import 'viewmodels/holidays_viewmodel.dart';
 import 'package:firebase_auth/firebase_auth.dart'; //ignore: uri_does_not_exist
 
 //ignore_for_file: non_type_as_type_argument
+import 'package:provider/provider.dart';
+import 'viewmodels/holidays_viewmodel.dart';
+
+// >>> NUEVO: Auth service + viewmodels de auth
+import 'services/auth_service.dart';
+import 'viewmodels/login_viewmodel.dart';
+import 'viewmodels/signup_viewmodel.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 Future<void> main() async {
-  // Ensure Flutter is ready
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -51,7 +55,6 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -60,7 +63,6 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-
       routes: {
         '/': (context) => const LoginScreen(),
         '/signup': (context) => const SignUpScreen(),
@@ -73,6 +75,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
-

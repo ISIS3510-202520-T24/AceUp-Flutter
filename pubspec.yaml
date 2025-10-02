@@ -65,6 +65,8 @@ flutter:
   assets:
     - assets/app_icon/
     - assets/logos/
+    - assets/logos/t_blue.svg
+    # Removed 'assets/icons/' since the directory does not exist
 
   fonts:
     - family: Inter
