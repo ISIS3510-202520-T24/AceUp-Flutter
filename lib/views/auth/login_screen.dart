@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // ignore: uri_does_not_exist
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../viewmodels/login_viewmodel.dart';
@@ -22,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _showErrors = false;
 
   // Biometrics
-  bool _bioReady = false;   // device soporta + el usuario la activó
+  bool _bioReady = false;   // dispositivo soporta + el usuario la activó
   bool _checkingBio = true;
 
   @override
@@ -247,7 +247,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }) async {
     final enabled = await SecureStore.biometricEnabled();
     if (!enabled) {
-      // primera vez: ofrecer habilitar
       await _maybeOfferBiometric(email: email, password: password);
       return;
     }
@@ -256,7 +255,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final storedEmail = (stored.email ?? '');
 
     if (storedEmail.isEmpty) {
-      // Habilitada pero sin datos (caso raro): ofrecer guardar
       final save = await _askReplaceDialog(
         title: 'Save for quick login?',
         message: 'Do you want to save this account for biometric login?',
@@ -271,12 +269,10 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     if (storedEmail.toLowerCase() == email.toLowerCase()) {
-      // Mismo usuario → refresco silencioso (por si cambió la clave)
       await SecureStore.setBiometricCredentials(email, password);
       await SecureStore.setLastEmail(email);
       await _computeBioReady();
     } else {
-      // Usuario distinto → preguntar si reemplazar
       final replace = await _askReplaceDialog(
         title: 'Replace quick-login account?',
         message:
@@ -321,48 +317,52 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _tryBiometricLogin() async {
-    if (_checkingBio || !_bioReady) return;
+    if (_checkingBio) return;
+    setState(() => _checkingBio = true);
 
-    final ok = await BiometricService().authenticate(reason: 'Use biometrics to sign in');
-    if (!mounted || !ok) return; // cancelado
+    try {
+      // 1) Pedimos huella/rostro
+      final ok = await BiometricService().authenticate();
+      if (!mounted || !ok) return;
 
-    final auth = context.read<AuthService>();
-    await auth.reloadUser();
+      final auth = context.read<AuthService>();
+      await auth.reloadUser();
 
-    // Si ya hay sesión y verificada, entra directo
-    if (auth.isSignedIn && auth.isEmailVerified) {
-      _showSnack('Welcome back, ${_displayName(auth)} 👋');
-      Navigator.pushReplacementNamed(context, '/today');
-      return;
-    }
+      // 2) Si ya hay sesión y el correo está verificado -> entrar
+      if (auth.currentUser != null && auth.isEmailVerified) {
+        final name = auth.currentUser?.displayName ?? 'there';
+        _showSnack('Welcome back, $name!');
+        Navigator.pushReplacementNamed(context, '/today');
+        return;
+      }
 
-    // Re-login con credenciales guardadas
-    final creds = await SecureStore.biometricCredentials();
-    final email = (creds.email ?? '').trim();
-    final pass = (creds.password ?? '').trim();
+      // 3) Si no hay sesión, usamos credenciales guardadas
+      final stored = await SecureStore.biometricCredentials();
+      final email = stored.email;
+      final pass  = stored.password;
 
-    if (email.isEmpty || pass.isEmpty) {
-      _showSnack('Quick login needs an existing session. Sign in once with email & password.');
-      return;
-    }
+      if (email == null || pass == null) {
+        _showSnack('No saved credentials. Sign in once with email & password.');
+        return;
+      }
 
-    final vm = context.read<LoginViewModel>();
-    final (okLogin, _) = await vm.loginWithEmailPassword(email: email, password: pass);
-    if (!mounted) return;
+      final vm = context.read<LoginViewModel>();
+      final (success, err) = await vm.loginWithEmailPassword(
+        email: email,
+        password: pass,
+      );
 
-    if (!okLogin) {
-      _showSnack('Stored credentials are outdated. Please sign in once with your password to update biometric login.');
-      return;
-    }
+      if (!mounted) return;
 
-    await auth.reloadUser();
-    if (auth.isEmailVerified) {
-      _showSnack('Welcome back, ${_displayName(auth)} 👋');
-      Navigator.pushReplacementNamed(context, '/today');
-    } else {
-      await _showVerifyDialog(auth);
-      await auth.signOut();
-      _showSnack('Please verify your email to continue');
+      if (success) {
+        final name = auth.currentUser?.displayName ?? 'there';
+        _showSnack('Welcome back, $name!');
+        Navigator.pushReplacementNamed(context, '/today');
+      } else {
+        _showSnack(err ?? 'Could not sign in with biometrics.');
+      }
+    } finally {
+      if (mounted) setState(() => _checkingBio = false);
     }
   }
 
@@ -420,7 +420,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 40),
-                  SvgPicture.asset('assets/logos/t_blue.svg', height: 180), // ignore: undefined_identifier
+                  SvgPicture.asset('assets/logos/t_blue.svg', height: 180),
                   const SizedBox(height: 12),
                   Text('AceUp',
                       style: theme.textTheme.headlineSmall?.copyWith(
