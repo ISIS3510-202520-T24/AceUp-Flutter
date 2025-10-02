@@ -3,12 +3,16 @@ import 'package:http/http.dart' as http; // ignore: uri_does_not_exist
 import '../models/holiday_model.dart';
 
 class HolidayService {
+  HolidayService._internal();
+
+  static final HolidayService _instance = HolidayService._internal();
+
+  factory HolidayService() {
+    return _instance;
+  }
+
   static const String _baseUrl = 'https://date.nager.at/api/v3';
 
-  /// Fetches holidays for a specific country and year
-  ///
-  /// [countryCode] - ISO 3166-1 alpha-2 country code (e.g., 'CO' for Colombia)
-  /// [year] - Year to fetch holidays for
   Future<List<Holiday>> getHolidaysForCountry(
       String countryCode,
       int year,
@@ -20,10 +24,8 @@ class HolidayService {
       final response = await http.get(uri);
 
       if (response.statusCode == 200) {
-        // The API returns an array directly
         final List<dynamic> jsonData = json.decode(response.body);
 
-        // Convert each JSON object to a Holiday
         return jsonData
             .map((json) => Holiday.fromJson(json as Map<String, dynamic>))
             .toList();
@@ -40,19 +42,15 @@ class HolidayService {
     }
   }
 
-  /// Fetches holidays for current year and next year for a specific country
   Future<List<Holiday>> getHolidaysForCurrentAndNextYear(String countryCode) async {
     final currentYear = DateTime.now().year;
     final nextYear = currentYear + 1;
 
     try {
-      // Fetch holidays for both years concurrently
       final results = await Future.wait([
         getHolidaysForCountry(countryCode, currentYear),
         getHolidaysForCountry(countryCode, nextYear),
       ]);
-
-      // Combine and sort by date
       final allHolidays = [...results[0], ...results[1]];
       allHolidays.sort((a, b) => a.date.compareTo(b.date));
 
@@ -62,12 +60,8 @@ class HolidayService {
     }
   }
 
-  /// Fetches holidays for a specific date
-  /// Returns true if the date is a public holiday
   Future<bool> isPublicHoliday(String countryCode, DateTime date) async {
     try {
-      // Nager.Date endpoint: /api/v3/IsTodayPublicHoliday/{countryCode}
-      // For specific date: we need to get the year's holidays and check
       final holidays = await getHolidaysForCountry(countryCode, date.year);
 
       return holidays.any((holiday) =>

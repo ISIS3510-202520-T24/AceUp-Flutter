@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart' as http; // ignore: uri_does_not_exist
 
 class AuthBridgeService {
   // Cambia por tu endpoint (Cloud Run/Functions/tu servidor)

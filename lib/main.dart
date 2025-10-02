@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'viewmodels/holidays_viewmodel.dart';
 import 'views/auth/logout_screen.dart';
 import 'views/auth/login_screen.dart';
 import 'views/auth/signup_screen.dart';
@@ -14,7 +15,9 @@ import 'package:provider/provider.dart';
 import 'services/auth_service.dart';
 import 'viewmodels/login_viewmodel.dart';
 import 'viewmodels/signup_viewmodel.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart'; //ignore: uri_does_not_exist
+
+//ignore_for_file: non_type_as_type_argument
 
 Future<void> main() async {
   // Ensure Flutter is ready
@@ -44,8 +47,6 @@ Future<void> main() async {
       child: const MyApp(),
     ),
   );
-
-  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {

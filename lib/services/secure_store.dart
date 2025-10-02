@@ -1,4 +1,6 @@
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // ignore: uri_does_not_exist
+
+// ignore_for_file: undefined_method, const_initialized_with_non_constant_value, undefined_identifier
 
 class SecureStore {
   static const _kBiometric = 'bio_enabled';

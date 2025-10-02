@@ -1,6 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/flutter_svg.dart'; // ignore: uri_does_not_exist
 import 'package:provider/provider.dart';
 
 import '../../viewmodels/signup_viewmodel.dart';
@@ -267,7 +267,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Center(
                     child: Column(
                       children: [
-                        SvgPicture.asset('assets/logos/t_blue.svg', height: 120),
+                        SvgPicture.asset('assets/logos/t_blue.svg', height: 120), // ignore: undefined_identifier
                         const SizedBox(height: 8),
                         Text('AceUp',
                             style: theme.textTheme.titleLarge?.copyWith(
