@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../views/today/today_screen.dart';
-import '../views/holidays/holidays_screen.dart';
 
 class BurgerMenu extends StatelessWidget {
   const BurgerMenu({super.key});
@@ -10,39 +8,65 @@ class BurgerMenu extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
+    final currentRoute = ModalRoute.of(context)?.settings.name;
+
     return Drawer(
       child: ListView(
         children: [
           DrawerHeader(
             decoration: BoxDecoration(color: colors.onPrimaryContainer),
-            child: Text("Menu", style: TextStyle(color: colors.primaryContainer, fontSize: 20)),
+            child: Text(
+              "AceUp",
+              style: TextStyle(
+                color: colors.primaryContainer,
+                fontSize: 20,
+              ),
+            ),
           ),
-          ListTile(
-            title: const Text("Today"),
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const TodayScreen()),
-              );
-            },
+          _buildMenuItem(
+            context: context,
+            title: "Today",
+            route: '/today',
+            isSelected: currentRoute == '/today',
+            colors: colors,
           ),
-          ListTile(
-            title: const Text("Shared"),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushReplacementNamed(context, '/shared');
-            },
+          _buildMenuItem(
+            context: context,
+            title: "Shared",
+            route: '/shared',
+            isSelected: currentRoute == '/shared',
+            colors: colors,
           ),
-          ListTile(
-            title: const Text("Holidays"),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushReplacementNamed(context, '/holidays');
-            },
+          _buildMenuItem(
+            context: context,
+            title: "Holidays",
+            route: '/holidays',
+            isSelected: currentRoute == '/holidays',
+            colors: colors,
           ),
         ],
       ),
     );
   }
-}
 
+  Widget _buildMenuItem({
+    required BuildContext context,
+    required String title,
+    required String route,
+    required bool isSelected,
+    required ColorScheme colors,
+  }) {
+    return ListTile(
+      title: Text(title),
+      selected: isSelected,
+      selectedTileColor: colors.primaryContainer.withValues(alpha: 0.1),
+      onTap: () {
+        Navigator.pop(context);
+
+        if (!isSelected) {
+          Navigator.pushReplacementNamed(context, route);
+        }
+      },
+    );
+  }
+}

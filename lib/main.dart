@@ -8,27 +8,17 @@ import 'views/holidays/holidays_screen.dart';
 import 'views/today/today_screen.dart';
 import 'views/shared/shared_screen.dart';
 import 'themes/app_theme.dart';
-import 'package:provider/provider.dart';
-
-import 'viewmodels/holidays_viewmodel.dart';
 
 Future<void> main() async {
-  // Asegúrate de que Flutter esté listo
+  // Ensure Flutter is ready
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Inicializa Firebase y PÁSALE LAS OPCIONES
+
+  // Initialize Firebase
   await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform, // <-- 2. USA LAS OPCIONES AQUÍ
+    options: DefaultFirebaseOptions.currentPlatform,
   );
-  
-  runApp(
-      MultiProvider(
-          providers: [
-            ChangeNotifierProvider(create: (_) => HolidaysViewModel()),
-          ],
-          child: const MyApp(),
-      ),
-  );
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -54,6 +44,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-
-
