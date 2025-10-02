@@ -42,6 +42,8 @@ dependencies:
   http: ^1.1.0
   firebase_auth: ^6.1.0
   flutter_secure_storage: ^9.2.2
+  font_awesome_flutter: ^10.10.0
+  http: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -65,8 +67,6 @@ flutter:
   assets:
     - assets/app_icon/
     - assets/logos/
-    - assets/logos/t_blue.svg
-    # Removed 'assets/icons/' since the directory does not exist
 
   fonts:
     - family: Inter

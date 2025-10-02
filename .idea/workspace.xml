@@ -10,8 +10,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="83f1ba98-ac45-48c6-90e8-73adca6f18e6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/lib/services/holiday_service.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/models/holiday.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/models/holiday_model.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/viewmodels/holidays_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/holidays_viewmodel.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/viewmodels/navigation_viewmodel.dart" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/views/holidays/holidays_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/holidays/holidays_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/widgets/burger_menu.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/burger_menu.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -108,7 +116,7 @@
     &quot;settings.editor.selected.configurable&quot;: &quot;dart.settings&quot;,
     &quot;show.migrate.to.gradle.popup&quot;: &quot;false&quot;
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\LAURA\AceUp-Flutter\assets\icons" />

@@ -9,9 +9,7 @@ import 'views/holidays/holidays_screen.dart';
 import 'views/today/today_screen.dart';
 import 'views/shared/shared_screen.dart';
 import 'themes/app_theme.dart';
-
 import 'package:provider/provider.dart';
-import 'viewmodels/holidays_viewmodel.dart';
 
 import 'services/auth_service.dart';
 import 'viewmodels/login_viewmodel.dart';
@@ -19,7 +17,10 @@ import 'viewmodels/signup_viewmodel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 Future<void> main() async {
+  // Ensure Flutter is ready
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -49,6 +50,7 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -57,6 +59,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
+
       routes: {
         '/': (context) => const LoginScreen(),
         '/signup': (context) => const SignUpScreen(),
@@ -69,3 +72,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+
+
