@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // ignore: uri_does_not_exist
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
 import '../../themes/app_icons.dart';
@@ -415,37 +415,52 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: colors.surfaceDim,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: Form(
-            key: _form,
-            autovalidateMode: autoMode,
-            child: Column(
-              children: [
-                // Top section: logo + title take available space responsively
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Flexible(
-                        child: SvgPicture.asset( // ignore: undefined_identifier
-                          theme.brightness == Brightness.light
-                              ? 'assets/logos/t_blue.svg'
-                              : 'assets/logos/t_white.svg',
-                          width: MediaQuery.of(context).size.width * 0.4, // scale to screen
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          'AceUp',
-                          style: AppTypography.h1.copyWith(
-                            color: colors.onPrimary,
-                          ),
-                        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            child: Form(
+              key: _form,
+              autovalidateMode: autoMode,
+              child: Column(
+                children: [
+                  const SizedBox(height: 40),
+                  SvgPicture.asset('assets/logos/t_blue.svg', height: 180),
+                  const SizedBox(height: 12),
+                  Text('AceUp',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: colors.onSurface,
+                      )),
+                  const SizedBox(height: 24),
+
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Welcome Back!',
+                        style: theme.textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w700)),
+                  ),
+                  const SizedBox(height: 12),
+
+                  TextFormField(
+                    controller: _email,
+                    maxLength: 40,
+                    keyboardType: TextInputType.emailAddress,
+                    validator: _valEmail,
+                    decoration: _decorStandard(context, hint: 'Email Address'),
+                  ),
+                  const SizedBox(height: 12),
+
+                  TextFormField(
+                    controller: _pass,
+                    maxLength: 40,
+                    obscureText: _obscure,
+                    validator: _valPass,
+                    decoration: _decorStandard(
+                      context,
+                      hint: 'Password',
+                      suffix: IconButton(
+                        onPressed: () => setState(() => _obscure = !_obscure),
+                        icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
                       ),
                     ],
                   ),
