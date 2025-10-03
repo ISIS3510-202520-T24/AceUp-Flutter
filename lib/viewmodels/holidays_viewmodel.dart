@@ -1,3 +1,5 @@
+import 'dart:developer' as console;
+
 import 'package:flutter/material.dart';
 import '../models/holiday_model.dart';
 import '../services/holiday_service.dart';
@@ -36,7 +38,7 @@ class HolidaysViewModel extends ChangeNotifier {
     } catch (e) {
       _errorMessage = e.toString();
       _setState(HolidayViewState.error);
-      print('Error fetching holidays: $e');
+      console.log('Error fetching holidays: $e');
     }
   }
 

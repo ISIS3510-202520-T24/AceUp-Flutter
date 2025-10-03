@@ -184,7 +184,7 @@ class HolidaysScreenContent extends StatelessWidget {
             ),
             Icon(
               AppIcons.edit,
-              size: 18,
+              size: 12,
               color: colors.inversePrimary,
             ),
           ],
