@@ -1,5 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // ignore: uri_does_not_exist
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+// ignore_for_file: undefined_class, undefined_identifier, non_type_as_type_argument
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;

@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
+import '../../themes/app_icons.dart';
+import '../../themes/app_typography.dart';
 import '../../viewmodels/login_viewmodel.dart';
 import '../../services/auth_service.dart';
 import '../../services/secure_store.dart';
 import '../../services/biometric_service.dart';
+import '../../widgets/buttons.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -58,27 +61,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // -------- Estilo unificado --------
   InputDecoration _decorStandard(BuildContext ctx, {String? hint, Widget? suffix}) {
-    final cs = Theme.of(ctx).colorScheme;
+    final colors = Theme.of(ctx).colorScheme;
     return InputDecoration(
       hintText: hint,
+      hintStyle: TextStyle(color: colors.secondary),
       counterText: '',
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.outlineVariant),
+        borderSide: BorderSide(color: colors.outline),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.primary, width: 1.5),
+        borderSide: BorderSide(color: colors.primary, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.error, width: 1.6),
+        borderSide: BorderSide(color: colors.onError, width: 1.5),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.error, width: 1.8),
+        borderSide: BorderSide(color: colors.onError, width: 1.5),
       ),
-      errorStyle: TextStyle(color: cs.error),
+      errorStyle: TextStyle(color: colors.onError),
       suffixIcon: suffix,
     );
   }
@@ -90,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.surfaceVariant,
+          backgroundColor: cs.surfaceDim,
           content: Text(msg, style: TextStyle(color: cs.onSurfaceVariant)),
           margin: const EdgeInsets.all(16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -404,12 +408,12 @@ class _LoginScreenState extends State<LoginScreen> {
     final loading = context.watch<LoginViewModel>().loading;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-
-    final autoMode =
-        _showErrors ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled;
+    final autoMode = _showErrors
+        ? AutovalidateMode.onUserInteraction
+        : AutovalidateMode.disabled;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: colors.surfaceDim,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -458,57 +462,123 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () => setState(() => _obscure = !_obscure),
                         icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
                       ),
-                    ),
+                    ],
                   ),
+                ),
 
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton(
-                      onPressed: _openForgotPassword,
-                      child: const Text('Forgot password?'),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
+                const SizedBox(height: 16),
 
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: FilledButton(
-                      onPressed: loading ? null : _submit,
-                      child: loading
-                          ? const SizedBox(
-                              width: 20, height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Sign in'),
-                    ),
-                  ),
-
-                  // Huella pequeña debajo del botón principal (solo si está lista)
-                  if (_bioReady) ...[
-                    const SizedBox(height: 8),
-                    Center(
-                      child: IconButton(
-                        tooltip: 'Sign in with biometrics',
-                        onPressed: _tryBiometricLogin,
-                        icon: const Icon(Icons.fingerprint, size: 28),
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                // Bottom section: form and actions
+                Expanded(
+                  flex: 4,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Text('Not a member? '),
-                      TextButton(
-                        onPressed: () => Navigator.pushNamed(context, '/signup'),
-                        child: const Text('Register now'),
+                      Text(
+                        'Welcome Back!',
+                        style: AppTypography.h1.copyWith(color: colors.onPrimary),
+                      ),
+                      const SizedBox(height: 12),
+
+                      TextFormField(
+                        controller: _email,
+                        maxLength: 40,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: _valEmail,
+                        decoration: _decorStandard(context, hint: 'Email Address'),
+                      ),
+                      const SizedBox(height: 12),
+
+                      TextFormField(
+                        controller: _pass,
+                        maxLength: 40,
+                        obscureText: _obscure,
+                        validator: _valPass,
+                        decoration: _decorStandard(
+                          context,
+                          hint: 'Password',
+                          suffix: IconButton(
+                            onPressed: () => setState(() => _obscure = !_obscure),
+                            icon: Icon(_obscure
+                                ? AppIcons.visibilityOff
+                                : AppIcons.visibilityOn),
+                            color: colors.outline,
+                          ),
+                        ),
+                      ),
+
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          onPressed: _openForgotPassword,
+                          child: Text(
+                            'Forgot password?',
+                            style: AppTypography.actionM.copyWith(
+                              color: colors.onPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      SizedBox(
+                        height: 52,
+                        child: FilledButton(
+                          onPressed: loading ? null : _submit,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: colors.primary,
+                            foregroundColor: colors.onPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: loading
+                              ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                              : const Text('Login'),
+                        ),
+                      ),
+
+                      if (_bioReady) ...[
+                        const SizedBox(height: 8),
+                        Center(
+                          child: IconButton(
+                            tooltip: 'Sign in with biometrics',
+                            onPressed: _tryBiometricLogin,
+                            icon: Icon(AppIcons.fingerprint, size: 28),
+                            color: colors.onPrimary,
+                          ),
+                        ),
+                      ],
+
+                      const Spacer(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'New to AceUp? ',
+                            style: AppTypography.bodyS
+                                .copyWith(color: colors.onPrimaryContainer),
+                          ),
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.pushNamed(context, '/signup'),
+                            child: Text(
+                              'Register now',
+                              style: AppTypography.actionM.copyWith(
+                                color: colors.onPrimary,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

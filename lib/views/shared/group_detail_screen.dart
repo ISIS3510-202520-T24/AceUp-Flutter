@@ -1,5 +1,3 @@
-// lib/features/groups/views/group_detail_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -90,6 +88,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   Widget build(BuildContext context) {
     // No es necesario llamar a context.watch aquí, ya que lo pasamos a los widgets hijos
     final viewModel = context.read<GroupDetailViewModel>();
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
 
     return Scaffold(
       drawer: const BurgerMenu(),
@@ -105,24 +105,24 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            color: Theme.of(context).colorScheme.secondaryContainer,
+            color: colors.tertiary,
             child: Row(
               children: [
                 IconButton(
                   icon: Icon(AppIcons.arrowLeft, size: 20),
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  color: colors.onTertiary,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 Text(
                   widget.groupName,
                   style: AppTypography.h4.copyWith(
-                    color: Theme.of(context).colorScheme.onPrimary,
+                    color: colors.onPrimary,
                   ),
                 ),
               ],
             ),
           ),
-          _buildWeekSelector(),
+          _buildWeekSelector(colors),
           Expanded(
             child: PageView.builder(
               controller: _pageController,
@@ -154,14 +154,14 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddOrUpdateEventDialog(context, viewModel),
-        backgroundColor: const Color(0xFF66DDC5),
+        backgroundColor: colors.primary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-        child: const Icon(Icons.event, color: Colors.black),
+        child: Icon(Icons.event, color: colors.onPrimary),
       ),
     );
   }
 
-  Widget _buildWeekSelector() {
+  Widget _buildWeekSelector(ColorScheme colors) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20.0),
       color: Colors.white,
@@ -169,7 +169,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: _weekDays.map((day) {
           final isSelected = DateUtils.isSameDay(day.date, _selectedDate);
-          return _buildDayItem(day, isSelected: isSelected, onTap: () {
+          return _buildDayItem(colors, day, isSelected: isSelected, onTap: () {
             // Al tocar un día, calculamos cuántos días de diferencia hay con hoy
             final today = DateUtils.dateOnly(DateTime.now());
             final difference = day.date.difference(today).inDays;
@@ -185,21 +185,21 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     );
   }
   
-  Widget _buildDayItem(Day day, {required bool isSelected, required VoidCallback onTap}) {
+  Widget _buildDayItem(ColorScheme colors, Day day, {required bool isSelected, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF66DDC5) : Colors.transparent,
+          color: isSelected ? colors.secondary : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(day.shortName, style: TextStyle(fontSize: 12, color: isSelected ? Colors.white : Colors.grey.shade600, fontWeight: FontWeight.bold)),
+            Text(day.shortName, style: TextStyle(fontSize: 12, color: colors.onPrimaryContainer, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text(day.dayNumber.toString(), style: TextStyle(fontSize: 18, color: isSelected ? Colors.white : const Color(0xFF2C3E50), fontWeight: FontWeight.bold)),
+            Text(day.dayNumber.toString(), style: TextStyle(fontSize: 18, color: colors.onSurfaceVariant, fontWeight: FontWeight.bold)),
           ],
         ),
       ),

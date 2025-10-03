@@ -1,5 +1,7 @@
 // lib/features/groups/viewmodels/shared_view_model.dart
 
+import 'dart:developer' as console;
+
 import 'package:flutter/material.dart';
 
 import '../models/group_model.dart';
@@ -34,7 +36,7 @@ class SharedViewModel extends ChangeNotifier {
       groups = await _groupService.getGroups();
       _setState(ViewState.idle);
     } catch (e) {
-      print('Error fetching groups: $e');
+      console.log('Error fetching groups: $e');
       _setState(ViewState.error);
     }
   }
@@ -47,7 +49,7 @@ class SharedViewModel extends ChangeNotifier {
       await _groupService.addGroup(name, members);
       await fetchGroups(); // Volvemos a cargar para obtener el nuevo grupo con su ID de Firebase
     } catch (e) {
-      print('Error adding group: $e');
+      console.log('Error adding group: $e');
       // Opcional: podrías establecer un estado de error aquí
     }
   }
@@ -58,7 +60,7 @@ class SharedViewModel extends ChangeNotifier {
       await _groupService.updateGroup(id, name, members);
       await fetchGroups(); // Volvemos a cargar para reflejar los cambios
     } catch (e) {
-      print('Error updating group: $e');
+      console.log('Error updating group: $e');
     }
   }
 
@@ -76,7 +78,7 @@ class SharedViewModel extends ChangeNotifier {
     try {
       await _groupService.deleteGroup(id);
     } catch (e) {
-      print('Error deleting group: $e');
+      console.log('Error deleting group: $e');
       // 3. Si la eliminación falla, revierte el cambio en la UI para mantener la consistencia.
       groups.insert(index, groupToDelete);
       notifyListeners();

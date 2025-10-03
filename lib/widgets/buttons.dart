@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../themes/app_typography.dart';
+
 
 enum ButtonType { primary, secondary }
 
@@ -29,9 +31,7 @@ class Button extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            textStyle: const TextStyle(
-              fontWeight: FontWeight.w600,
-            ),
+            textStyle: AppTypography.actionM
           ),
           child: Text(text),
         );
@@ -41,9 +41,7 @@ class Button extends StatelessWidget {
           onPressed: onPressed,
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: colors.primary),
-            textStyle: TextStyle(
-              fontWeight: FontWeight.w600, color: colors.onPrimary,
-            ),
+            textStyle: AppTypography.actionM,
           ),
           child: Text(text),
         );

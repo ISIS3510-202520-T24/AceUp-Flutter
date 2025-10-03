@@ -32,7 +32,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
     final rightControl = _buildRightControl(context, colors);
 
     return AppBar(
-      backgroundColor: colors.primaryContainer,
+      backgroundColor: colors.secondary,
       elevation: 0.0,
       title: Text(
         title,
@@ -41,7 +41,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: true,
       leading: _buildLeftControl(context, colors),
       actions: rightControl != null ? [rightControl] : null,
-      iconTheme: IconThemeData(color: colors.onPrimaryContainer),
+      iconTheme: IconThemeData(color: colors.onSecondary),
     );
   }
 
@@ -63,7 +63,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
       case LeftControlType.cancel:
         return TextButton(
           onPressed: onLeftPressed ?? () => Navigator.of(context).maybePop(),
-          child: Text("Cancel", style: AppTypography.actionM.copyWith(color: colors.onPrimaryContainer)),
+          child: Text("Cancel", style: AppTypography.actionM.copyWith(color: colors.onSecondary)),
         );
     }
   }
@@ -74,12 +74,12 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
       case RightControlType.edit:
         return TextButton(
           onPressed: onRightPressed,
-          child: Text("Edit", style: AppTypography.actionM.copyWith(color: colors.onPrimaryContainer)),
+          child: Text("Edit", style: AppTypography.actionM.copyWith(color: colors.onSecondary)),
         );
       case RightControlType.save:
         return TextButton(
           onPressed: onRightPressed,
-          child: Text("Save", style: AppTypography.actionM.copyWith(color: colors.onPrimaryContainer)),
+          child: Text("Save", style: AppTypography.actionM.copyWith(color: colors.onSecondary)),
         );
       case RightControlType.none:
         return null;
