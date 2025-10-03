@@ -11,15 +11,13 @@
   <component name="ChangeListManager">
     <list default="true" id="83f1ba98-ac45-48c6-90e8-73adca6f18e6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/auth_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/auth_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/themes/app_theme.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/themes/app_theme.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/viewmodels/holidays_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/holidays_viewmodel.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/viewmodels/shared_view_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/shared_view_model.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aceup_clean.iml" beforeDir="false" afterPath="$PROJECT_DIR$/aceup_clean.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/themes/app_icons.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/themes/app_icons.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/auth/biometric_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/auth/biometric_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/views/auth/login_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/auth/login_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/holidays/holidays_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/holidays/holidays_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/shared/group_detail_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/shared/group_detail_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/views/shared/shared_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/shared/shared_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -108,7 +106,7 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "theme-fixes",
+    "git-widget-placeholder": "develop",
     "io.flutter.reload.alreadyRun": "true",
     "last_opened_file_path": "C:/Users/LAURA/AceUp-Flutter/assets/icons",
     "project.structure.last.edited": "SDKs",

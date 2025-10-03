@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/flutter_svg.dart'; // ignore: uri_does_not_exist
 import 'package:provider/provider.dart';
 
 import '../../themes/app_icons.dart';
@@ -9,6 +9,8 @@ import '../../services/auth_service.dart';
 import '../../services/secure_store.dart';
 import '../../services/biometric_service.dart';
 import '../../widgets/buttons.dart';
+
+//ignore_for_file: undefined_identifier
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _showErrors = false;
 
   // Biometrics
-  bool _bioReady = false;   // dispositivo soporta + el usuario la activó
+  bool _bioReady = false; // dispositivo soporta + el usuario la activó
   bool _checkingBio = true;
 
   @override
@@ -60,7 +62,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // -------- Estilo unificado --------
-  InputDecoration _decorStandard(BuildContext ctx, {String? hint, Widget? suffix}) {
+  InputDecoration _decorStandard(BuildContext ctx,
+      {String? hint, Widget? suffix}) {
     final colors = Theme.of(ctx).colorScheme;
     return InputDecoration(
       hintText: hint,
@@ -97,7 +100,8 @@ class _LoginScreenState extends State<LoginScreen> {
           backgroundColor: cs.surfaceDim,
           content: Text(msg, style: TextStyle(color: cs.onSurfaceVariant)),
           margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
   }
@@ -122,33 +126,34 @@ class _LoginScreenState extends State<LoginScreen> {
         builder: (ctx, setDialog) {
           final cs = Theme.of(ctx).colorScheme;
           InputDecoration _decor() => InputDecoration(
-                labelText: 'Email',
-                hintText: 'name@email.com',
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: cs.outlineVariant),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: cs.primary, width: 1.5),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: cs.error, width: 1.6),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: cs.error, width: 1.8),
-                ),
-                errorStyle: TextStyle(color: cs.error),
-              );
+            labelText: 'Email',
+            hintText: 'name@email.com',
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: cs.outlineVariant),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: cs.primary, width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: cs.error, width: 1.6),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: cs.error, width: 1.8),
+            ),
+            errorStyle: TextStyle(color: cs.error),
+          );
 
           return AlertDialog(
             title: const Text('Reset password'),
             content: Form(
               key: form,
-              autovalidateMode:
-                  showErrors ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+              autovalidateMode: showErrors
+                  ? AutovalidateMode.onUserInteraction
+                  : AutovalidateMode.disabled,
               child: TextFormField(
                 controller: ctrl,
                 keyboardType: TextInputType.emailAddress,
@@ -162,21 +167,27 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+              TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel')),
               FilledButton(
                 onPressed: () async {
                   setDialog(() => showErrors = true);
                   if (!form.currentState!.validate()) return;
                   try {
-                    await context.read<AuthService>().requestPasswordReset(ctrl.text.trim());
+                    await context
+                        .read<AuthService>()
+                        .requestPasswordReset(ctrl.text.trim());
                     if (context.mounted) {
                       Navigator.pop(context);
-                      _showSnack('If an account exists, we sent an email to reset your password.');
+                      _showSnack(
+                          'If an account exists, we sent an email to reset your password.');
                     }
                   } catch (e) {
                     if (context.mounted) {
                       Navigator.pop(context);
-                      _showSnack(e.toString().replaceFirst('Exception: ', ''));
+                      _showSnack(
+                          e.toString().replaceFirst('Exception: ', ''));
                     }
                   }
                 },
@@ -194,7 +205,8 @@ class _LoginScreenState extends State<LoginScreen> {
       context: context,
       builder: (_) => AlertDialog(
         title: const Text('Verify your email'),
-        content: const Text('We sent a verification email. Please verify your address before continuing.'),
+        content: const Text(
+            'We sent a verification email. Please verify your address before continuing.'),
         actions: [
           TextButton(
             onPressed: () async {
@@ -203,7 +215,9 @@ class _LoginScreenState extends State<LoginScreen> {
             },
             child: const Text('Resend'),
           ),
-          FilledButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK')),
         ],
       ),
     );
@@ -232,19 +246,18 @@ class _LoginScreenState extends State<LoginScreen> {
         title: Text(title),
         content: Text(message),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(negative)),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(positive)),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(negative)),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(positive)),
         ],
       ),
     );
     return res == true;
   }
 
-  /// Lógica post-login para manejar biometría:
-  /// - Si no está habilitada → ofrecer habilitar.
-  /// - Si está habilitada:
-  ///   - Mismo email que el guardado → actualizar silenciosamente password.
-  ///   - Email distinto → preguntar si quieres reemplazar las credenciales guardadas.
   Future<void> _handleBiometricAfterLogin({
     required String email,
     required String password,
@@ -280,7 +293,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final replace = await _askReplaceDialog(
         title: 'Replace quick-login account?',
         message:
-            'Biometric is already enabled for $storedEmail. Do you want to replace it with $email?',
+        'Biometric is already enabled for $storedEmail. Do you want to replace it with $email?',
       );
       if (replace) {
         await SecureStore.setBiometricCredentials(email, password);
@@ -306,8 +319,12 @@ class _LoginScreenState extends State<LoginScreen> {
         title: const Text('Quick login'),
         content: const Text('Enable biometric unlock for next time?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Not now')),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Enable')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Not now')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Enable')),
         ],
       ),
     );
@@ -325,14 +342,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _checkingBio = true);
 
     try {
-      // 1) Pedimos huella/rostro
       final ok = await BiometricService().authenticate();
       if (!mounted || !ok) return;
 
       final auth = context.read<AuthService>();
       await auth.reloadUser();
 
-      // 2) Si ya hay sesión y el correo está verificado -> entrar
       if (auth.currentUser != null && auth.isEmailVerified) {
         final name = auth.currentUser?.displayName ?? 'there';
         _showSnack('Welcome back, $name!');
@@ -340,10 +355,9 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // 3) Si no hay sesión, usamos credenciales guardadas
       final stored = await SecureStore.biometricCredentials();
       final email = stored.email;
-      final pass  = stored.password;
+      final pass = stored.password;
 
       if (email == null || pass == null) {
         _showSnack('No saved credentials. Sign in once with email & password.');
@@ -351,10 +365,8 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       final vm = context.read<LoginViewModel>();
-      final (success, err) = await vm.loginWithEmailPassword(
-        email: email,
-        password: pass,
-      );
+      final (success, err) =
+      await vm.loginWithEmailPassword(email: email, password: pass);
 
       if (!mounted) return;
 
@@ -381,7 +393,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _email.text.trim();
     final password = _pass.text.trim();
 
-    final (ok, err) = await vm.loginWithEmailPassword(email: email, password: password);
+    final (ok, err) =
+    await vm.loginWithEmailPassword(email: email, password: password);
     if (!mounted) return;
 
     if (!ok) {
@@ -391,7 +404,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     await auth.reloadUser();
     if (auth.isEmailVerified) {
-      // Manejo de biometría con la nueva política
       await _handleBiometricAfterLogin(email: email, password: password);
 
       _showSnack('Welcome back, ${_displayName(auth)} 👋');
@@ -408,59 +420,43 @@ class _LoginScreenState extends State<LoginScreen> {
     final loading = context.watch<LoginViewModel>().loading;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final autoMode = _showErrors
-        ? AutovalidateMode.onUserInteraction
-        : AutovalidateMode.disabled;
+    final autoMode =
+    _showErrors ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled;
 
     return Scaffold(
       backgroundColor: colors.surfaceDim,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            child: Form(
-              key: _form,
-              autovalidateMode: autoMode,
-              child: Column(
-                children: [
-                  const SizedBox(height: 40),
-                  SvgPicture.asset('assets/logos/t_blue.svg', height: 180),
-                  const SizedBox(height: 12),
-                  Text('AceUp',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: colors.onSurface,
-                      )),
-                  const SizedBox(height: 24),
-
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('Welcome Back!',
-                        style: theme.textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w700)),
-                  ),
-                  const SizedBox(height: 12),
-
-                  TextFormField(
-                    controller: _email,
-                    maxLength: 40,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: _valEmail,
-                    decoration: _decorStandard(context, hint: 'Email Address'),
-                  ),
-                  const SizedBox(height: 12),
-
-                  TextFormField(
-                    controller: _pass,
-                    maxLength: 40,
-                    obscureText: _obscure,
-                    validator: _valPass,
-                    decoration: _decorStandard(
-                      context,
-                      hint: 'Password',
-                      suffix: IconButton(
-                        onPressed: () => setState(() => _obscure = !_obscure),
-                        icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          child: Form(
+            key: _form,
+            autovalidateMode: autoMode,
+            child: Column(
+              children: [
+                // ---------- TOP FLEX: Logo + Title ----------
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: SvgPicture.asset(
+                          theme.brightness == Brightness.light
+                              ? 'assets/logos/t_blue.svg'
+                              : 'assets/logos/t_white.svg',
+                          width: MediaQuery.of(context).size.width * 0.4,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          'AceUp',
+                          style: AppTypography.h1.copyWith(
+                            color: colors.onPrimary,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -468,7 +464,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 16),
 
-                // Bottom section: form and actions
+                // ---------- BOTTOM FLEX: Form + Actions ----------
                 Expanded(
                   flex: 4,
                   child: Column(
@@ -499,9 +495,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           hint: 'Password',
                           suffix: IconButton(
                             onPressed: () => setState(() => _obscure = !_obscure),
-                            icon: Icon(_obscure
-                                ? AppIcons.visibilityOff
-                                : AppIcons.visibilityOn),
+                            icon: Icon(
+                              _obscure
+                                  ? AppIcons.visibilityOff
+                                  : AppIcons.visibilityOn,
+                            ),
                             color: colors.outline,
                           ),
                         ),
@@ -560,8 +558,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           Text(
                             'New to AceUp? ',
-                            style: AppTypography.bodyS
-                                .copyWith(color: colors.onPrimaryContainer),
+                            style: AppTypography.bodyS.copyWith(
+                              color: colors.onPrimaryContainer,
+                            ),
                           ),
                           TextButton(
                             onPressed: () =>

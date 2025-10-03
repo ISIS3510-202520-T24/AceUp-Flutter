@@ -6,6 +6,7 @@ import 'package:flutter/widgets.dart';
 class AppIcons {
   static IconData burgerMenu = FontAwesomeIcons.bars;
   static IconData arrowLeft = FontAwesomeIcons.angleLeft;
+  static IconData arrowRight = FontAwesomeIcons.angleRight;
   static IconData fingerprint = FontAwesomeIcons.fingerprint;
   static IconData image = FontAwesomeIcons.image;
 
@@ -13,6 +14,8 @@ class AppIcons {
   static IconData visibilityOn = FontAwesomeIcons.solidEye;
 
   static IconData edit = FontAwesomeIcons.pen;
+  static IconData add = FontAwesomeIcons.plus;
+  static IconData delete = FontAwesomeIcons.trashCan;
 
   static IconData calendarMonth = FontAwesomeIcons.solidCalendarDays;
   static IconData calendarWeek = FontAwesomeIcons.calendarWeek;

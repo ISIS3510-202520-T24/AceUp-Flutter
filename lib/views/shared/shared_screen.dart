@@ -53,7 +53,7 @@ class SharedScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: colors.primary,
         onPressed: () {},
-        child: Icon(Icons.add, size: 28, color: colors.onPrimary),
+        child: Icon(AppIcons.add, size: 28, color: colors.onPrimary),
       ),
     );
   }
@@ -87,7 +87,7 @@ class SharedScreen extends StatelessWidget {
             color: Colors.red.shade400,
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: const Icon(Icons.delete_sweep, color: Colors.white),
+            child: Icon(AppIcons.delete, color: Colors.white),
           ),
           child: _buildGroupListItem(context, colors, viewModel, group),
         );
@@ -124,7 +124,7 @@ class SharedScreen extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(AppIcons.arrowLeft, color: colors.onPrimaryContainer, size: 16),
+            Icon(AppIcons.arrowRight, color: colors.onPrimaryContainer, size: 16),
           ],
         ),
       ),
