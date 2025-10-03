@@ -156,7 +156,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         onPressed: () => _showAddOrUpdateEventDialog(context, viewModel),
         backgroundColor: colors.primary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-        child: Icon(Icons.event, color: colors.onPrimary),
+        child: Icon(AppIcons.calendarDay, color: colors.onPrimary),
       ),
     );
   }
@@ -232,7 +232,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
             viewModel.deleteEvent(event.id);
             ScaffoldMessenger.of(context)..removeCurrentSnackBar()..showSnackBar(SnackBar(content: Text('${event.title} deleted')));
           },
-          background: Container(color: Colors.red.shade400, alignment: Alignment.centerRight, padding: const EdgeInsets.symmetric(horizontal: 20.0), child: const Icon(Icons.delete, color: Colors.white)),
+          background: Container(color: Colors.red.shade400, alignment: Alignment.centerRight, padding: const EdgeInsets.symmetric(horizontal: 20.0), child: Icon(AppIcons.delete, color: Colors.white)),
           child: Card(
             elevation: 2.0,
             margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),

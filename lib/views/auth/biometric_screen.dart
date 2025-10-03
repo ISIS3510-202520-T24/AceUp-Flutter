@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../services/biometric_service.dart';
 import '../../services/auth_service.dart';
+import '../../themes/app_icons.dart';
 
 class BiometricScreen extends StatefulWidget {
   const BiometricScreen({super.key});
@@ -40,7 +41,7 @@ class _BiometricScreenState extends State<BiometricScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.fingerprint, size: 96, color: cs.primary),
+            Icon(AppIcons.fingerprint, size: 96, color: cs.primary),
             const SizedBox(height: 12),
             const Text('Waiting for biometric…'),
           ],
