@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // ignore: uri_does_not_exist
 import 'package:provider/provider.dart';
 
+import '../../themes/app_icons.dart';
+import '../../themes/app_typography.dart';
 import '../../viewmodels/login_viewmodel.dart';
 import '../../services/auth_service.dart';
 import '../../services/secure_store.dart';
 import '../../services/biometric_service.dart';
+import '../../widgets/buttons.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -58,27 +61,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
   // -------- Estilo unificado --------
   InputDecoration _decorStandard(BuildContext ctx, {String? hint, Widget? suffix}) {
-    final cs = Theme.of(ctx).colorScheme;
+    final colors = Theme.of(ctx).colorScheme;
     return InputDecoration(
       hintText: hint,
+      hintStyle: TextStyle(color: colors.secondary),
       counterText: '',
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.outlineVariant),
+        borderSide: BorderSide(color: colors.outline),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.primary, width: 1.5),
+        borderSide: BorderSide(color: colors.primary, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.error, width: 1.6),
+        borderSide: BorderSide(color: colors.onError, width: 1.5),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.error, width: 1.8),
+        borderSide: BorderSide(color: colors.onError, width: 1.5),
       ),
-      errorStyle: TextStyle(color: cs.error),
+      errorStyle: TextStyle(color: colors.onError),
       suffixIcon: suffix,
     );
   }
@@ -409,7 +413,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _showErrors ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: colors.surfaceDim,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -420,20 +424,19 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 children: [
                   const SizedBox(height: 40),
-                  SvgPicture.asset('assets/logos/t_blue.svg', height: 180), // ignore: undefined_identifier
-                  const SizedBox(height: 12),
+                  SvgPicture.asset('assets/logos/t_blue.svg', height: 250), // ignore: undefined_identifier
+                  const SizedBox(height: 2),
                   Text('AceUp',
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w800,
-                        color: colors.onSurface,
+                        color: colors.onPrimary,
                       )),
                   const SizedBox(height: 24),
 
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text('Welcome Back!',
-                        style: theme.textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w700)),
+                        style: AppTypography.h1.copyWith(color: colors.onPrimary))
                   ),
                   const SizedBox(height: 12),
 
@@ -456,7 +459,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       hint: 'Password',
                       suffix: IconButton(
                         onPressed: () => setState(() => _obscure = !_obscure),
-                        icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                        icon: Icon(_obscure ? AppIcons.visibilityOff : AppIcons.visibilityOn),
+                        color: colors.outline,
                       ),
                     ),
                   ),
@@ -465,7 +469,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     alignment: Alignment.centerLeft,
                     child: TextButton(
                       onPressed: _openForgotPassword,
-                      child: const Text('Forgot password?'),
+                      child: Text('Forgot password?',
+                      style: AppTypography.actionM.copyWith(color: colors.onPrimary)),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -475,12 +480,19 @@ class _LoginScreenState extends State<LoginScreen> {
                     height: 52,
                     child: FilledButton(
                       onPressed: loading ? null : _submit,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: colors.primary,
+                        foregroundColor: colors.onPrimary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        )
+                      ),
                       child: loading
                           ? const SizedBox(
                               width: 20, height: 20,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Sign in'),
+                          : const Text('Login'),
                     ),
                   ),
 
@@ -491,7 +503,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: IconButton(
                         tooltip: 'Sign in with biometrics',
                         onPressed: _tryBiometricLogin,
-                        icon: const Icon(Icons.fingerprint, size: 28),
+                        icon: Icon(AppIcons.fingerprint, size: 28),
+                        color: colors.onPrimary,
                       ),
                     ),
                   ],
@@ -500,9 +513,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text('Not a member? '),
+                      Text('New to AceUp? ', style: AppTypography.bodyS.copyWith(color: colors.onPrimaryContainer)),
                       TextButton(
                         onPressed: () => Navigator.pushNamed(context, '/signup'),
+                        style: TextButton.styleFrom(
+                          textStyle: AppTypography.actionM.copyWith(color: colors.onPrimary),
+                        ),
                         child: const Text('Register now'),
                       ),
                     ],

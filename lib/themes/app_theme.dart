@@ -11,16 +11,21 @@ class AppTheme {
 
     colorScheme: ColorScheme(
       brightness: Brightness.light,
-      primary: AppColors.mintDark,
-      onPrimary: AppColors.blueDarkest,
-      primaryContainer: AppColors.blueLight,
-      onPrimaryContainer: AppColors.blueDark,
-      secondary: AppColors.blueMedium,
-      onSecondary: AppColors.lightLightest,
-      secondaryContainer: AppColors.blueLightest,
-      surface: AppColors.lightLightest,
-      onSurface: AppColors.blueDarkest,
-      surfaceDim: AppColors.lightLight,
+      primary: AppColors.mintDark, // Buttons, FAB, active tab
+      onPrimary: AppColors.blueDarkest, // Icons and texts over primary
+      secondary: AppColors.blueLight, // Top bar, current day in calendar
+      onSecondary: AppColors.blueDark, // Icons over secondary
+      tertiary: AppColors.blueLightest, // Sub top bar
+      onTertiary: AppColors.blueDark, // Icons over tertiary
+      surface: AppColors.lightLightest, // Background
+      surfaceDim: AppColors.lightLight, // Auth screens, cards, info items
+      onSurface: AppColors.darkDarkest, // In-view titles
+      onSurfaceVariant: AppColors.darkMedium, // Calendar numbers
+      onPrimaryContainer: AppColors.darkLight, // List item details, days of week
+      inversePrimary: AppColors.darkLightest,// Unselected tabs, icons on surface
+      outline: AppColors.blueMedium, // Form borders, outlines
+      outlineVariant: AppColors.lightDark, // Dividers
+      shadow: AppColors.lightDarkest, // Unavailable items
       error: AppColors.errorLight,
       onError: AppColors.errorMedium,
 

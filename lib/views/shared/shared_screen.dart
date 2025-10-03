@@ -1,8 +1,8 @@
-// lib/features/groups/views/shared_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/group_model.dart';
+import '../../themes/app_icons.dart';
+import '../../themes/app_typography.dart';
 import '../../viewmodels/shared_view_model.dart';
 import '../../widgets/burger_menu.dart';
 import 'group_detail_screen.dart';
@@ -42,11 +42,11 @@ class SharedScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTotalGroupsCard(viewModel.groups.length),
+            _buildTotalGroupsCard(colors, viewModel.groups.length),
             const SizedBox(height: 30),
-            const Text('Shared Calendars', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2C3E50))),
+            Text('Shared Calendars', style: AppTypography.h4.copyWith(color: colors.onPrimary)),
             const SizedBox(height: 20),
-            Expanded(child: _buildGroupList(context, viewModel)), // Pasamos el contexto
+            Expanded(child: _buildGroupList(context, colors, viewModel)), // Pasamos el contexto
           ],
         ),
       ),
@@ -59,7 +59,7 @@ class SharedScreen extends StatelessWidget {
   }
 
   // Se pasa el contexto para el SnackBar y el ViewModel
-  Widget _buildGroupList(BuildContext context, SharedViewModel viewModel) {
+  Widget _buildGroupList(BuildContext context, ColorScheme colors, SharedViewModel viewModel) {
     if (viewModel.state == ViewState.loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -89,13 +89,13 @@ class SharedScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: const Icon(Icons.delete_sweep, color: Colors.white),
           ),
-          child: _buildGroupListItem(context, viewModel, group),
+          child: _buildGroupListItem(context, colors, viewModel, group),
         );
       },
     );
   }
 
-  Widget _buildGroupListItem(BuildContext context, SharedViewModel viewModel, Group group) {
+  Widget _buildGroupListItem(BuildContext context, ColorScheme colors, SharedViewModel viewModel, Group group) {
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
@@ -112,19 +112,19 @@ class SharedScreen extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Row(
           children: [
-            Container(width: 20, height: 20, decoration: const BoxDecoration(color: Color(0xFF2C3E50), shape: BoxShape.circle)),
+            Container(width: 20, height: 20, decoration: BoxDecoration(color: colors.onPrimary, shape: BoxShape.circle)),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(group.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: Color(0xFF2C3E50))),
+                  Text(group.name, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: colors.onPrimary)),
                   const SizedBox(height: 4),
-                  Text(group.members.join(', '), overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                  Text(group.members.join(', '), overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: colors.onPrimaryContainer)),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+            Icon(AppIcons.arrowLeft, color: colors.onPrimaryContainer, size: 16),
           ],
         ),
       ),
@@ -132,7 +132,7 @@ class SharedScreen extends StatelessWidget {
   }
   
   // CORREGIDO: Widget implementado
-  Widget _buildTotalGroupsCard(int count) {
+  Widget _buildTotalGroupsCard(ColorScheme colors, int count) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
       decoration: BoxDecoration(
@@ -143,8 +143,8 @@ class SharedScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('Total Groups:', style: TextStyle(fontSize: 16, color: Colors.black87, fontWeight: FontWeight.w500)),
-          Text(count.toString(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+          Text('Total Groups:', style: AppTypography.h5.copyWith(color: colors.onSurface)),
+          Text(count.toString(), style: AppTypography.h5.copyWith(color: colors.onSurface)),
         ],
       ),
     );

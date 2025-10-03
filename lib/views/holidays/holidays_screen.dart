@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../themes/app_icons.dart';
+import '../../themes/app_typography.dart';
 import '../../viewmodels/holidays_viewmodel.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/top_bar.dart';
@@ -83,7 +84,7 @@ class HolidaysScreenContent extends StatelessWidget {
                   viewModel.errorMessage ?? 'An unknown error occurred',
                   style: TextStyle(
                     fontSize: 14,
-                    color: colors.onSurface.withOpacity(0.7),
+                    color: colors.onSurface,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -112,7 +113,7 @@ class HolidaysScreenContent extends StatelessWidget {
                 Icon(
                   Icons.calendar_today,
                   size: 64,
-                  color: colors.primary.withOpacity(0.5),
+                  color: colors.primary,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -128,7 +129,7 @@ class HolidaysScreenContent extends StatelessWidget {
                   'Pull down to refresh',
                   style: TextStyle(
                     fontSize: 14,
-                    color: colors.onSurface.withOpacity(0.7),
+                    color: colors.onSurface,
                   ),
                 ),
               ],
@@ -138,23 +139,23 @@ class HolidaysScreenContent extends StatelessWidget {
 
         return RefreshIndicator(
           onRefresh: () => viewModel.refreshHolidays(),
-          child: _buildHolidaysList(viewModel),
+          child: _buildHolidaysList(viewModel, colors),
         );
     }
   }
 
-  Widget _buildHolidaysList(HolidaysViewModel viewModel) {
+  Widget _buildHolidaysList(HolidaysViewModel viewModel, ColorScheme colors) {
     return ListView.builder(
       padding: const EdgeInsets.all(16.0),
       itemCount: viewModel.holidays.length,
       itemBuilder: (context, index) {
         final holiday = viewModel.holidays[index];
-        return _buildHolidayCard(holiday);
+        return _buildHolidayCard(holiday, colors);
       },
     );
   }
 
-  Widget _buildHolidayCard(holiday) {
+  Widget _buildHolidayCard(holiday, ColorScheme colors) {
     String dateText;
     dateText = holiday.fullDate;
 
@@ -171,19 +172,12 @@ class HolidaysScreenContent extends StatelessWidget {
                 children: [
                   Text(
                     holiday.displayName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF201E1B),
-                    ),
+                    style: AppTypography.bodyM.copyWith(color: colors.onSurface),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     dateText,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF797671),
-                    ),
+                    style: AppTypography.bodyS.copyWith(color: colors.onPrimaryContainer),
                   ),
                 ],
               ),
@@ -191,7 +185,7 @@ class HolidaysScreenContent extends StatelessWidget {
             Icon(
               AppIcons.edit,
               size: 18,
-              color: const Color(0xFF797671),
+              color: colors.inversePrimary,
             ),
           ],
         ),
