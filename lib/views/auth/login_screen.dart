@@ -33,7 +33,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    // Solo calculamos si mostrar el icono (NO pedimos biometría automáticamente)
     WidgetsBinding.instance.addPostFrameCallback((_) => _computeBioReady());
   }
 
@@ -458,8 +457,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
+                ),
 
                 const SizedBox(height: 16),
 
@@ -503,77 +503,56 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
-                      
+
                       Align(
                         alignment: Alignment.centerLeft,
                         child: TextButton(
-                        onPressed: _openForgotPassword,
-                        child: Text(
-                          'Forgot password?',
-                          style: AppTypography.actionM.copyWith(
-                          color: colors.primary,
+                          onPressed: _openForgotPassword,
+                          child: Text(
+                            'Forgot password?',
+                            style: AppTypography.actionM.copyWith(
+                              color: colors.primary,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
 
-                  SizedBox(
-                    height: 52,
-                    child: FilledButton(
-                      onPressed: loading ? null : _submit,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: colors.primary,
-                        foregroundColor: colors.onPrimary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      const SizedBox(height: 8),
+
+                      SizedBox(
+                        height: 52,
+                        child: FilledButton(
+                          onPressed: loading ? null : _submit,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: colors.primary,
+                            foregroundColor: colors.onPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: loading
+                              ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                              : const Text('Login'),
                         ),
                       ),
-                      child: loading
-                          ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                          : const Text('Login'),
-                    ),
-                  ),
 
-                  if (_bioReady) ...[
-                    const SizedBox(height: 8),
-                    Center(
-                      child: IconButton(
-                        tooltip: 'Sign in with biometrics',
-                        onPressed: _tryBiometricLogin,
-                        icon: Icon(AppIcons.fingerprint, size: 28),
-                        color: colors.primary,
-                      ),
-                    ),
-                  ],
-
-                  const SizedBox(height: 24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'New to AceUp? ',
-                        style: AppTypography.bodyS
-                            .copyWith(color: colors.onSurfaceVariant),
-                      ),
-                      TextButton(
-                        onPressed: () =>
-                            Navigator.pushNamed(context, '/signup'),
-                        child: Text(
-                          'Register now',
-                          style: AppTypography.actionM.copyWith(
+                      if (_bioReady) ...[
+                        const SizedBox(height: 8),
+                        Center(
+                          child: IconButton(
+                            tooltip: 'Sign in with biometrics',
+                            onPressed: _tryBiometricLogin,
+                            icon: Icon(AppIcons.fingerprint, size: 28),
                             color: colors.primary,
                           ),
                         ),
                       ],
 
-                      const Spacer(),
+                      const SizedBox(height: 24),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -597,8 +576,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

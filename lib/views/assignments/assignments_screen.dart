@@ -2,75 +2,66 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../themes/app_icons.dart';
+import '../../viewmodels/assignments_viewmodel.dart';
 import '../../widgets/burger_menu.dart';
+import '../../widgets/content_switcher.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
-import '../../widgets/content_switcher.dart';
-import '../../viewmodels/today_viewmodel.dart';
 
-class TodayScreen extends StatelessWidget {
-  const TodayScreen({super.key});
+class AssignmentsScreen extends StatelessWidget {
+  const AssignmentsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => TodayViewModel(),
-      child: const _TodayScreenContent(),
+      create: (_) => AssignmentsViewModel(),
+      child: const _AssignmentsScreenContent(),
     );
   }
 }
 
-class _TodayScreenContent extends StatelessWidget {
-  const _TodayScreenContent();
+class _AssignmentsScreenContent extends StatelessWidget {
+  const _AssignmentsScreenContent();
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<TodayViewModel>();
+    final viewModel = context.watch<AssignmentsViewModel>();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
     return Scaffold(
       drawer: const BurgerMenu(),
       appBar: TopBar(
-        title: "Today",
+        title: "Assignments",
         leftControlType: LeftControlType.menu,
         rightControlType: RightControlType.none,
       ),
+
       body: Column(
         children: [
           ContentSwitcher(
-            tabs: viewModel.tabLabels,
-            selectedIndex: viewModel.selectedTabIndex,
-            onTabSelected: (index) => viewModel.selectTab(index),
+              tabs: viewModel.tabLabels,
+              selectedIndex: viewModel.selectedTabIndex,
+              onTabSelected: (index) => viewModel.selectTab(index)
           ),
           Expanded(
-            child: _buildContent(context, viewModel),
+              child: _buildContent(context, viewModel),
           ),
         ],
       ),
       floatingActionButton: FAB(
           options: [
             FabOption(
-                icon: AppIcons.exam,
-                label: 'New Exam',
-                onPressed: () => _handleAddAction(context, viewModel)
-            ),
-            FabOption(
-                icon: AppIcons.chalkboard,
-                label: 'New Class',
-                onPressed: () => _handleAddAction(context, viewModel)
-            ),
-            FabOption(
-                icon: AppIcons.assignments,
+                icon: AppIcons.add,
                 label: 'New Assignment',
                 onPressed: () => _handleAddAction(context, viewModel)
             ),
           ]
-      ),
+      )
     );
   }
 
-  Widget _buildContent(BuildContext context, TodayViewModel viewModel) {
+  Widget _buildContent(BuildContext context, AssignmentsViewModel viewModel) {
     if (viewModel.hasContent) {
       return _buildContentList(viewModel);
     } else {
@@ -78,7 +69,7 @@ class _TodayScreenContent extends StatelessWidget {
     }
   }
 
-  Widget _buildEmptyState(BuildContext context, TodayViewModel viewModel) {
+  Widget _buildEmptyState(BuildContext context, AssignmentsViewModel viewModel) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -138,79 +129,31 @@ class _TodayScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildContentList(TodayViewModel viewModel) {
-    switch (viewModel.selectedTab) {
-      case TodayTab.exams:
-        return _buildExamsList(viewModel.exams);
-      case TodayTab.timetable:
-        return _buildTimetableList(viewModel.timetable);
-      case TodayTab.assignments:
-        return _buildAssignmentsList(viewModel.assignments);
-    }
-  }
+  Widget _buildContentList(AssignmentsViewModel viewModel) {
+    final assignments = viewModel.selectedTab == AssignmentsTab.pending
+        ? viewModel.pendingAssignments
+        : viewModel.completedAssignments;
 
-  Widget _buildExamsList(List<String> exams) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: exams.length,
-      itemBuilder: (context, index) {
-        return Card(
-          child: ListTile(
-            title: Text(exams[index]),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildTimetableList(List<String> timetable) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: timetable.length,
-      itemBuilder: (context, index) {
-        return Card(
-          child: ListTile(
-            title: Text(timetable[index]),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAssignmentsList(List<String> assignments) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
       itemCount: assignments.length,
       itemBuilder: (context, index) {
-        return Card(
-          child: ListTile(
-            title: Text(assignments[index]),
-          ),
+        final assignment = assignments[index];
+        return ListTile(
+          title: Text(assignment),
+          // Add more details as needed
         );
       },
     );
   }
 
-  void _handleAddAction(BuildContext context, TodayViewModel viewModel) {
+  void _handleAddAction(BuildContext context, AssignmentsViewModel viewModel) {
+    //Navigator.pushNamed(context, '/add-assignment');
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Add new - Coming Soon!'),
+        content: Text('Add new assignment - Coming soon!'),
         duration: const Duration(seconds: 2),
       ),
     );
-
-    // TODO: Navigate to appropriate add screen or show dialog
-    // Example:
-    // switch (viewModel.selectedTab) {
-    //   case TodayTab.exams:
-    //     _showAddExamDialog(context);
-    //     break;
-    //   case TodayTab.timetable:
-    //     _showAddClassDialog(context);
-    //     break;
-    //   case TodayTab.assignments:
-    //     _showAddAssignmentDialog(context);
-    //     break;
-    // }
   }
 }
