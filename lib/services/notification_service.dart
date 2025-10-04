@@ -20,12 +20,6 @@ class NotificationService {
     // 1. Pide permiso al usuario
     await _fcm.requestPermission();
 
-    // 2. Obtiene el token de FCM
-    final fcmToken = await _fcm.getToken();
-    print("📱 FCM Token: $fcmToken");
-    // Aquí es donde deberías guardar el token en Firestore para el usuario actual.
-    // Esta lógica ya la tienes en tu AuthService.
-
     // 3. Configura los manejadores de mensajes
     _initPushNotifications();
   }

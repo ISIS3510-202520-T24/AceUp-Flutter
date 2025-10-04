@@ -70,7 +70,7 @@ class AuthService {
     String? fcmToken;
     try {
       fcmToken = await _fcm.getToken();
-      print('📱 FCM Token obtained: $fcmToken');
+      print('📱 AuthService got FCM Token: $fcmToken');
     } catch (e) {
       print('Could not get FCM token: $e');
     }

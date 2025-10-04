@@ -7,6 +7,7 @@ import '../../viewmodels/shared_view_model.dart';
 import '../../widgets/burger_menu.dart';
 import 'group_detail_screen.dart';
 import '../../widgets/top_bar.dart';
+import '../../services/auth_service.dart';
 
 // Wrapper para proveer el ViewModel (sin cambios)
 class SharedScreenWrapper extends StatelessWidget {
@@ -21,8 +22,38 @@ class SharedScreenWrapper extends StatelessWidget {
   }
 }
 
-class SharedScreen extends StatelessWidget {
+class SharedScreen extends StatefulWidget {
   const SharedScreen({super.key});
+
+  @override
+  State<SharedScreen> createState() => _SharedScreenState();
+}
+
+class _SharedScreenState extends State<SharedScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Usamos addPostFrameCallback para asegurarnos de que el contexto esté disponible
+    // y para no llamar a setState o notificar a listeners durante un build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialData();
+    });
+  }
+
+  // Nueva función para iniciar la carga de datos con el UID del usuario actual
+  void _loadInitialData() {
+    final authService = context.read<AuthService>();
+    final userId = authService.currentUser?.uid;
+
+    if (userId != null) {
+      // Usamos context.read aquí porque solo necesitamos llamar a la función,
+      // no necesitamos que initState se reconstruya si el ViewModel cambia.
+      context.read<SharedViewModel>().fetchGroups(userId);
+    } else {
+      print("Error: No user is currently logged in to fetch groups.");
+      // Opcional: mostrar un SnackBar o manejar el error
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

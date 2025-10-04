@@ -5,6 +5,7 @@ import 'dart:developer' as console;
 import 'package:flutter/material.dart';
 
 import '../models/group_model.dart';
+import '../services/auth_service.dart';
 import '../services/group_service.dart';
 import '../models/user_model.dart';
 
@@ -20,23 +21,29 @@ class SharedViewModel extends ChangeNotifier {
   ViewState _state = ViewState.idle;
   ViewState get state => _state;
 
+  String? _currentUserId;
+
   SharedViewModel() {
-    fetchGroups();
     fetchAllUsers();
   }
 
   // Metodo privado para cambiar el estado y notificar a la UI
   void _setState(ViewState viewState) {
+    if (_state == viewState) return;
     _state = viewState;
-    notifyListeners();
+    Future.microtask(() {
+      notifyListeners();
+    });
   }
 
   // --- MÉTODOS EXISTENTES ---
 
-  Future<void> fetchGroups() async {
+  Future<void> fetchGroups(String userId) async {
+    _currentUserId = userId; 
+
     _setState(ViewState.loading);
     try {
-      groups = await _groupService.getGroups();
+      groups = await _groupService.getGroupsForUser(userId);
 
       if (availableUsers.isEmpty) {
         await fetchAllUsers();
@@ -58,21 +65,30 @@ class SharedViewModel extends ChangeNotifier {
   // --- NUEVOS MÉTODOS CRUD QUE FALTABAN ---
 
   /// Añade un nuevo grupo a Firestore y luego actualiza la lista local.
-  Future<void> addGroup(String name, List<String> members) async {
+  Future<void> addGroup(String name, List<String> memberEmails) async {
     try {
-      await _groupService.addGroup(name, members);
-      await fetchGroups(); // Volvemos a cargar para obtener el nuevo grupo con su ID de Firebase
+      final authService = AuthService();
+      final currentUserEmail = authService.currentUser?.email;
+      if (currentUserEmail != null && !memberEmails.any((email) => email.toLowerCase() == currentUserEmail.toLowerCase())) {
+        memberEmails.add(currentUserEmail);
+      }
+
+      await _groupService.addGroup(name, memberEmails);
+      if (_currentUserId != null) {
+        await fetchGroups(_currentUserId!);
+      }
     } catch (e) {
       console.log('Error adding group: $e');
-      // Opcional: podrías establecer un estado de error aquí
     }
   }
 
   /// Actualiza un grupo existente en Firestore y luego actualiza la lista local.
-  Future<void> updateGroup(String id, String name, List<String> members) async {
+  Future<void> updateGroup(String id, String name, List<String> memberEmails) async {
     try {
-      await _groupService.updateGroup(id, name, members);
-      await fetchGroups(); // Volvemos a cargar para reflejar los cambios
+      await _groupService.updateGroup(id, name, memberEmails);
+      if (_currentUserId != null) {
+        await fetchGroups(_currentUserId!);
+      }
     } catch (e) {
       console.log('Error updating group: $e');
     }

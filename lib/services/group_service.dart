@@ -154,6 +154,17 @@ class GroupService {
 
   }
 
+    Future<List<Group>> getGroupsForUser(String userId) async {
+    // Usamos 'array-contains' para encontrar todos los documentos de 'groups'
+    // donde el array 'members' contenga el UID del usuario actual.
+    QuerySnapshot snapshot = await _firestore
+        .collection('groups')
+        .where('members', arrayContains: userId)
+        .get();
+        
+    return snapshot.docs.map((doc) => Group.fromFirestore(doc)).toList();
+    }
+
   // --- MÉTODOS DE GRUPO ---
 
   Future<List<Group>> getGroups() async {
