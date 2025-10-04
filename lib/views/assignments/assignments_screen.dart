@@ -36,6 +36,7 @@ class _AssignmentsScreenContent extends StatelessWidget {
         leftControlType: LeftControlType.menu,
         rightControlType: RightControlType.none,
       ),
+
       body: Column(
         children: [
           ContentSwitcher(
@@ -54,7 +55,7 @@ class _AssignmentsScreenContent extends StatelessWidget {
                 icon: AppIcons.add,
                 label: 'New Assignment',
                 onPressed: () => _handleAddAction(context, viewModel)
-            )
+            ),
           ]
       )
     );
@@ -74,47 +75,55 @@ class _AssignmentsScreenContent extends StatelessWidget {
 
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: colors.tertiary,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              AppIcons.icons,
-              size: 40,
-              color: colors.secondary,
+          Expanded(
+            flex: 2,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: colors.tertiary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    AppIcons.icons,
+                    size: 40,
+                    color: colors.secondary,
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                  child: Text(
+                    viewModel.emptyStateMessage,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: colors.onPrimary,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // Subtitle
+                Text(
+                  viewModel.emptyStateSubtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: colors.onSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
-
-          const SizedBox(height: 24),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: Text(
-              viewModel.emptyStateMessage,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: colors.onPrimary,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // Subtitle
-          Text(
-            viewModel.emptyStateSubtitle,
-            style: TextStyle(
-              fontSize: 14,
-              color: colors.onSecondary,
-            ),
-          ),
+          const Spacer(),
         ],
       ),
     );
@@ -143,7 +152,7 @@ class _AssignmentsScreenContent extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Add new assignment - Coming soon!'),
-        duration: const Duration(seconds: 1),
+        duration: const Duration(seconds: 2),
       ),
     );
   }

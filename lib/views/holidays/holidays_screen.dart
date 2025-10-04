@@ -4,6 +4,7 @@ import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/holidays_viewmodel.dart';
 import '../../widgets/burger_menu.dart';
+import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
 
 class HolidaysScreen extends StatelessWidget {
@@ -35,19 +36,15 @@ class HolidaysScreenContent extends StatelessWidget {
         rightControlType: RightControlType.none,
       ),
       body: _buildBody(context, viewModel, colors),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: colors.primary,
-        onPressed: () {
-          // TODO: Add functionality to create custom holiday
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Add custom holiday feature coming soon!'),
-              duration: Duration(seconds: 2),
+      floatingActionButton: FAB(
+          options: [
+            FabOption(
+                icon: AppIcons.add,
+                label: 'New Custom Holiday',
+                onPressed: () => _handleAddAction(context, viewModel)
             ),
-          );
-        },
-        child: Icon(Icons.add, size: 28, color: colors.onPrimary),
-      ),
+          ]
+      )
     );
   }
 
@@ -111,7 +108,7 @@ class HolidaysScreenContent extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.calendar_today,
+                  AppIcons.calendarDay,
                   size: 64,
                   color: colors.primary,
                 ),
@@ -189,6 +186,15 @@ class HolidaysScreenContent extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _handleAddAction(BuildContext context, HolidaysViewModel viewModel) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Add custom holiday - Coming soon!'),
+        duration: const Duration(seconds: 2),
       ),
     );
   }

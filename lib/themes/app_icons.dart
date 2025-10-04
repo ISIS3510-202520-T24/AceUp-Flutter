@@ -17,6 +17,9 @@ class AppIcons {
   static IconData add = FontAwesomeIcons.plus;
   static IconData delete = FontAwesomeIcons.trashCan;
 
+  static IconData chalkboard = FontAwesomeIcons.chalkboard;
+  static IconData exam = FontAwesomeIcons.flagCheckered;
+
   static IconData calendarMonth = FontAwesomeIcons.solidCalendarDays;
   static IconData calendarWeek = FontAwesomeIcons.calendarWeek;
   static IconData calendarDay = FontAwesomeIcons.calendarDay;

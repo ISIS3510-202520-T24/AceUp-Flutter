@@ -28,11 +28,11 @@ class FAB extends StatefulWidget {
   State<FAB> createState() => _FABState();
 }
 
-class _FABState extends State<FAB>
-    with SingleTickerProviderStateMixin {
+class _FABState extends State<FAB> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _expandAnimation;
   bool _isExpanded = false;
+  OverlayEntry? _overlayEntry;
 
   @override
   void initState() {
@@ -51,6 +51,7 @@ class _FABState extends State<FAB>
 
   @override
   void dispose() {
+    _removeOverlay();
     _controller.dispose();
     super.dispose();
   }
@@ -60,10 +61,46 @@ class _FABState extends State<FAB>
       _isExpanded = !_isExpanded;
       if (_isExpanded) {
         _controller.forward();
+        _showOverlay();
       } else {
         _controller.reverse();
+        _removeOverlay();
       }
     });
+  }
+
+  void _showOverlay() {
+    if (_overlayEntry != null) return;
+
+    final overlay = Overlay.of(context);
+    if (overlay == null) return;
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) {
+        final colors = Theme.of(context).colorScheme;
+
+        return Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: _toggle,
+                child: Container(color: colors.surface.withValues(alpha: 0.5)),
+              ),
+            ),
+
+            ..._buildExpandingActionButtons(),
+          ],
+        );
+      },
+    );
+
+    overlay.insert(_overlayEntry!);
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
   }
 
   void _handleFabPress() {
@@ -78,25 +115,23 @@ class _FABState extends State<FAB>
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return SizedBox.expand(
-      child: Stack(
-        alignment: Alignment.bottomRight,
-        clipBehavior: Clip.none,
-        children: [
-          // Semi-transparent overlay when expanded (only for multiple options)
-          if (_isExpanded && widget.options.length > 1)
-            GestureDetector(
-              onTap: _toggle,
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.5),
-              ),
+    return FloatingActionButton(
+      backgroundColor: colors.primary,
+      onPressed: _handleFabPress,
+      child: AnimatedBuilder(
+        animation: _expandAnimation,
+        builder: (context, child) {
+          return Transform.rotate(
+            angle: widget.options.length > 1
+                ? _expandAnimation.value * math.pi / 4
+                : 0,
+            child: Icon(
+              AppIcons.add,
+              size: 18,
+              color: colors.onPrimary,
             ),
-
-          if (widget.options.length > 1)
-            ..._buildExpandingActionButtons(),
-
-          _buildMainFab(colors),
-        ],
+          );
+        },
       ),
     );
   }
@@ -104,16 +139,18 @@ class _FABState extends State<FAB>
   List<Widget> _buildExpandingActionButtons() {
     final children = <Widget>[];
     final count = widget.options.length;
-    final step = 90.0 / (count > 1 ? count - 1 : 1);
 
     for (var i = 0; i < count; i++) {
       final option = widget.options[i];
+      final verticalOffset = (i + 2) * (56.0 + 8.0);
       children.add(
-        _ExpandingActionButton(
-          directionInDegrees: 270.0 - (i * step),
-          maxDistance: widget.distance,
-          progress: _expandAnimation,
-          child: _buildOptionButton(option),
+        Positioned(
+          right: 16,
+          bottom: verticalOffset, // just above the FAB
+          child: _ExpandingActionButton(
+            progress: _expandAnimation,
+            child: _buildOptionButton(option),
+          ),
         ),
       );
     }
@@ -138,11 +175,7 @@ class _FABState extends State<FAB>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                option.icon,
-                size: 15,
-                color: colors.primary,
-              ),
+              Icon(option.icon, size: 15, color: colors.primary),
               const SizedBox(width: 8),
               Text(
                 option.label,
@@ -158,44 +191,13 @@ class _FABState extends State<FAB>
       ),
     );
   }
-
-  Widget _buildMainFab(ColorScheme colors) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: AnimatedBuilder(
-        animation: _expandAnimation,
-        builder: (context, child) {
-          return FloatingActionButton(
-            backgroundColor: colors.primary,
-            onPressed: _handleFabPress,
-            child: Transform.rotate(
-              // Only rotate if there are multiple options
-              angle: widget.options.length > 1
-                  ? _expandAnimation.value * math.pi / 4
-                  : 0,
-              child: Icon(
-                AppIcons.add,
-                size: 18,
-                color: colors.onPrimary,
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
 }
 
-/// Animation wrapper for expanding action buttons
 class _ExpandingActionButton extends StatelessWidget {
-  final double directionInDegrees;
-  final double maxDistance;
   final Animation<double> progress;
   final Widget child;
 
   const _ExpandingActionButton({
-    required this.directionInDegrees,
-    required this.maxDistance,
     required this.progress,
     required this.child,
   });
@@ -205,20 +207,12 @@ class _ExpandingActionButton extends StatelessWidget {
     return AnimatedBuilder(
       animation: progress,
       builder: (context, child) {
-        final offset = Offset.fromDirection(
-          directionInDegrees * (math.pi / 180.0),
-          progress.value * maxDistance,
-        );
-
-        return Positioned(
-          right: 32.0 + offset.dx,
-          bottom: 32.0 + offset.dy,
-          child: Transform.scale(
-            scale: progress.value,
-            child: Opacity(
-              opacity: progress.value,
-              child: child,
-            ),
+        return Transform.scale(
+          scale: progress.value,
+          alignment: Alignment.centerRight,
+          child: Opacity(
+            opacity: progress.value,
+            child: child,
           ),
         );
       },

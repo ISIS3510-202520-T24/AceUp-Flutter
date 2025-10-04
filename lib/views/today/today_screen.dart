@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../themes/app_icons.dart';
 import '../../widgets/burger_menu.dart';
+import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
 import '../../widgets/content_switcher.dart';
 import '../../viewmodels/today_viewmodel.dart';
@@ -47,12 +48,24 @@ class _TodayScreenContent extends StatelessWidget {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: colors.primary,
-        onPressed: () {
-          _handleAddAction(context, viewModel);
-        },
-        child: Icon(Icons.add, size: 28, color: colors.onPrimary),
+      floatingActionButton: FAB(
+          options: [
+            FabOption(
+                icon: AppIcons.exam,
+                label: 'New Exam',
+                onPressed: () => _handleAddAction(context, viewModel)
+            ),
+            FabOption(
+                icon: AppIcons.chalkboard,
+                label: 'New Class',
+                onPressed: () => _handleAddAction(context, viewModel)
+            ),
+            FabOption(
+                icon: AppIcons.assignments,
+                label: 'New Assignment',
+                onPressed: () => _handleAddAction(context, viewModel)
+            ),
+          ]
       ),
     );
   }
@@ -71,47 +84,55 @@ class _TodayScreenContent extends StatelessWidget {
 
     return Center(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: colors.tertiary,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              AppIcons.icons,
-              size: 40,
-              color: colors.secondary,
+          Expanded(
+            flex: 2,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: colors.tertiary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    AppIcons.icons,
+                    size: 40,
+                    color: colors.secondary,
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                  child: Text(
+                    viewModel.emptyStateMessage,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: colors.onPrimary,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                // Subtitle
+                Text(
+                  viewModel.emptyStateSubtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: colors.onSecondary,
+                  ),
+                ),
+              ],
             ),
           ),
-
-          const SizedBox(height: 24),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0),
-            child: Text(
-              viewModel.emptyStateMessage,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: colors.onPrimary,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // Subtitle
-          Text(
-            viewModel.emptyStateSubtitle,
-            style: TextStyle(
-              fontSize: 14,
-              color: colors.onSecondary,
-            ),
-          ),
+          const Spacer(),
         ],
       ),
     );
@@ -171,12 +192,10 @@ class _TodayScreenContent extends StatelessWidget {
   }
 
   void _handleAddAction(BuildContext context, TodayViewModel viewModel) {
-    final String itemType = viewModel.tabLabels[viewModel.selectedTabIndex];
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Add new $itemType'),
-        duration: const Duration(seconds: 1),
+        content: Text('Add new - Coming Soon!'),
+        duration: const Duration(seconds: 2),
       ),
     );
 
