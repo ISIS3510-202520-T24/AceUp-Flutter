@@ -15,6 +15,7 @@ import 'viewmodels/signup_viewmodel.dart';
 import 'viewmodels/holidays_viewmodel.dart';
 import 'package:firebase_auth/firebase_auth.dart'; //ignore: uri_does_not_exist
 import 'package:provider/provider.dart';
+import 'services/notification_service.dart';
 
 //ignore_for_file: non_type_as_type_argument
 
@@ -24,6 +25,8 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  await NotificationService().initNotifications();
 
   runApp(
     MultiProvider(
