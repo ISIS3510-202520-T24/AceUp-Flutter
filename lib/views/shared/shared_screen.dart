@@ -52,7 +52,7 @@ class SharedScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: colors.primary,
-        onPressed: () {},
+        onPressed: () => _showAddOrUpdateGroupDialog(context, viewModel),
         child: Icon(Icons.add, size: 28, color: colors.onPrimary),
       ),
     );
@@ -120,7 +120,11 @@ class SharedScreen extends StatelessWidget {
                 children: [
                   Text(group.name, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: colors.onPrimary)),
                   const SizedBox(height: 4),
-                  Text(group.members.join(', '), overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: colors.onPrimaryContainer)),
+                  Text(
+                  group.members.map((user) => user.nick).join(', '), // Mapea la lista de AppUser a una lista de nicks y los une
+                  overflow: TextOverflow.ellipsis, 
+                  style: TextStyle(fontSize: 14, color: colors.onPrimaryContainer)
+                ),
                 ],
               ),
             ),
@@ -154,40 +158,126 @@ class SharedScreen extends StatelessWidget {
   void _showAddOrUpdateGroupDialog(BuildContext context, SharedViewModel viewModel, {Group? group}) {
     final isUpdating = group != null;
     final nameController = TextEditingController(text: isUpdating ? group.name : '');
-    final membersController = TextEditingController(text: isUpdating ? group.members.join(', ') : '');
+ 
+    // Lista de controladores para los campos de email
+    final List<TextEditingController> emailControllers = [];
+    if (isUpdating) {
+      for (var member in group!.members) {
+        emailControllers.add(TextEditingController(text: member.email));
+      }
+    } else{
+      emailControllers.add(TextEditingController());
+    }
 
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(isUpdating ? 'Update Group' : 'Add Group'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Group Name', hintText: 'e.g., Family')),
-              TextField(controller: membersController, decoration: const InputDecoration(labelText: 'Members', hintText: 'e.g., Ana, Juan, Luis')),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-            ElevatedButton(
-              onPressed: () {
-                final name = nameController.text;
-                final members = membersController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-                if (name.isNotEmpty) {
-                  if (isUpdating) {
-                    viewModel.updateGroup(group.id, name, members);
-                  } else {
-                    viewModel.addGroup(name, members);
-                  }
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Text(isUpdating ? 'Update' : 'Add'),
-            ),
-          ],
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text(isUpdating ? 'Update Group' : 'Add Group'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'Group Name')
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Member Emails:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    // Usamos un ListView para la lista dinámica de campos
+                    Expanded(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: emailControllers.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: emailControllers[index],
+                                    decoration: InputDecoration(hintText: 'member${index + 1}@email.com'),
+                                    keyboardType: TextInputType.emailAddress,
+                                  ),
+                                ),
+                                // Botón para eliminar un campo de email
+                                IconButton(
+                                  icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+                                  onPressed: () {
+                                    // No permitir eliminar el último campo
+                                    if (emailControllers.length > 1) {
+                                      setDialogState(() {
+                                        emailControllers[index].dispose(); // Limpiar el controlador
+                                        emailControllers.removeAt(index);
+                                      });
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    // Botón para añadir un nuevo campo de email
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add member'),
+                        onPressed: () {
+                          setDialogState(() {
+                            emailControllers.add(TextEditingController());
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel')),
+                ElevatedButton(
+                  onPressed: () {
+                    final name = nameController.text;
+                    // Recoger todos los emails de los controladores
+                    final emails = emailControllers
+                        .map((controller) => controller.text.trim())
+                        .where((email) => email.isNotEmpty)
+                        .toList();
+
+                    if (name.isNotEmpty && emails.isNotEmpty) {
+                      if (isUpdating) {
+                        viewModel.updateGroup(group.id, name, emails);
+                      } else {
+                        viewModel.addGroup(name, emails);
+                      }
+                      Navigator.of(dialogContext).pop();
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please enter a group name and at least one member email.'))
+                      );
+                    }
+                  },
+                  child: Text(isUpdating ? 'Update' : 'Add'),
+                ),
+              ],
+            );
+          },
         );
       },
-    );
+    ).then((_) {
+      // Este bloque se ejecuta cuando el diálogo se cierra.
+      // Es crucial para limpiar todos los controladores y evitar fugas de memoria.
+      nameController.dispose();
+      for (var controller in emailControllers) {
+        controller.dispose();
+      }
+    });
   }
 }

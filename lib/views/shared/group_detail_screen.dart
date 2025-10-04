@@ -1,16 +1,18 @@
+// lib/features/groups/views/group_detail_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../models/event_model.dart';
+import '../../models/calendar_event_model.dart';
 import '../../themes/app_icons.dart';
 import '../../viewmodels/group_detail_view_model.dart';
-import '../../viewmodels/shared_view_model.dart';
+import '../../viewmodels/shared_view_model.dart' hide ViewState;
 import '../../widgets/burger_menu.dart';
 import '../../widgets/top_bar.dart';
 import '../../themes/app_typography.dart';
 
 
-// Wrapper para proveer el ViewModel. No necesita cambios.
+// Wrapper
 class GroupDetailScreenWrapper extends StatelessWidget {
   final String groupId;
   final String groupName;
@@ -36,31 +38,26 @@ class GroupDetailScreen extends StatefulWidget {
 class _GroupDetailScreenState extends State<GroupDetailScreen> {
   late DateTime _selectedDate;
   List<Day> _weekDays = [];
-  
-  // Controlador para el PageView que permite el deslizamiento
   late PageController _pageController;
-  // Usamos un número grande como página inicial para simular un scroll "infinito"
   final int _initialPage = 5000;
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = DateTime.now();
-    // Inicializamos el controlador en la página que representa "hoy"
+    _selectedDate = DateUtils.dateOnly(DateTime.now()); 
     _pageController = PageController(initialPage: _initialPage);
     _generateWeekDaysFor(_selectedDate);
   }
 
   @override
   void dispose() {
-    _pageController.dispose(); // Es importante limpiar el controlador para evitar fugas de memoria
+    _pageController.dispose();
     super.dispose();
   }
 
-  // Genera los 7 días de la semana para el selector superior, basado en una fecha de referencia
   void _generateWeekDaysFor(DateTime date) {
     _weekDays = [];
-    int currentDayOfWeek = date.weekday; // Lunes = 1, Domingo = 7
+    int currentDayOfWeek = date.weekday;
     DateTime firstDayOfWeek = date.subtract(Duration(days: currentDayOfWeek - 1));
 
     for (int i = 0; i < 7; i++) {
@@ -75,18 +72,9 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     }
   }
 
-  // Comprueba si dos fechas pertenecen a la misma semana del calendario
-  bool _isSameWeek(DateTime date1, DateTime date2) {
-    // Restamos el día de la semana para encontrar el Lunes de cada fecha
-    final startOfWeek1 = date1.subtract(Duration(days: date1.weekday - 1));
-    final startOfWeek2 = date2.subtract(Duration(days: date2.weekday - 1));
-    // Si el Lunes es el mismo día, están en la misma semana
-    return DateUtils.isSameDay(startOfWeek1, startOfWeek2);
-  }
 
   @override
   Widget build(BuildContext context) {
-    // No es necesario llamar a context.watch aquí, ya que lo pasamos a los widgets hijos
     final viewModel = context.read<GroupDetailViewModel>();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
@@ -98,7 +86,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         leftControlType: LeftControlType.menu,
         rightControlType: RightControlType.edit,
         onRightPressed: () {
-          // TODO
+          context.read<GroupDetailViewModel>().refreshData();
         },
       ),
       body: Column(
@@ -127,20 +115,16 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
             child: PageView.builder(
               controller: _pageController,
               onPageChanged: (index) {
-                // Calculamos la nueva fecha basada en la página a la que se deslizó el usuario
-                final newDate = DateTime.now().add(Duration(days: index - _initialPage));
-                setState(() {
-                  _selectedDate = newDate;
-                  // Si el deslizamiento nos lleva a una semana diferente, regeneramos el selector
-                  if (!_isSameWeek(_weekDays.first.date, newDate)) {
+                final newDate = DateUtils.dateOnly(DateTime.now()).add(Duration(days: index - _initialPage));
+                if (!DateUtils.isSameDay(_selectedDate, newDate)) {
+                  setState(() {
+                    _selectedDate = newDate;
                     _generateWeekDaysFor(newDate);
-                  }
-                });
+                  });
+                }
               },
               itemBuilder: (context, index) {
-                // Para cada página, calculamos la fecha correspondiente
-                final dateForPage = DateTime.now().add(Duration(days: index - _initialPage));
-                // Usamos Consumer para que solo la lista de eventos se reconstruya al cambiar los datos
+                final dateForPage = DateUtils.dateOnly(DateTime.now()).add(Duration(days: index - _initialPage));
                 return Consumer<GroupDetailViewModel>(
                   builder: (context, vm, child) {
                     final eventsForPage = vm.getEventsForDay(dateForPage);
@@ -153,34 +137,70 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddOrUpdateEventDialog(context, viewModel),
+        onPressed: () => _showAddGroupEventDialog(context, viewModel),
         backgroundColor: colors.primary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-        child: Icon(Icons.event, color: colors.onPrimary),
+        child: Icon(Icons.group_add, color: colors.onPrimary),
       ),
     );
   }
 
   Widget _buildWeekSelector(ColorScheme colors) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20.0),
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
       color: Colors.white,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: _weekDays.map((day) {
-          final isSelected = DateUtils.isSameDay(day.date, _selectedDate);
-          return _buildDayItem(colors, day, isSelected: isSelected, onTap: () {
-            // Al tocar un día, calculamos cuántos días de diferencia hay con hoy
-            final today = DateUtils.dateOnly(DateTime.now());
-            final difference = day.date.difference(today).inDays;
-            // Animamos el PageView a la página correspondiente
-            _pageController.animateToPage(
-              _initialPage + difference, 
-              duration: const Duration(milliseconds: 400), 
-              curve: Curves.easeInOut,
-            );
-          });
-        }).toList(),
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Flecha Izquierda
+          IconButton(
+            icon: Icon(Icons.arrow_left, color: colors.onPrimaryContainer),
+            onPressed: () {
+              // Saltamos 7 páginas hacia atrás
+              _pageController.animateToPage(
+                _pageController.page!.round() - 7,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+
+          ),
+          // Usamos Expanded para que los días ocupen el espacio disponible
+          Expanded(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: _weekDays.map((day) {
+                final isSelected = DateUtils.isSameDay(day.date, _selectedDate);
+                return _buildDayItem(colors, day, isSelected: isSelected, onTap: () {
+                  if (!DateUtils.isSameDay(_selectedDate, day.date)) {
+                    final today = DateUtils.dateOnly(DateTime.now());
+                    final difference = day.date.difference(today).inDays;
+                    final targetPage = _initialPage + difference;
+
+                    _pageController.animateToPage(
+                      targetPage, 
+                      duration: const Duration(milliseconds: 400), 
+                      curve: Curves.easeInOut,
+                    );
+                  }
+                });
+              }).toList(),
+            ),
+          ),
+          // Flecha Derecha
+          IconButton(
+            icon: Icon(Icons.arrow_right, color: colors.onPrimaryContainer),
+            onPressed: () {
+              // Saltamos 7 páginas hacia adelante
+              _pageController.animateToPage(
+                _pageController.page!.round() + 7,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -206,7 +226,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     );
   }
 
-  Widget _buildEventList(BuildContext context, GroupDetailViewModel viewModel, List<Event> events, DateTime forDate) {
+  Widget _buildEventList(BuildContext context, GroupDetailViewModel viewModel, List<CalendarEvent> events, DateTime forDate) {
     if (viewModel.state == ViewState.loading && events.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -222,39 +242,65 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
       itemCount: events.length,
       itemBuilder: (context, index) {
         final event = events[index];
-        final startTime = DateFormat.jm().format(event.startTime.toDate());
-        final endTime = DateFormat.jm().format(event.endTime.toDate());
+        final startTime = DateFormat.jm().format(event.startTime);
+        final endTime = DateFormat.jm().format(event.endTime);
 
-        return Dismissible(
-          key: Key(event.id),
-          direction: DismissDirection.endToStart,
-          onDismissed: (_) {
-            viewModel.deleteEvent(event.id);
-            ScaffoldMessenger.of(context)..removeCurrentSnackBar()..showSnackBar(SnackBar(content: Text('${event.title} deleted')));
-          },
-          background: Container(color: Colors.red.shade400, alignment: Alignment.centerRight, padding: const EdgeInsets.symmetric(horizontal: 20.0), child: const Icon(Icons.delete, color: Colors.white)),
-          child: Card(
-            elevation: 2.0,
-            margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-            color: const Color(0xFFF0FAF8),
-            child: ListTile(
-              title: Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: Text('Time: $startTime - $endTime'),
-              onTap: () => _showAddOrUpdateEventDialog(context, viewModel, event: event),
-            ),
+        final canDismiss = event.type == EventType.group;
+
+        Widget eventTile = Card(
+          elevation: 2.0,
+          margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+          shape: RoundedRectangleBorder(
+            side: BorderSide(color: event.color, width: 2.0),
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          child: ListTile(
+            leading: _getIconForEventType(event.type),
+            title: Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text('${event.ownerName} | $startTime - $endTime'),
+            onLongPress: canDismiss 
+              ? () => _showAddGroupEventDialog(context, viewModel, event: event)
+              : null,
           ),
         );
+        
+        if (canDismiss) {
+          return Dismissible(
+            key: Key(event.startTime.toIso8601String() + event.title),
+            direction: DismissDirection.endToStart,
+            onDismissed: (_) {
+              // Esta acción requiere el ID original del evento de Firestore,
+              // que no guardamos en CalendarEvent para mantenerlo simple.
+              // viewModel.deleteGroupEvent(event.originalId); 
+              ScaffoldMessenger.of(context)..removeCurrentSnackBar()..showSnackBar(SnackBar(content: Text('Delete for group events is not yet implemented.')));
+            },
+            background: Container(color: Colors.red.shade400, alignment: Alignment.centerRight, padding: const EdgeInsets.symmetric(horizontal: 20.0), child: const Icon(Icons.delete, color: Colors.white)),
+            child: eventTile,
+          );
+        } else {
+          return eventTile;
+        }
       },
     );
   }
+
+  Icon _getIconForEventType(EventType type) {
+    switch (type) {
+      case EventType.assignment: return const Icon(Icons.assignment, color: Colors.blue);
+      case EventType.exam: return const Icon(Icons.school, color: Colors.red);
+      case EventType.classSession: return const Icon(Icons.book, color: Colors.green);
+      case EventType.group: return const Icon(Icons.group, color: Colors.orange);
+      case EventType.personal:
+      default: return const Icon(Icons.person, color: Colors.grey);
+    }
+  }
   
-  void _showAddOrUpdateEventDialog(BuildContext context, GroupDetailViewModel viewModel, {Event? event}) {
+  void _showAddGroupEventDialog(BuildContext context, GroupDetailViewModel viewModel, {CalendarEvent? event}) {
     final isUpdating = event != null;
     final titleController = TextEditingController(text: isUpdating ? event.title : '');
     
-    TimeOfDay selectedStartTime = isUpdating ? TimeOfDay.fromDateTime(event.startTime.toDate()) : const TimeOfDay(hour: 12, minute: 0);
-    TimeOfDay selectedEndTime = isUpdating ? TimeOfDay.fromDateTime(event.endTime.toDate()) : const TimeOfDay(hour: 13, minute: 0);
+    TimeOfDay selectedStartTime = isUpdating ? TimeOfDay.fromDateTime(event.startTime) : const TimeOfDay(hour: 12, minute: 0);
+    TimeOfDay selectedEndTime = isUpdating ? TimeOfDay.fromDateTime(event.endTime) : const TimeOfDay(hour: 13, minute: 0);
 
     showDialog(
       context: context,
@@ -262,7 +308,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: Text(isUpdating ? 'Update Event' : 'Add Event for ${DateFormat('MMMM d').format(_selectedDate)}'),
+              title: Text(isUpdating ? 'Update Group Event' : 'Add Group Event for ${DateFormat('MMMM d').format(_selectedDate)}'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -275,11 +321,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                       TextButton(
                         onPressed: () async {
                           final TimeOfDay? picked = await showTimePicker(context: context, initialTime: selectedStartTime);
-                          if (picked != null && picked != selectedStartTime) {
-                            setDialogState(() {
-                              selectedStartTime = picked;
-                            });
-                          }
+                          if (picked != null) { setDialogState(() => selectedStartTime = picked); }
                         },
                         child: Text(selectedStartTime.format(context), style: const TextStyle(fontSize: 16)),
                       ),
@@ -292,11 +334,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                       TextButton(
                         onPressed: () async {
                           final TimeOfDay? picked = await showTimePicker(context: context, initialTime: selectedEndTime);
-                          if (picked != null && picked != selectedEndTime) {
-                            setDialogState(() {
-                              selectedEndTime = picked;
-                            });
-                          }
+                          if (picked != null) { setDialogState(() => selectedEndTime = picked); }
                         },
                         child: Text(selectedEndTime.format(context), style: const TextStyle(fontSize: 16)),
                       ),
@@ -314,9 +352,10 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                       final finalEndTime = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, selectedEndTime.hour, selectedEndTime.minute);
 
                       if (isUpdating) {
-                        viewModel.updateEvent(event.id, title, finalStartTime, finalEndTime);
+                        // La actualización requiere el ID original de Firestore, que no tenemos.
+                        // viewModel.updateGroupEvent(event.originalId, title, finalStartTime, finalEndTime);
                       } else {
-                        viewModel.addEvent(title, finalStartTime, finalEndTime);
+                        viewModel.addGroupEvent(title, finalStartTime, finalEndTime);
                       }
                       Navigator.of(context).pop();
                     }

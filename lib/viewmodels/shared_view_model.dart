@@ -6,12 +6,14 @@ import 'package:flutter/material.dart';
 
 import '../models/group_model.dart';
 import '../services/group_service.dart';
+import '../models/user_model.dart';
 
 // El enum de estado que usan ambos ViewModels
 enum ViewState { idle, loading, error }
 
 class SharedViewModel extends ChangeNotifier {
   final GroupService _groupService = GroupService();
+  List<AppUser> availableUsers = []; // Nueva lista para el selector
   
   List<Group> groups = [];
   
@@ -20,6 +22,7 @@ class SharedViewModel extends ChangeNotifier {
 
   SharedViewModel() {
     fetchGroups();
+    fetchAllUsers();
   }
 
   // Metodo privado para cambiar el estado y notificar a la UI
@@ -34,6 +37,17 @@ class SharedViewModel extends ChangeNotifier {
     _setState(ViewState.loading);
     try {
       groups = await _groupService.getGroups();
+
+      if (availableUsers.isEmpty) {
+        await fetchAllUsers();
+      }
+
+      for (var group in groups) {
+        group.members = availableUsers
+            .where((user) => group.memberUids.contains(user.uid))
+            .toList();
+      }
+
       _setState(ViewState.idle);
     } catch (e) {
       console.log('Error fetching groups: $e');
@@ -82,6 +96,15 @@ class SharedViewModel extends ChangeNotifier {
       // 3. Si la eliminación falla, revierte el cambio en la UI para mantener la consistencia.
       groups.insert(index, groupToDelete);
       notifyListeners();
+    }
+  }
+
+    Future<void> fetchAllUsers() async {
+    try {
+      availableUsers = await _groupService.getAllUsers();
+      notifyListeners();
+    } catch (e) {
+      print('Error fetching users: $e');
     }
   }
 }

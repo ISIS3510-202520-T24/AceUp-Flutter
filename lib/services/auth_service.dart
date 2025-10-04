@@ -1,11 +1,13 @@
 import 'package:firebase_auth/firebase_auth.dart'; // ignore: uri_does_not_exist
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart'; //ignore: uri_does_not_exist
 
 // ignore_for_file: undefined_class, undefined_identifier, non_type_as_type_argument
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseMessaging _fcm = FirebaseMessaging.instance; 
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
@@ -64,6 +66,15 @@ class AuthService {
     final ref = _db.collection('users').doc(uid);
     final snap = await ref.get();
 
+    //Lógica para obtener el token de FCM
+    String? fcmToken;
+    try {
+      fcmToken = await _fcm.getToken();
+      print('📱 FCM Token obtained: $fcmToken');
+    } catch (e) {
+      print('Could not get FCM token: $e');
+    }
+
     if (!snap.exists) {
       // Crear documento inicial
       await ref.set({
@@ -71,12 +82,14 @@ class AuthService {
         'email': user.email,
         'nick': nickname ?? user.displayName ?? '',
         'createdAt': FieldValue.serverTimestamp(),
+        'fcmTokens': fcmToken != null ? [fcmToken] : [],
       });
     } else {
       // Actualizar campos importantes sin pisar lo demás
       await ref.set({
         'email': user.email,
         if (nickname != null && nickname.isNotEmpty) 'nick': nickname,
+        if (fcmToken != null) 'fcmTokens': FieldValue.arrayUnion([fcmToken]),
       }, SetOptions(merge: true));
     }
   }
