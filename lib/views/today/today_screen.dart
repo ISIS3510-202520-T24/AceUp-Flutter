@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../themes/app_icons.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/top_bar.dart';
@@ -59,8 +60,9 @@ class _TodayScreenContent extends StatelessWidget {
   Widget _buildContent(BuildContext context, TodayViewModel viewModel) {
     if (viewModel.hasContent) {
       return _buildContentList(viewModel);
+    } else {
+      return _buildEmptyState(context, viewModel);
     }
-    return _buildEmptyState(context, viewModel);
   }
 
   Widget _buildEmptyState(BuildContext context, TodayViewModel viewModel) {
@@ -79,7 +81,7 @@ class _TodayScreenContent extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              AppIcons.image,
+              AppIcons.icons,
               size: 40,
               color: colors.secondary,
             ),
@@ -134,7 +136,6 @@ class _TodayScreenContent extends StatelessWidget {
         return Card(
           child: ListTile(
             title: Text(exams[index]),
-            leading: const Icon(Icons.school),
           ),
         );
       },
@@ -149,7 +150,6 @@ class _TodayScreenContent extends StatelessWidget {
         return Card(
           child: ListTile(
             title: Text(timetable[index]),
-            leading: const Icon(Icons.schedule),
           ),
         );
       },
@@ -164,7 +164,6 @@ class _TodayScreenContent extends StatelessWidget {
         return Card(
           child: ListTile(
             title: Text(assignments[index]),
-            leading: const Icon(Icons.assignment),
           ),
         );
       },

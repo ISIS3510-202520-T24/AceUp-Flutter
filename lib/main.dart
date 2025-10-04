@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'views/assignments/assignments_screen.dart';
 import 'views/auth/logout_screen.dart';
 import 'views/auth/login_screen.dart';
 import 'views/auth/signup_screen.dart';
@@ -65,8 +66,9 @@ class MyApp extends StatelessWidget {
         '/biometric': (context) => const BiometricScreen(),
         '/today': (context) => const TodayScreen(),
         '/holidays': (context) => const HolidaysScreen(),
-        '/account': (_) => const LogoutScreen(),
-        '/shared': (_) => const SharedScreenWrapper(),
+        '/account': (context) => const LogoutScreen(),
+        '/shared': (context) => const SharedScreenWrapper(),
+        '/assignments' : (context) => const AssignmentsScreen(),
       },
     );
   }

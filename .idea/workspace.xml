@@ -11,7 +11,14 @@
   <component name="ChangeListManager">
     <list default="true" id="83f1ba98-ac45-48c6-90e8-73adca6f18e6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/themes/app_icons.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/themes/app_icons.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/viewmodels/today_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/today_viewmodel.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/auth/login_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/auth/login_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/today/today_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/today/today_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/widgets/burger_menu.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/burger_menu.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -100,7 +107,7 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "hotfix/merge-problems",
+    "git-widget-placeholder": "feature/48-implement-assigments-screen-and-context-aware-feature",
     "io.flutter.reload.alreadyRun": "true",
     "last_opened_file_path": "C:/Users/LAURA/AceUp-Flutter/assets/icons",
     "project.structure.last.edited": "SDKs",

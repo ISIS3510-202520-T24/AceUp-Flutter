@@ -8,7 +8,7 @@ class AppIcons {
   static IconData arrowLeft = FontAwesomeIcons.angleLeft;
   static IconData arrowRight = FontAwesomeIcons.angleRight;
   static IconData fingerprint = FontAwesomeIcons.fingerprint;
-  static IconData image = FontAwesomeIcons.image;
+  static IconData icons = FontAwesomeIcons.icons;
 
   static IconData visibilityOff = FontAwesomeIcons.solidEyeSlash;
   static IconData visibilityOn = FontAwesomeIcons.solidEye;

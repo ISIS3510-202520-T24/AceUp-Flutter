@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 enum TodayTab { exams, timetable, assignments }
 
 class TodayViewModel extends ChangeNotifier {
-  TodayTab _selectedTab = TodayTab.assignments;
+  TodayTab _selectedTab = TodayTab.timetable;
   TodayTab get selectedTab => _selectedTab;
 
   int get selectedTabIndex => _selectedTab.index;
