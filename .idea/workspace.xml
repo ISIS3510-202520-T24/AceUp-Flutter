@@ -10,7 +10,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="83f1ba98-ac45-48c6-90e8-73adca6f18e6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/assets/fonts/Sansita-ExtraBoldItalic.ttf" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/logos/t_blue.svg" beforeDir="false" afterPath="$PROJECT_DIR$/assets/logos/t_blue.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/logos/t_white.svg" beforeDir="false" afterPath="$PROJECT_DIR$/assets/logos/t_white.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/themes/app_typography.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/themes/app_typography.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/auth/login_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/auth/login_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/holidays/holidays_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/holidays/holidays_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/shared/shared_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/shared/shared_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/today/today_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/today/today_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/widgets/burger_menu.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/burger_menu.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -100,7 +110,7 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "hotfix/merge-problems",
+    "git-widget-placeholder": "develop",
     "io.flutter.reload.alreadyRun": "true",
     "last_opened_file_path": "C:/Users/LAURA/AceUp-Flutter/assets/icons",
     "project.structure.last.edited": "SDKs",
@@ -116,8 +126,8 @@
       <recent name="C:\Users\LAURA\AceUp-Flutter\assets\logos" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\LAURA\AceUp-Flutter\assets\icons" />
       <recent name="C:\Users\LAURA\AceUp-Flutter\assets\fonts" />
+      <recent name="C:\Users\LAURA\AceUp-Flutter\assets\icons" />
       <recent name="C:\Users\LAURA\AceUp-Flutter\assets\logos" />
       <recent name="C:\Users\LAURA\AceUp-Flutter\lib\views\shared" />
       <recent name="C:\Users\LAURA\AceUp-Flutter\lib\views\auth" />

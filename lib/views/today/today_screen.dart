@@ -51,7 +51,7 @@ class _TodayScreenContent extends StatelessWidget {
         onPressed: () {
           _handleAddAction(context, viewModel);
         },
-        child: Icon(Icons.add, size: 28, color: colors.onPrimary),
+        child: Icon(AppIcons.add, size: 18, color: colors.onPrimary),
       ),
     );
   }
@@ -134,7 +134,7 @@ class _TodayScreenContent extends StatelessWidget {
         return Card(
           child: ListTile(
             title: Text(exams[index]),
-            leading: const Icon(Icons.school),
+            leading: Icon(AppIcons.planner),
           ),
         );
       },

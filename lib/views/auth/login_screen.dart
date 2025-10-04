@@ -27,13 +27,12 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _showErrors = false;
 
   // Biometrics
-  bool _bioReady = false; // dispositivo soporta + el usuario la activó
+  bool _bioReady = false;
   bool _checkingBio = true;
 
   @override
   void initState() {
     super.initState();
-    // Solo calculamos si mostrar el icono (NO pedimos biometría automáticamente)
     WidgetsBinding.instance.addPostFrameCallback((_) => _computeBioReady());
   }
 
@@ -115,6 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return email.contains('@') ? email.split('@').first : email;
   }
 
+  // ---------------- Password Reset ----------------
   Future<void> _openForgotPassword() async {
     final form = GlobalKey<FormState>();
     final ctrl = TextEditingController(text: _email.text.trim());
@@ -415,6 +415,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // ---------------- UI ----------------
   @override
   Widget build(BuildContext context) {
     final loading = context.watch<LoginViewModel>().loading;
@@ -425,51 +426,54 @@ class _LoginScreenState extends State<LoginScreen> {
 
     return Scaffold(
       backgroundColor: colors.surfaceDim,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-          child: Form(
-            key: _form,
-            autovalidateMode: autoMode,
-            child: Column(
-              children: [
-                // ---------- TOP FLEX: Logo + Title ----------
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Flexible(
-                        child: SvgPicture.asset(
-                          theme.brightness == Brightness.light
-                              ? 'assets/logos/t_blue.svg'
-                              : 'assets/logos/t_white.svg',
-                          width: MediaQuery.of(context).size.width * 0.4,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          'AceUp',
-                          style: AppTypography.h1.copyWith(
-                            color: colors.onPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
+        child: Column(
+          children: [
+            // ---------- TOP (logo + title, shrinkable) ----------
+            Expanded(
+              flex: 3,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end, // vertical centering
+                crossAxisAlignment: CrossAxisAlignment.center, // horizontal centering
+                children: [
+                  Flexible(
+                    child: SvgPicture.asset(
+                      theme.brightness == Brightness.light
+                          ? 'assets/logos/t_blue.svg'
+                          : 'assets/logos/t_white.svg',
+                      width: MediaQuery.of(context).size.width * 0.5,
+                      fit: BoxFit.contain,
+                    ),
                   ),
-                ),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'AceUp',
+                        style: AppTypography.logo.copyWith(
+                          color: colors.onPrimary,
+                          fontSize: 54,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
-                const SizedBox(height: 16),
-
-                // ---------- BOTTOM FLEX: Form + Actions ----------
-                Expanded(
-                  flex: 4,
+            // ---------- BOTTOM (scrollable form + register) ----------
+            Expanded(
+              flex: 4,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: Form(
+                  key: _form,
+                  autovalidateMode: autoMode,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      const SizedBox(height: 12),
                       Text(
                         'Welcome Back!',
                         style: AppTypography.h1.copyWith(color: colors.onPrimary),
@@ -494,11 +498,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           context,
                           hint: 'Password',
                           suffix: IconButton(
-                            onPressed: () => setState(() => _obscure = !_obscure),
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
                             icon: Icon(
                               _obscure
                                   ? AppIcons.visibilityOff
                                   : AppIcons.visibilityOn,
+                              size: 18
                             ),
                             color: colors.outline,
                           ),
@@ -512,7 +518,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Text(
                             'Forgot password?',
                             style: AppTypography.actionM.copyWith(
-                              color: colors.onPrimary,
+                              color: colors.onSecondary,
                             ),
                           ),
                         ),
@@ -536,7 +542,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                              : const Text('Login'),
+                              : const Text('Login',
+                              style: AppTypography.actionM),
                         ),
                       ),
 
@@ -547,19 +554,18 @@ class _LoginScreenState extends State<LoginScreen> {
                             tooltip: 'Sign in with biometrics',
                             onPressed: _tryBiometricLogin,
                             icon: Icon(AppIcons.fingerprint, size: 28),
-                            color: colors.onPrimary,
+                            color: colors.onSecondary,
                           ),
                         ),
                       ],
 
-                      const Spacer(),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
                             'New to AceUp? ',
                             style: AppTypography.bodyS.copyWith(
-                              color: colors.onPrimaryContainer,
+                              color: colors.onPrimary,
                             ),
                           ),
                           TextButton(
@@ -568,7 +574,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Text(
                               'Register now',
                               style: AppTypography.actionM.copyWith(
-                                color: colors.onPrimary,
+                                color: colors.onSecondary,
                               ),
                             ),
                           ),
@@ -577,9 +583,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

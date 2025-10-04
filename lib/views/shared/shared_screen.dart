@@ -53,7 +53,7 @@ class SharedScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: colors.primary,
         onPressed: () {},
-        child: Icon(AppIcons.add, size: 28, color: colors.onPrimary),
+        child: Icon(AppIcons.add, size: 18, color: colors.onPrimary),
       ),
     );
   }

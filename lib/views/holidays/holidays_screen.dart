@@ -46,7 +46,7 @@ class HolidaysScreenContent extends StatelessWidget {
             ),
           );
         },
-        child: Icon(Icons.add, size: 28, color: colors.onPrimary),
+        child: Icon(AppIcons.add, size: 18, color: colors.onPrimary),
       ),
     );
   }
