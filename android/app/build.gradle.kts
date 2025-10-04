@@ -10,23 +10,20 @@ plugins {
 
 
 android {
-    namespace = "com.aceup.aceup_clean"  // tu namespace real
-    compileSdk = 36
+    namespace = "com.aceup.aceup_clean"
+    compileSdk = 35          // <-- subir a 35
 
     defaultConfig {
         applicationId = "com.aceup.aceup_clean"
-        minSdk = flutter.minSdkVersion
-        targetSdk = 36
+        minSdk = 23          // ya lo tienes bien
+        targetSdk = 35       // <-- subir a 35
         versionCode = 1
         versionName = "1.0"
     }
 
     buildTypes {
-        debug {
-            // nada especial
-        }
+        debug { }
         release {
-            // si no minificas, NO uses shrinkResources
             isMinifyEnabled = false
             isShrinkResources = false
             proguardFiles(
@@ -40,10 +37,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+    kotlinOptions { jvmTarget = "17" }
 }
+
 
 
 flutter {

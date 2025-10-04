@@ -1,10 +1,8 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // ignore: uri_does_not_exist
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
-import '../../themes/app_icons.dart';
-import '../../themes/app_typography.dart';
 import '../../viewmodels/signup_viewmodel.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -15,10 +13,11 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   final _form = GlobalKey<FormState>();
-  final _nick = TextEditingController();
-  final _email = TextEditingController();
-  final _pass = TextEditingController();
-  final _pass2 = TextEditingController();
+  final _nick   = TextEditingController();
+  final _email  = TextEditingController();
+  final _email2 = TextEditingController(); // Confirm email
+  final _pass   = TextEditingController();
+  final _pass2  = TextEditingController();
 
   bool _agree = false;
   bool _ob1 = true, _ob2 = true;
@@ -29,7 +28,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   void dispose() {
-    _nick.dispose(); _email.dispose(); _pass.dispose(); _pass2.dispose();
+    _nick.dispose();
+    _email.dispose();
+    _email2.dispose();
+    _pass.dispose();
+    _pass2.dispose();
     super.dispose();
   }
 
@@ -50,6 +53,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return null;
   }
 
+  String? _vEmail2(String? v) {
+    final x = (v ?? '').trim();
+    if (x.isEmpty) return 'Confirm your email';
+    if (x.length > 40) return 'Max 40 characters';
+    if (x.toLowerCase() != _email.text.trim().toLowerCase()) {
+      return 'Emails do not match';
+    }
+    return null;
+  }
+
   // At least 8 chars, one uppercase letter and one number
   final _pwdRegex = RegExp(r'^(?=.*[A-Z])(?=.*\d).{8,}$');
   String? _vPass(String? v) {
@@ -62,7 +75,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return null;
   }
 
-  // Confirm password: solo que coincida
   String? _vConfirm(String? v) {
     final x = (v ?? '').trim();
     if (x.isEmpty) return 'Confirm your password';
@@ -73,29 +85,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
   // --------------- Estilo uniforme ---------------
   InputDecoration _decorStandard(BuildContext ctx,
       {String? label, String? hint, Widget? suffix}) {
-    final colors = Theme.of(ctx).colorScheme;
+    final cs = Theme.of(ctx).colorScheme;
     return InputDecoration(
       labelText: label,
       hintText: hint,
-      hintStyle: TextStyle(color: colors.secondary),
       counterText: '',
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: colors.outline),
+        borderSide: BorderSide(color: cs.outlineVariant),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: colors.primary, width: 1.5),
+        borderSide: BorderSide(color: cs.primary, width: 1.5),
       ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: colors.onError, width: 1.5),
+      errorBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderSide: BorderSide(color: Color(0xFFE57373), width: 1.5),
       ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: colors.onError, width: 1.5),
+      focusedErrorBorder: const OutlineInputBorder(
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+        borderSide: BorderSide(color: Color(0xFFEF9A9A), width: 1.5),
       ),
-      errorStyle: TextStyle(color: colors.onError),
+      errorStyle: const TextStyle(color: Color(0xFFD32F2F)),
       suffixIcon: suffix,
     );
   }
@@ -106,7 +117,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      backgroundColor: Theme.of(context).colorScheme.surfaceDim,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       constraints: const BoxConstraints(maxHeight: 600),
       builder: (_) {
         final textStyle = Theme.of(context).textTheme.bodyMedium;
@@ -147,8 +158,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               Text('5. Changes',
                   style: textStyle?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              const Text(
-                  'We may update these terms. We will notify you of material changes.'),
+              const Text('We may update these terms. We will notify you of material changes.'),
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: () => Navigator.pop(context),
@@ -162,14 +172,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void _snack(String msg) {
-    final colors = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context)
       ..removeCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: colors.error,
-          content: Text(msg, style: TextStyle(color: colors.onError)),
+          backgroundColor: cs.errorContainer,
+          content: Text(msg, style: TextStyle(color: cs.onErrorContainer)),
           margin: const EdgeInsets.all(16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -188,7 +198,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Future<void> _submit() async {
-    setState(() => _showErrors = true); // desde aquí ya valida visualmente
+    setState(() => _showErrors = true);
     if (!_form.currentState!.validate()) return;
 
     if (!_agree) {
@@ -250,7 +260,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
 
     final autoMode = _showErrors
         ? AutovalidateMode.onUserInteraction
@@ -271,21 +280,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Center(
                     child: Column(
                       children: [
-                        SvgPicture.asset('assets/logos/t_blue.svg', height: 120), // ignore: undefined_identifier
-                        const SizedBox(height: 2),
+                        SvgPicture.asset('assets/logos/t_blue.svg', height: 120),
+                        const SizedBox(height: 8),
                         Text('AceUp',
                             style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.w800,
-                                color: colors.onPrimary)),
+                                color: const Color(0xFF0F2C4C))),
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text('Sign up',
-                      style: AppTypography.h3.copyWith(color: colors.onPrimary)),
+                      style: theme.textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                   Text('Create an account to access your new student lifestyle!',
-                      style: AppTypography.bodyS.copyWith(color: colors.onPrimary)),
+                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
                   const SizedBox(height: 18),
 
                   TextFormField(
@@ -301,8 +311,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     controller: _email,
                     maxLength: 40,
                     validator: _vEmail,
+                    autovalidateMode: autoMode,
                     decoration: _decorStandard(context,
                         label: 'Email Address', hint: 'name@email.com'),
+                  ),
+                  const SizedBox(height: 12),
+
+                  TextFormField(
+                    controller: _email2,
+                    maxLength: 40,
+                    validator: _vEmail2,
+                    autovalidateMode: autoMode,
+                    decoration: _decorStandard(context,
+                        label: 'Confirm Email', hint: 'repeat your email'),
                   ),
                   const SizedBox(height: 12),
 
@@ -311,14 +332,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     maxLength: 40,
                     validator: _vPass,
                     obscureText: _ob1,
+                    autovalidateMode: autoMode,
                     decoration: _decorStandard(
                       context,
                       label: 'Password',
                       hint: '8+ chars, 1 uppercase, 1 number',
                       suffix: IconButton(
                         onPressed: () => setState(() => _ob1 = !_ob1),
-                        icon: Icon(_ob1 ? AppIcons.visibilityOff : AppIcons.visibilityOn),
-                        color: colors.outline,
+                        icon: Icon(_ob1 ? Icons.visibility_off : Icons.visibility),
                       ),
                     ),
                   ),
@@ -329,13 +350,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     maxLength: 40,
                     validator: _vConfirm,
                     obscureText: _ob2,
+                    autovalidateMode: autoMode,
                     decoration: _decorStandard(
                       context,
                       label: 'Confirm password',
                       suffix: IconButton(
-                          onPressed: () => setState(() => _ob2 = !_ob2),
-                          icon: Icon(_ob2 ? AppIcons.visibilityOff : AppIcons.visibilityOn),
-                          color: colors.outline,
+                        onPressed: () => setState(() => _ob2 = !_ob2),
+                        icon: Icon(_ob2 ? Icons.visibility_off : Icons.visibility),
                       ),
                     ),
                   ),
