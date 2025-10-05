@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // ignore: uri_does_not_exist
 import 'package:provider/provider.dart';
 
+import '../../themes/app_icons.dart';
+import '../../themes/app_typography.dart';
 import '../../viewmodels/login_viewmodel.dart';
 import '../../services/auth_service.dart';
 import '../../services/secure_store.dart';
 import '../../services/biometric_service.dart';
 import '../../services/startup_ttfp.dart'; // marca el primer frame
+import '../../widgets/buttons.dart';
 
 // ignore_for_file: undefined_identifier
 
@@ -60,28 +63,30 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // -------- Estilo unificado --------
-  InputDecoration _decorStandard(BuildContext ctx, {String? hint, Widget? suffix}) {
-    final cs = Theme.of(ctx).colorScheme;
+  InputDecoration _decorStandard(BuildContext ctx,
+      {String? hint, Widget? suffix}) {
+    final colors = Theme.of(ctx).colorScheme;
     return InputDecoration(
       hintText: hint,
+      hintStyle: TextStyle(color: colors.secondary),
       counterText: '',
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.outlineVariant),
+        borderSide: BorderSide(color: colors.outline),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.primary, width: 1.5),
+        borderSide: BorderSide(color: colors.primary, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.error, width: 1.6),
+        borderSide: BorderSide(color: colors.onError, width: 1.5),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: cs.error, width: 1.8),
+        borderSide: BorderSide(color: colors.onError, width: 1.5),
       ),
-      errorStyle: TextStyle(color: cs.error),
+      errorStyle: TextStyle(color: colors.onError),
       suffixIcon: suffix,
     );
   }
@@ -93,10 +98,11 @@ class _LoginScreenState extends State<LoginScreen> {
       ..showSnackBar(
         SnackBar(
           behavior: SnackBarBehavior.floating,
-          backgroundColor: cs.surfaceVariant,
+          backgroundColor: cs.surfaceDim,
           content: Text(msg, style: TextStyle(color: cs.onSurfaceVariant)),
           margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
   }
@@ -121,33 +127,34 @@ class _LoginScreenState extends State<LoginScreen> {
         builder: (ctx, setDialog) {
           final cs = Theme.of(ctx).colorScheme;
           InputDecoration _decor() => InputDecoration(
-                labelText: 'Email',
-                hintText: 'name@email.com',
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: cs.outlineVariant),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: cs.primary, width: 1.5),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: cs.error, width: 1.6),
-                ),
-                focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: cs.error, width: 1.8),
-                ),
-                errorStyle: TextStyle(color: cs.error),
-              );
+            labelText: 'Email',
+            hintText: 'name@email.com',
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: cs.outlineVariant),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: cs.primary, width: 1.5),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: cs.error, width: 1.6),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: cs.error, width: 1.8),
+            ),
+            errorStyle: TextStyle(color: cs.error),
+          );
 
           return AlertDialog(
             title: const Text('Reset password'),
             content: Form(
               key: form,
-              autovalidateMode:
-                  showErrors ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
+              autovalidateMode: showErrors
+                  ? AutovalidateMode.onUserInteraction
+                  : AutovalidateMode.disabled,
               child: TextFormField(
                 controller: ctrl,
                 keyboardType: TextInputType.emailAddress,
@@ -161,21 +168,27 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+              TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel')),
               FilledButton(
                 onPressed: () async {
                   setDialog(() => showErrors = true);
                   if (!form.currentState!.validate()) return;
                   try {
-                    await context.read<AuthService>().requestPasswordReset(ctrl.text.trim());
+                    await context
+                        .read<AuthService>()
+                        .requestPasswordReset(ctrl.text.trim());
                     if (context.mounted) {
                       Navigator.pop(context);
-                      _showSnack('If an account exists, we sent an email to reset your password.');
+                      _showSnack(
+                          'If an account exists, we sent an email to reset your password.');
                     }
                   } catch (e) {
                     if (context.mounted) {
                       Navigator.pop(context);
-                      _showSnack(e.toString().replaceFirst('Exception: ', ''));
+                      _showSnack(
+                          e.toString().replaceFirst('Exception: ', ''));
                     }
                   }
                 },
@@ -202,7 +215,9 @@ class _LoginScreenState extends State<LoginScreen> {
             },
             child: const Text('Resend'),
           ),
-          FilledButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
+          FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK')),
         ],
       ),
     );
@@ -290,7 +305,8 @@ Future<void> _handleBiometricAfterLogin({
     final email = _email.text.trim();
     final password = _pass.text.trim();
 
-    final (ok, err) = await vm.loginWithEmailPassword(email: email, password: password);
+    final (ok, err) =
+    await vm.loginWithEmailPassword(email: email, password: password);
     if (!mounted) return;
 
     if (!ok) {
@@ -316,6 +332,7 @@ Future<void> _handleBiometricAfterLogin({
   Future<void> _onBiometricPressed() async {
     if (_checkingBio) return;
     setState(() => _checkingBio = true);
+
     try {
       final ok = await BiometricService().authenticate();
       if (!mounted || !ok) {
@@ -360,137 +377,189 @@ Future<void> _handleBiometricAfterLogin({
     final loading = context.watch<LoginViewModel>().loading;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-
     final autoMode =
-        _showErrors ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled;
+    _showErrors ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled;
 
     return Scaffold(
       backgroundColor: colors.surfaceDim,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            child: Form(
-              key: _form,
-              autovalidateMode: autoMode,
+        child: Column(
+          children: [
+            // ---------- TOP (logo + title, shrinkable) ----------
+            Expanded(
+              flex: 3,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.end, // vertical centering
+                crossAxisAlignment: CrossAxisAlignment.center, // horizontal centering
                 children: [
-                  const SizedBox(height: 32),
-                  Center(
+                  Flexible(
                     child: SvgPicture.asset(
-                      'assets/logos/t_blue.svg',
-                      height: 160,
+                      theme.brightness == Brightness.light
+                          ? 'assets/logos/t_blue.svg'
+                          : 'assets/logos/t_white.svg',
+                      width: MediaQuery.of(context).size.width * 0.5,
                       fit: BoxFit.contain,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Text(
-                      'AceUp',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: colors.onSurface,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  Text(
-                    'Welcome Back!',
-                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 12),
-
-                  TextFormField(
-                    controller: _email,
-                    maxLength: 40,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: _valEmail,
-                    decoration: _decorStandard(context, hint: 'Email Address'),
-                  ),
-                  const SizedBox(height: 12),
-
-                  TextFormField(
-                    controller: _pass,
-                    maxLength: 40,
-                    obscureText: _obscure,
-                    validator: _valPass,
-                    decoration: _decorStandard(
-                      context,
-                      hint: 'Password',
-                      suffix: IconButton(
-                        onPressed: () => setState(() => _obscure = !_obscure),
-                        icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-                      ),
-                    ),
-                  ),
-
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton(
-                      onPressed: _openForgotPassword,
-                      child: const Text('Forgot password?'),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  SizedBox(
-                    height: 52,
-                    child: FilledButton(
-                      onPressed: loading ? null : _submit,
-                      child: loading
-                          ? const SizedBox(
-                              width: 20, height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Sign in'),
-                    ),
-                  ),
-
-                  // --- Botón biométrico SI el device soporta biometría ---
-                  const SizedBox(height: 12),
-                  FutureBuilder<bool>(
-                    future: BiometricService().canUseBiometrics(),
-                    builder: (context, snap) {
-                      if (snap.connectionState != ConnectionState.done) {
-                        return const SizedBox.shrink();
-                      }
-                      final canBio = snap.data == true;
-                      if (!canBio) return const SizedBox.shrink();
-
-                      return SizedBox(
-                        height: 52,
-                        child: OutlinedButton.icon(
-                          onPressed: _checkingBio ? null : _onBiometricPressed,
-                          icon: const Icon(Icons.fingerprint),
-                          label: _checkingBio
-                              ? const SizedBox(
-                                  width: 20, height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Text('Sign in with biometrics'),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'AceUp',
+                        style: AppTypography.logo.copyWith(
+                          color: colors.onPrimary,
+                          fontSize: 54,
                         ),
-                      );
-                    },
-                  ),
-
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('Not a member? '),
-                      TextButton(
-                        onPressed: () => Navigator.pushNamed(context, '/signup'),
-                        child: const Text('Register now'),
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
+
+            // ---------- BOTTOM (scrollable form + register) ----------
+            Expanded(
+              flex: 4,
+              child: SingleChildScrollView(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                child: Form(
+                  key: _form,
+                  autovalidateMode: autoMode,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: 12),
+                      Text(
+                        'Welcome Back!',
+                        style: AppTypography.h1.copyWith(color: colors.onPrimary),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _email,
+                        maxLength: 40,
+                        keyboardType: TextInputType.emailAddress,
+                        validator: _valEmail,
+                        decoration:
+                        _decorStandard(context, hint: 'Email Address'),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _pass,
+                        maxLength: 40,
+                        obscureText: _obscure,
+                        validator: _valPass,
+                        decoration: _decorStandard(
+                          context,
+                          hint: 'Password',
+                          suffix: IconButton(
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
+                            icon: Icon(
+                              _obscure
+                                  ? AppIcons.visibilityOff
+                                  : AppIcons.visibilityOn,
+                              size: 18,
+                            ),
+                            color: colors.outline,
+                          ),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton(
+                          onPressed: _openForgotPassword,
+                          child: Text(
+                            'Forgot password?',
+                            style: AppTypography.actionM.copyWith(
+                              color: colors.onSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 52,
+                        child: FilledButton(
+                          onPressed: loading ? null : _submit,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: colors.primary,
+                            foregroundColor: colors.onPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: loading
+                              ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2),
+                          )
+                              : const Text('Login',
+                              style: AppTypography.actionM),
+                        ),
+                      ),
+
+                      // --- Botón biométrico SI el device soporta biometría ---
+                      const SizedBox(height: 6),
+                      FutureBuilder<bool>(
+                        future: BiometricService().canUseBiometrics(),
+                        builder: (context, snap) {
+                          if (snap.connectionState != ConnectionState.done) {
+                            return const SizedBox.shrink();
+                          }
+                          final canBio = snap.data == true;
+                          if (!canBio) return const SizedBox.shrink();
+
+                          return SizedBox(
+                            height: 52,
+                            child: OutlinedButton.icon(
+                              onPressed:
+                              _checkingBio ? null : _onBiometricPressed,
+                              icon: Icon(AppIcons.fingerprint),
+                              label: _checkingBio
+                                  ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2),
+                              )
+                                  : const Text('Sign in with biometrics',
+                                  style: AppTypography.actionM),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'New to AceUp? ',
+                            style: AppTypography.bodyS.copyWith(
+                              color: colors.onPrimary,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.pushNamed(context, '/signup'),
+                            child: Text(
+                              'Register now',
+                              style: AppTypography.actionM.copyWith(
+                                color: colors.onSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
