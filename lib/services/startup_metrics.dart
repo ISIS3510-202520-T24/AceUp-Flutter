@@ -1,7 +1,9 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:package_info_plus/package_info_plus.dart'; // ignore: uri_does_not_exist
+import 'package:supabase_flutter/supabase_flutter.dart'; // ignore: uri_does_not_exist
+
+// ignore_for_file: undefined_identifier
 
 final Stopwatch _sw = Stopwatch()..start();
 

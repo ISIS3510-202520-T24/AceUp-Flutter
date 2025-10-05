@@ -84,7 +84,7 @@ class _SharedScreenState extends State<SharedScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: colors.primary,
         onPressed: () => _showAddOrUpdateGroupDialog(context, viewModel),
-        child: Icon(Icons.add, size: 28, color: colors.onPrimary),
+        child: Icon(Icons.add, size: 18, color: colors.onPrimary),
       ),
     );
   }

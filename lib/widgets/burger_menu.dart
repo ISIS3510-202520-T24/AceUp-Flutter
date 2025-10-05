@@ -25,13 +25,14 @@ class BurgerMenu extends StatelessWidget {
               bottom: false,
               child: Text(
                 "AceUp",
-                style: AppTypography.h1.copyWith(color: colors.tertiary),
+                style: AppTypography.logo.copyWith(color: colors.tertiary),
               ),
             ),
           ),
 
           Expanded(
             child: ListView(
+              physics: const NeverScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
                 Padding(
@@ -123,7 +124,6 @@ class BurgerMenu extends StatelessWidget {
             ),
           ),
 
-          // Logout button pinned at the bottom
           Container(
             decoration: BoxDecoration(
               border: Border(
@@ -133,17 +133,22 @@ class BurgerMenu extends StatelessWidget {
                 ),
               ),
             ),
-            child: ListTile(
-              leading: Icon(Icons.logout, color: colors.primary),
-              title: Text(
-                'Logout',
-                style: AppTypography.actionL.copyWith(color: colors.onSurface),
+            child:
+            SafeArea(
+              top: false,
+              child:
+              ListTile(
+                leading: Icon(AppIcons.logout, color: colors.primary),
+                title: Text(
+                  'Logout',
+                  style: AppTypography.actionL.copyWith(color: colors.onSurface),
+                ),
+                onTap: () async {
+                  await context.read<AuthService>().signOut();
+                  if (!context.mounted) return;
+                  Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
+                },
               ),
-              onTap: () async {
-                await context.read<AuthService>().signOut();
-                if (!context.mounted) return;
-                Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
-              },
             ),
           ),
         ],
