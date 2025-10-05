@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+
 import 'views/assignments/assignments_screen.dart';
 import 'views/auth/logout_screen.dart';
 import 'views/auth/login_screen.dart';
@@ -9,24 +10,43 @@ import 'views/auth/biometric_screen.dart';
 import 'views/holidays/holidays_screen.dart';
 import 'views/today/today_screen.dart';
 import 'views/shared/shared_screen.dart';
+
 import 'themes/app_theme.dart';
+
 import 'services/auth_service.dart';
+import 'services/notification_service.dart';
 import 'viewmodels/login_viewmodel.dart';
 import 'viewmodels/signup_viewmodel.dart';
 import 'viewmodels/holidays_viewmodel.dart';
-import 'package:firebase_auth/firebase_auth.dart'; //ignore: uri_does_not_exist
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
-import 'services/notification_service.dart';
+
+// ⬇️ Metrización de inicio y Supabase
+import 'package:supabase_flutter/supabase_flutter.dart' hide User;
+import 'services/startup_ttfp.dart';
 
 //ignore_for_file: non_type_as_type_argument
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // ⬇⬇⬇ Arranca el cronómetro ANTES de cualquier await/inicialización pesada
+  StartupTTFP.start();
+
+  // Inicializa Supabase para que StartupTTFP pueda insertar métricas
+  await Supabase.initialize(
+    url: 'https://qaotvqrayazjhkykevbo.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhb3R2cXJheWF6amhreWtldmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTYwNTcsImV4cCI6MjA3NTE3MjA1N30.R9i8RqEUFMzx6Uh0q2vHZ7H8gDVYzb1A0CbhiE030kc',
+  );
+
+  // Firebase (si ya lo tenías)
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // Notificaciones (si ya lo tenías)
   await NotificationService().initNotifications();
 
   runApp(
@@ -68,7 +88,7 @@ class MyApp extends StatelessWidget {
         '/holidays': (context) => const HolidaysScreen(),
         '/account': (context) => const LogoutScreen(),
         '/shared': (context) => const SharedScreenWrapper(),
-        '/assignments' : (context) => const AssignmentsScreen(),
+        '/assignments': (context) => const AssignmentsScreen(),
       },
     );
   }
