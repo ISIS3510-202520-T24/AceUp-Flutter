@@ -38,25 +38,25 @@ class GroupDetailViewModel extends ChangeNotifier {
   }
 
   Future<void> _loadGroupData() async {
-    print('🔄 Loading group data for groupId: $groupId');
+    print('Loading group data for groupId: $groupId');
     _setState(ViewState.loading);
     try {
       // 1. Obtener detalles del grupo y sus miembros
-      print('📥 Getting group details...');
+      print('Getting group details...');
       final group = await _groupService.getGroupDetails(groupId);
-      print('✅ Group found: ${group.name}, members: ${group.memberUids}');
+      print('Group found: ${group.name}, members: ${group.memberUids}');
 
       _groupMembers = await _getGroupMembers(group.memberUids);
-      print('👥 Group members loaded: ${_groupMembers.length}');
+      print('Group members loaded: ${_groupMembers.length}');
       
       // 2. Obtener todos los eventos para los miembros del grupo
-      print('📅 Loading events for group...');
+      print('Loading events for group...');
       await _loadAllEventsForGroup();
-      print('🎉 Total events loaded: ${_allEvents.length}');
+      print('Total events loaded: ${_allEvents.length}');
       
       _setState(ViewState.idle);
     } catch (e) {
-      print('❌ Error loading group data: $e');
+      print('Error loading group data: $e');
       _errorMessage = e.toString();
       _setState(ViewState.error);
 

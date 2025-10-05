@@ -146,11 +146,10 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
 // EN group_detail_screen.dart
 Widget _buildWeekSelector(ColorScheme colors) {
   return Container(
-    padding: const EdgeInsets.symmetric(vertical: 12.0),
+    padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0), // Añadido padding horizontal
     color: Colors.white,
     child: Row(
       children: [
-        // Flecha Izquierda (sin cambios)
         IconButton(
           icon: Icon(Icons.arrow_left, color: colors.onPrimaryContainer),
           onPressed: () {
@@ -161,31 +160,28 @@ Widget _buildWeekSelector(ColorScheme colors) {
             );
           },
         ),
-        // ===================================================================
-        // == CORRECCIÓN CLAVE: Envolvemos la fila de días en un Expanded ==
-        // ===================================================================
         Expanded(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: _weekDays.map((day) {
               final isSelected = DateUtils.isSameDay(day.date, _selectedDate);
+              // Ahora el `Expanded` está aquí, envolviendo directamente el DayItem
               return Expanded(
-              child:_buildDayItem(colors, day, isSelected: isSelected, onTap: () {
-                if (!DateUtils.isSameDay(_selectedDate, day.date)) {
-                  final today = DateUtils.dateOnly(DateTime.now());
-                  final difference = day.date.difference(today).inDays;
-                  _pageController.animateToPage(
-                    _initialPage + difference, 
-                    duration: const Duration(milliseconds: 400), 
-                    curve: Curves.easeInOut,
-                  );
-                }
-              }),
+                child: _buildDayItem(colors, day, isSelected: isSelected, onTap: () {
+                  if (!DateUtils.isSameDay(_selectedDate, day.date)) {
+                    final today = DateUtils.dateOnly(DateTime.now());
+                    final difference = day.date.difference(today).inDays;
+                    _pageController.animateToPage(
+                      _initialPage + difference, 
+                      duration: const Duration(milliseconds: 400), 
+                      curve: Curves.easeInOut,
+                    );
+                  }
+                }),
               );
             }).toList(),
           ),
         ),
-        // Flecha Derecha (sin cambios)
         IconButton(
           icon: Icon(Icons.arrow_right, color: colors.onPrimaryContainer),
           onPressed: () {
@@ -202,25 +198,54 @@ Widget _buildWeekSelector(ColorScheme colors) {
 } 
   
   Widget _buildDayItem(ColorScheme colors, Day day, {required bool isSelected, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? colors.secondary : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(day.shortName, style: TextStyle(fontSize: 12, color: colors.onPrimaryContainer, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text(day.dayNumber.toString(), style: TextStyle(fontSize: 18, color: colors.onSurfaceVariant, fontWeight: FontWeight.bold)),
-          ],
+  // Para que MON, TUE, WED... se muestren en varias líneas si es necesario
+  final shortNameFormatted = day.shortName.replaceAllMapped(RegExp(r'.'), (match) => '${match.group(0)}\n').trim();
+
+  return GestureDetector(
+    onTap: onTap,
+    // Usamos un Material para el efecto de splash (ripple) al tocar
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16), // Para que el splash sea redondeado
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? colors.secondary : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                shortNameFormatted,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isSelected ? colors.onSecondary : colors.onPrimaryContainer,
+                  fontWeight: FontWeight.bold,
+                  height: 1.1, // Reduce el espacio entre líneas
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                day.dayNumber.toString(),
+                style: TextStyle(
+                  fontSize: 18,
+                  color: isSelected ? colors.onSecondary : colors.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildEventList(BuildContext context, GroupDetailViewModel viewModel, List<CalendarEvent> events, DateTime forDate) {
     if (viewModel.state == ViewState.loading && events.isEmpty) {
@@ -346,8 +371,6 @@ Widget _buildWeekSelector(ColorScheme colors) {
                       final finalEndTime = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, selectedEndTime.hour, selectedEndTime.minute);
 
                       if (isUpdating) {
-                        // La actualización requiere el ID original de Firestore, que no tenemos.
-                        // viewModel.updateGroupEvent(event.originalId, title, finalStartTime, finalEndTime);
                       } else {
                         viewModel.addGroupEvent(title, finalStartTime, finalEndTime);
                       }
