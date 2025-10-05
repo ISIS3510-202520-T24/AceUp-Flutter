@@ -5,21 +5,17 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-// Función de ayuda para obtener la fecha actual en una zona horaria específica (ej. UTC-5)
-function getNowInTimezone(offsetHours = -5) {
-  const nowUtc = new Date();
-  const nowInTimezone = new Date(nowUtc.getTime() + offsetHours * 60 * 60 * 1000);
-  return nowInTimezone;
-}
-
+// ===================================================================
+// == FUNCIÓN 1: NOTIFICAR CUANDO ALGUIEN QUEDA LIBRE (PROGRAMADA) ==
+// ===================================================================
 exports.notifyOnFreeMembers = onSchedule("every 5 minutes", async (event) => {
-  logger.info("--- Function Start ---");
+  logger.info("--- [notifyOnFreeMembers] Function Start ---");
 
-  const now = getNowInTimezone(-5);;
+  const now = new Date();
   const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
   const db = admin.firestore();
 
-  logger.info(`Checking for events that ended between: ${fiveMinutesAgo.toISOString()} and ${now.toISOString()}`);
+  logger.info(`Checking for events that ended between (UTC): ${fiveMinutesAgo.toISOString()} and ${now.toISOString()}`);
 
   try {
     const groupsSnapshot = await db.collection("groups").get();
@@ -29,18 +25,17 @@ exports.notifyOnFreeMembers = onSchedule("every 5 minutes", async (event) => {
       const group = groupDoc.data();
       const groupName = group.name || "Unnamed Group";
       const memberUids = group.members || [];
-      logger.info(`Processing group: "${groupName}" with ${memberUids.length} members.`);
-
+      
       if (memberUids.length < 1) continue;
+      logger.info(`Processing group: "${groupName}"`);
 
       const recentlyFreedMemberDocs = [];
 
       for (const memberId of memberUids) {
-        logger.debug(`-> Checking member: ${memberId}`);
         const userRef = db.collection("users").doc(memberId);
         let justBecameFree = false;
 
-        // 1. Revisar eventos personales (ruta simple)
+        // 1. Revisar eventos personales con Timestamp
         const personalEventsSnap = await userRef.collection("events")
           .where("endTime", ">=", admin.firestore.Timestamp.fromDate(fiveMinutesAgo))
           .where("endTime", "<=", admin.firestore.Timestamp.fromDate(now))
@@ -51,20 +46,13 @@ exports.notifyOnFreeMembers = onSchedule("every 5 minutes", async (event) => {
           justBecameFree = true;
         }
 
-        // ===================================================================
-        // == CORRECCIÓN CLAVE: Búsqueda anidada para eventos académicos ==
-        // ===================================================================
+        // 2. Revisar eventos académicos (exámenes y clases)
         if (!justBecameFree) {
-          logger.debug(`   - No personal events found. Checking academic events for ${memberId}...`);
-          // 2. Revisar eventos académicos (ruta anidada)
           const termsSnap = await userRef.collection("terms").get();
-
-          // Usamos un bucle 'for...of' para poder usar 'await' dentro y salir temprano
           for (const termDoc of termsSnap.docs) {
             const subjectsSnap = await termDoc.ref.collection("subjects").get();
             for (const subjectDoc of subjectsSnap.docs) {
               
-              // Buscar en la subcolección 'exams'
               const examsSnap = await subjectDoc.ref.collection("exams")
                 .where("endTime", ">=", admin.firestore.Timestamp.fromDate(fiveMinutesAgo))
                 .where("endTime", "<=", admin.firestore.Timestamp.fromDate(now))
@@ -73,49 +61,24 @@ exports.notifyOnFreeMembers = onSchedule("every 5 minutes", async (event) => {
               if (!examsSnap.empty) {
                 logger.info(`   ✅ Member ${memberId} just finished an EXAM in subject ${subjectDoc.id}!`);
                 justBecameFree = true;
-                break; // Salir del bucle de materias
+                break;
               }
-            }
-            if (justBecameFree) {
-              break; // Salir del bucle de semestres
-            }
-          }
-        }
-        
-        // La lógica para las 'classes' es más compleja y se puede añadir después si es necesario
-        if (!justBecameFree) {
-          logger.debug(`   - No Timestamp events found. Checking recurring classes for ${memberId}...`);
-          const termsSnap = await userRef.collection("terms").get();
-
-          for (const termDoc of termsSnap.docs) {
-            const subjectsSnap = await termDoc.ref.collection("subjects").get();
-            for (const subjectDoc of subjectsSnap.docs) {
+              
               const classesSnap = await subjectDoc.ref.collection("classes").get();
-
               for (const classDoc of classesSnap.docs) {
                 const classData = classDoc.data();
-                const dayOfWeek = classData.dayOfWeek; // Es un número (ej. 1 para Lunes)
-                const endTimeStr = classData.endTime; // Es un string (ej. "10:00")
+                const dayOfWeek = classData.dayOfWeek;
+                const endTimeStr = classData.endTime;
 
-                // Asegurarnos de que tenemos los datos necesarios
                 if (typeof dayOfWeek !== "number" || typeof endTimeStr !== "string") continue;
 
-                // Comprobar si el día de la semana de "ahora" coincide con el de la clase
-                // Nota: en JS, getDay() es Domingo=0, Lunes=1.. Sábado=6. Firestore usa Lunes=1.. Domingo=7.
-                // Hacemos un ajuste para que coincidan.
-                const nowDayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
+                const nowDayOfWeekUTC = now.getUTCDay() === 0 ? 7 : now.getUTCDay();
                 
-                if (nowDayOfWeek === dayOfWeek) {
-                  // Calcular la hora de fin de la clase para el día de HOY
+                if (nowDayOfWeekUTC === dayOfWeek) {
                   const [hour, minute] = endTimeStr.split(":").map(Number);
-                  const classEndTimeToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute);
-
-                  const classEndTimeTodayInTimezone = new Date(classEndTimeToday.getTime() - (5 * 60 * 60 * 1000));
+                  const classEndTimeTodayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), hour, minute));
                   
-                  logger.debug(`   - Checking class: day=${dayOfWeek}, endTime=${endTimeStr}. Calculated endTime in UTC-5: ${classEndTimeToday.toLocaleString("en-US", {timeZone: "America/Bogota"})}`);
-
-                  // Comprobar si esa hora de fin cae en nuestro rango de 5 minutos
-                  if (classEndTimeToday >= fiveMinutesAgo && classEndTimeToday <= now) {
+                  if (classEndTimeTodayUTC >= fiveMinutesAgo && classEndTimeTodayUTC <= now) {
                     logger.info(`   ✅ Member ${memberId} just finished a CLASS: ${subjectDoc.data().name}!`);
                     justBecameFree = true;
                     break;
@@ -128,7 +91,6 @@ exports.notifyOnFreeMembers = onSchedule("every 5 minutes", async (event) => {
           }
         }
 
-
         if (justBecameFree) {
           const userDoc = await userRef.get();
           if (userDoc.exists) {
@@ -138,55 +100,26 @@ exports.notifyOnFreeMembers = onSchedule("every 5 minutes", async (event) => {
       }
 
       if (recentlyFreedMemberDocs.length > 0) {
-        const freedNames = recentlyFreedMemberDocs.map(doc => doc.data().nick || "A member");
-        const freedUids = recentlyFreedMemberDocs.map(doc => doc.id);
-
-        logger.info(`   🎉 Members who just became free in "${groupName}": ${freedNames.join(", ")}`);
-
-        const notificationTitle = `Update from ${groupName}`;
-        const notificationBody = `Now available: ${freedNames.join(", ")}.`;
-
-        // Obtener los UIDs de los miembros a notificar (todos EXCEPTO los que quedaron libres)
-        const uidsToNotify = memberUids.filter(uid => !freedUids.includes(uid));
-        
-        if (uidsToNotify.length > 0) {
-          logger.info(`   📬 Preparing to notify UIDs: ${uidsToNotify.join(", ")}`);
-          const tokens = await getTokensForUids(uidsToNotify);
-
-          if (tokens.length > 0) {
-            logger.info(`   📲 Found ${tokens.length} FCM tokens. Sending notification...`);
-            const message = {
-              notification: { title: notificationTitle, body: notificationBody },
-              tokens: tokens,
-            };
-            await admin.messaging().sendEachForMulticast(message);
-            logger.info(`   ✅ Notification sent successfully.`);
-          } else {
-            logger.warn(`   ⚠️ No FCM tokens found for users to notify in group "${groupName}".`);
-          }
-        } else {
-          logger.info(`   - No other members in the group to notify.`);
-        }
+        await notifyOnAvailabilityChange(group, recentlyFreedMemberDocs);
       } else {
         logger.info(`No members became free in group "${groupName}" during this check.`);
       }
     }
   } catch (error) {
-    logger.error("❌ CRITICAL ERROR in notifyOnFreeMembers function:", error);
+    logger.error("❌ CRITICAL ERROR in notifyOnFreeMembers:", error);
   }
-  logger.info("--- Function End ---");
+  logger.info("--- [notifyOnFreeMembers] Function End ---");
 });
 
-
 // ===================================================================
-// == TRIGGERS: El punto de entrada ==
+// == FUNCIÓN 2: NOTIFICAR CUANDO UN HORARIO CAMBIA (TRIGGERS) ==
 // ===================================================================
 exports.onUserEventChange = onDocumentWritten("users/{userId}/events/{eventId}", (event) => {
   return compareTimeFieldsAndNotify(event, "personal event", ["startTime", "endTime"]);
 });
 
 exports.onUserAssignmentChange = onDocumentWritten("users/{userId}/terms/{termId}/subjects/{subjectId}/assignments/{assignmentId}", (event) => {
-  return compareTimeFieldsAndNotify(event, "assignment", ["dueTime"]);
+  return compareTimeFieldsAndNotify(event, "assignment", ["dueDate"]);
 });
 
 exports.onUserExamChange = onDocumentWritten("users/{userId}/terms/{termId}/subjects/{subjectId}/exams/{examId}", (event) => {
@@ -198,21 +131,20 @@ exports.onUserClassChange = onDocumentWritten("users/{userId}/terms/{termId}/sub
 });
 
 // ===================================================================
-// == FUNCIÓN DE AYUDA PARA COMPARAR CAMPOS DE TIEMPO ==
+// == FUNCIONES DE AYUDA REUTILIZABLES ==
 // ===================================================================
+
 async function compareTimeFieldsAndNotify(event, eventType, timeFields) {
   const userId = event.params.userId;
   const beforeSnap = event.data.before;
   const afterSnap = event.data.after;
 
-  // Creado o borrado -> notificar
   if (!beforeSnap.exists || !afterSnap.exists) {
     logger.info(`New/deleted ${eventType} for user ${userId}. Triggering notification.`);
-    await notifyGroupMembers(userId, eventType);
+    await notifyOnScheduleUpdate(userId);
     return;
   }
 
-  // Actualizado -> comparar campos
   const beforeData = beforeSnap.data();
   const afterData = afterSnap.data();
   let timeChanged = false;
@@ -238,16 +170,13 @@ async function compareTimeFieldsAndNotify(event, eventType, timeFields) {
 
   if (timeChanged) {
     logger.info(`A time field in [${timeFields.join(', ')}] changed for ${eventType} on user ${userId}. Triggering notification.`);
-    await notifyGroupMembers(userId, eventType);
+    await notifyOnScheduleUpdate(userId);
   } else {
     logger.info(`Change detected for ${eventType} on user ${userId}, but no time fields were modified. No notification sent.`);
   }
 }
 
-// ===================================================================
-// == FUNCIÓN DE AYUDA PARA ENVIAR LAS NOTIFICACIONES ==
-// ===================================================================
-async function notifyGroupMembers(userId, eventTypeDescription) {
+async function notifyOnScheduleUpdate(userId) {
   try {
     const userDoc = await admin.firestore().collection("users").doc(userId).get();
     if (!userDoc.exists) {
@@ -272,25 +201,47 @@ async function notifyGroupMembers(userId, eventTypeDescription) {
       const uidsToNotify = (group.members || []).filter(memberId => memberId !== userId);
 
       if (uidsToNotify.length > 0) {
-        logger.info(`   - Group "${groupName}": Notifying ${uidsToNotify.length} members.`);
-        const tokens = await getTokensForUids(uidsToNotify);
-        if (tokens.length > 0) {
-          const notificationTitle = `Update from ${groupName}`;
-          const notificationBody = `${userName} has updated their calendar. Their availability may have changed.`;
-          const message = {
-            notification: { title: notificationTitle, body: notificationBody },
-            tokens: tokens,
-          };
-          await admin.messaging().sendEachForMulticast(message);
-          logger.info(`     ✅ Notifications sent successfully for group "${groupName}".`);
-        } else {
-          logger.warn(`     ⚠️ No FCM tokens found for members of group "${groupName}".`);
-        }
+        // CORRECCIÓN: Usa backticks (`) para la interpolación
+        const notificationBody = `${userName} has updated their calendar. Their availability may have changed.`;
+        await sendNotification(groupName, uidsToNotify, notificationBody);
       }
     }
   } catch (error) {
-    logger.error(`❌ CRITICAL ERROR in notifyGroupMembers for user ${userId}:`, error);
+    logger.error(`❌ CRITICAL ERROR in notifyOnScheduleUpdate for user ${userId}:`, error);
   }
+}
+
+async function notifyOnAvailabilityChange(groupData, freedMemberDocs) {
+    const groupName = groupData.name || "Unnamed Group";
+    const memberUids = groupData.members || [];
+    const freedNames = freedMemberDocs.map(doc => doc.data().nick || "A member");
+    const freedUids = freedMemberDocs.map(doc => doc.id);
+
+    // CORRECCIÓN: Usa backticks (`) para la interpolación
+    const notificationBody = `Now available: ${freedNames.join(", ")}.`;
+    const uidsToNotify = memberUids.filter(uid => !freedUids.includes(uid));
+
+    if (uidsToNotify.length > 0) {
+        await sendNotification(groupName, uidsToNotify, notificationBody);
+    } else {
+        logger.info(`- No other members in the group to notify.`);
+    }
+}
+
+async function sendNotification(groupName, uidsToNotify, notificationBody) {
+    logger.info(`   📬 Preparing to notify UIDs: ${uidsToNotify.join(", ")}`);
+    const tokens = await getTokensForUids(uidsToNotify);
+    if (tokens.length > 0) {
+        logger.info(`   📲 Found ${tokens.length} FCM tokens. Sending notification...`);
+        const message = {
+            notification: { title: `Update from ${groupName}`, body: notificationBody },
+            tokens: tokens,
+        };
+        await admin.messaging().sendEachForMulticast(message);
+        logger.info(`   ✅ Notification sent successfully.`);
+    } else {
+        logger.warn(`   ⚠️ No FCM tokens found for users to notify.`);
+    }
 }
 
 async function getTokensForUids(uids) {

@@ -84,10 +84,8 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
       appBar: TopBar(
         title: "Shared",
         leftControlType: LeftControlType.menu,
-        rightControlType: RightControlType.edit,
-        onRightPressed: () {
-          context.read<GroupDetailViewModel>().refreshData();
-        },
+        rightControlType: RightControlType.none,
+        onRightPressed: () {},
       ),
       body: Column(
         children: [
@@ -145,65 +143,63 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
     );
   }
 
-  Widget _buildWeekSelector(ColorScheme colors) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
-      color: Colors.white,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Flecha Izquierda
-          IconButton(
-            icon: Icon(Icons.arrow_left, color: colors.onPrimaryContainer),
-            onPressed: () {
-              // Saltamos 7 páginas hacia atrás
-              _pageController.animateToPage(
-                _pageController.page!.round() - 7,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
+// EN group_detail_screen.dart
+Widget _buildWeekSelector(ColorScheme colors) {
+  return Container(
+    padding: const EdgeInsets.symmetric(vertical: 12.0),
+    color: Colors.white,
+    child: Row(
+      children: [
+        // Flecha Izquierda (sin cambios)
+        IconButton(
+          icon: Icon(Icons.arrow_left, color: colors.onPrimaryContainer),
+          onPressed: () {
+            _pageController.animateToPage(
+              _pageController.page!.round() - 7,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          },
+        ),
+        // ===================================================================
+        // == CORRECCIÓN CLAVE: Envolvemos la fila de días en un Expanded ==
+        // ===================================================================
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: _weekDays.map((day) {
+              final isSelected = DateUtils.isSameDay(day.date, _selectedDate);
+              return Expanded(
+              child:_buildDayItem(colors, day, isSelected: isSelected, onTap: () {
+                if (!DateUtils.isSameDay(_selectedDate, day.date)) {
+                  final today = DateUtils.dateOnly(DateTime.now());
+                  final difference = day.date.difference(today).inDays;
+                  _pageController.animateToPage(
+                    _initialPage + difference, 
+                    duration: const Duration(milliseconds: 400), 
+                    curve: Curves.easeInOut,
+                  );
+                }
+              }),
               );
-            },
-
+            }).toList(),
           ),
-          // Usamos Expanded para que los días ocupen el espacio disponible
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: _weekDays.map((day) {
-                final isSelected = DateUtils.isSameDay(day.date, _selectedDate);
-                return _buildDayItem(colors, day, isSelected: isSelected, onTap: () {
-                  if (!DateUtils.isSameDay(_selectedDate, day.date)) {
-                    final today = DateUtils.dateOnly(DateTime.now());
-                    final difference = day.date.difference(today).inDays;
-                    final targetPage = _initialPage + difference;
-
-                    _pageController.animateToPage(
-                      targetPage, 
-                      duration: const Duration(milliseconds: 400), 
-                      curve: Curves.easeInOut,
-                    );
-                  }
-                });
-              }).toList(),
-            ),
-          ),
-          // Flecha Derecha
-          IconButton(
-            icon: Icon(Icons.arrow_right, color: colors.onPrimaryContainer),
-            onPressed: () {
-              // Saltamos 7 páginas hacia adelante
-              _pageController.animateToPage(
-                _pageController.page!.round() + 7,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut,
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+        // Flecha Derecha (sin cambios)
+        IconButton(
+          icon: Icon(Icons.arrow_right, color: colors.onPrimaryContainer),
+          onPressed: () {
+            _pageController.animateToPage(
+              _pageController.page!.round() + 7,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          },
+        ),
+      ],
+    ),
+  );
+} 
   
   Widget _buildDayItem(ColorScheme colors, Day day, {required bool isSelected, required VoidCallback onTap}) {
     return GestureDetector(
@@ -266,13 +262,11 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         
         if (canDismiss) {
           return Dismissible(
-            key: Key(event.startTime.toIso8601String() + event.title),
+            key: Key(event.id),
             direction: DismissDirection.endToStart,
             onDismissed: (_) {
-              // Esta acción requiere el ID original del evento de Firestore,
-              // que no guardamos en CalendarEvent para mantenerlo simple.
-              // viewModel.deleteGroupEvent(event.originalId); 
-              ScaffoldMessenger.of(context)..removeCurrentSnackBar()..showSnackBar(SnackBar(content: Text('Delete for group events is not yet implemented.')));
+              viewModel.deleteGroupEvent(event.id);
+              ScaffoldMessenger.of(context)..removeCurrentSnackBar()..showSnackBar(SnackBar(content: Text('"${event.title}" deleted')));
             },
             background: Container(color: Colors.red.shade400, alignment: Alignment.centerRight, padding: const EdgeInsets.symmetric(horizontal: 20.0), child: const Icon(Icons.delete, color: Colors.white)),
             child: eventTile,
