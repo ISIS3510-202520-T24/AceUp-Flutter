@@ -10,12 +10,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="83f1ba98-ac45-48c6-90e8-73adca6f18e6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/lib/models/assignment_model.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/services/assignment_service.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/themes/app_icons.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/themes/app_icons.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/viewmodels/assignments_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/assignments_viewmodel.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/viewmodels/today_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/today_viewmodel.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/views/assignments/assignments_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/assignments/assignments_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/holidays/holidays_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/holidays/holidays_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/views/today/today_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/today/today_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/widgets/floating_action_button.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/floating_action_button.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -104,7 +106,7 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "feature/48-implement-assigments-screen-and-context-aware-feature",
+    "git-widget-placeholder": "feature/49-implement-answer-to-bq-22-on-today-screen",
     "io.flutter.reload.alreadyRun": "true",
     "last_opened_file_path": "C:/Users/LAURA/AceUp-Flutter/assets/icons",
     "project.structure.last.edited": "SDKs",

@@ -16,6 +16,7 @@ class AppIcons {
   static IconData edit = FontAwesomeIcons.pen;
   static IconData add = FontAwesomeIcons.plus;
   static IconData delete = FontAwesomeIcons.trashCan;
+  static IconData importance = FontAwesomeIcons.circleExclamation;
 
   static IconData chalkboard = FontAwesomeIcons.chalkboard;
   static IconData exam = FontAwesomeIcons.flagCheckered;
