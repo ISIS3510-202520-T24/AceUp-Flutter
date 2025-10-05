@@ -1,0 +1,38 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "aceup-app-123",
+          "appId": "1:372482326957:android:74f7ad8255ce5fd06d2124",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "aceup-app-123",
+          "configurations": {
+            "android": "1:372482326957:android:74f7ad8255ce5fd06d2124",
+            "ios": "1:372482326957:ios:9f35e3e0f9f398206d2124",
+            "macos": "1:372482326957:ios:9f35e3e0f9f398206d2124",
+            "web": "1:372482326957:web:d5c43dae549d6f5d6d2124",
+            "windows": "1:372482326957:web:e36a8b4b3655f4296d2124"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ]
+    }
+  ]
+}

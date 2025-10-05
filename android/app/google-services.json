@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "372482326957",
+    "project_id": "aceup-app-123",
+    "storage_bucket": "aceup-app-123.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:372482326957:android:74f7ad8255ce5fd06d2124",
+        "android_client_info": {
+          "package_name": "com.aceup.aceup_clean"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmuN2IJQfpzuWgO5SvsHKhY89AjV8OLWk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:372482326957:android:77c59121ab6b2f246d2124",
+        "android_client_info": {
+          "package_name": "com.aceup.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmuN2IJQfpzuWgO5SvsHKhY89AjV8OLWk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
