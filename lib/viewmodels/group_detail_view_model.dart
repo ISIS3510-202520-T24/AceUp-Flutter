@@ -79,7 +79,7 @@ class GroupDetailViewModel extends ChangeNotifier {
           members.add(user);
           print('✅ Found user: ${user.nick} (${user.email})');
         } else {
-          print('⚠️ User not found for UID: $uid');
+          print('⚠ User not found for UID: $uid');
         }
       }
       return members;
@@ -365,6 +365,24 @@ class GroupDetailViewModel extends ChangeNotifier {
       return eventDate.isAtSameMomentAs(targetDate);
     }).toList();
   }
+
+  Future<void> deleteGroupEvent(String eventId) async {
+  // Eliminamos el evento de la lista local para una respuesta de UI instantánea
+  _allEvents.removeWhere((event) => event.id == eventId && event.type == EventType.group);
+  notifyListeners();
+  
+  // Llamamos al servicio para borrarlo permanentemente de la base de datos
+  try {
+    await _groupService.deleteEvent(groupId, eventId);
+    // No es estrictamente necesario recargar todo si la UI ya está actualizada,
+    // pero lo dejamos como respaldo en caso de error.
+  } catch (e) {
+    print('Error deleting group event: $e');
+    // Si la eliminación en el backend falla, recargamos todo para
+    // que el evento eliminado vuelva a aparecer y mantener la consistencia.
+    await _loadGroupData();
+  }
+}
 
   Future<void> addGroupEvent(String title, DateTime startTime, DateTime endTime) async {
     try {
