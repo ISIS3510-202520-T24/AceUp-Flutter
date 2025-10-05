@@ -3,6 +3,12 @@ import 'package:flutter/material.dart';
 class AppTypography {
   static const String fontFamily = 'Inter';
 
+  /// AceUp Wordmark
+  static const TextStyle logo = TextStyle(
+    fontFamily: 'Sansita',
+    fontSize: 32,
+  );
+
   /// Headings
   static const TextStyle h1 = TextStyle(
     fontFamily: fontFamily,

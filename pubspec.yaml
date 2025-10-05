@@ -75,6 +75,11 @@ flutter:
         - asset: assets/fonts/Inter-VariableFont.ttf
         - asset: assets/fonts/Inter-Italic-VariableFont.ttf
           style: italic
+    - family: Sansita
+      fonts:
+        - asset: assets/fonts/Sansita-ExtraBoldItalic.ttf
+          style: italic
+          weight: 800
 
 rename_app:
   name: "AceUp"

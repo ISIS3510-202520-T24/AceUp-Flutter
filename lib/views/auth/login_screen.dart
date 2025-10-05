@@ -365,7 +365,8 @@ Future<void> _handleBiometricAfterLogin({
         _showErrors ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: colors.surfaceDim,
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
