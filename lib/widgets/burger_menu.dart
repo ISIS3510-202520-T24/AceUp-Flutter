@@ -123,7 +123,6 @@ class BurgerMenu extends StatelessWidget {
             ),
           ),
 
-          // Logout button pinned at the bottom
           Container(
             decoration: BoxDecoration(
               border: Border(
@@ -134,7 +133,7 @@ class BurgerMenu extends StatelessWidget {
               ),
             ),
             child: ListTile(
-              leading: Icon(Icons.logout, color: colors.primary),
+              leading: Icon(AppIcons.logout, color: colors.primary),
               title: Text(
                 'Logout',
                 style: AppTypography.actionL.copyWith(color: colors.onSurface),

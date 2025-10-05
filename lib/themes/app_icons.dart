@@ -9,6 +9,7 @@ class AppIcons {
   static IconData arrowRight = FontAwesomeIcons.angleRight;
   static IconData fingerprint = FontAwesomeIcons.fingerprint;
   static IconData icons = FontAwesomeIcons.icons;
+  static IconData logout = FontAwesomeIcons.rightFromBracket;
 
   static IconData visibilityOff = FontAwesomeIcons.solidEyeSlash;
   static IconData visibilityOn = FontAwesomeIcons.solidEye;

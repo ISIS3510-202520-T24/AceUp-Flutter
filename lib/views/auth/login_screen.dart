@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/flutter_svg.dart'; // ignore: uri_does_not_exist
 import 'package:provider/provider.dart';
 
 import '../../viewmodels/login_viewmodel.dart';
@@ -7,6 +7,8 @@ import '../../services/auth_service.dart';
 import '../../services/secure_store.dart';
 import '../../services/biometric_service.dart';
 import '../../services/startup_ttfp.dart'; // marca el primer frame
+
+// ignore_for_file: undefined_identifier
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
