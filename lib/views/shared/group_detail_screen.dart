@@ -289,9 +289,30 @@ Widget _buildWeekSelector(ColorScheme colors) {
           return Dismissible(
             key: Key(event.id),
             direction: DismissDirection.endToStart,
+            confirmDismiss: (_) async {
+              return await showDialog<bool>(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text('Are you sure you want to delete the event?'),
+                    content: Text('Event: "${event.title}"'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('No'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('Yes'),
+                      ),
+                    ],
+                  );
+                },
+              ) ?? false;
+            },
             onDismissed: (_) {
               viewModel.deleteGroupEvent(event.id);
-              ScaffoldMessenger.of(context)..removeCurrentSnackBar()..showSnackBar(SnackBar(content: Text('"${event.title}" deleted')));
+              ScaffoldMessenger.of(context)..removeCurrentSnackBar()..showSnackBar(SnackBar(content: Text('"${event.title}" eliminado')));
             },
             background: Container(color: Colors.red.shade400, alignment: Alignment.centerRight, padding: const EdgeInsets.symmetric(horizontal: 20.0), child: const Icon(Icons.delete, color: Colors.white)),
             child: eventTile,
@@ -324,6 +345,7 @@ Widget _buildWeekSelector(ColorScheme colors) {
     showDialog(
       context: context,
       builder: (context) {
+        String errorMsg = '';
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
@@ -359,6 +381,11 @@ Widget _buildWeekSelector(ColorScheme colors) {
                       ),
                     ],
                   ),
+                  if (errorMsg.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(errorMsg, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                    ),
                 ],
               ),
               actions: [
@@ -370,7 +397,27 @@ Widget _buildWeekSelector(ColorScheme colors) {
                       final finalStartTime = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, selectedStartTime.hour, selectedStartTime.minute);
                       final finalEndTime = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, selectedEndTime.hour, selectedEndTime.minute);
 
-                      if (isUpdating) {
+                      // Validación de solapamiento para add y update
+                      final allEvents = viewModel.getEventsForDay(_selectedDate);
+                      final conflict = allEvents.any((e) {
+                        // Si es edición, no comparar contra sí mismo
+                        if (isUpdating && event != null && e.id == event.id) return false;
+                        if (e.type == EventType.classSession || e.type == EventType.assignment || e.type == EventType.exam) {
+                          final eStart = e.startTime;
+                          final eEnd = e.endTime;
+                          return finalStartTime.isBefore(eEnd) && finalEndTime.isAfter(eStart);
+                        }
+                        return false;
+                      });
+                      if (conflict) {
+                        setDialogState(() {
+                          errorMsg = 'The event is interfering with a class, assignment, or exam. Please choose another time slot.';
+                        });
+                        return;
+                      }
+
+                      if (isUpdating && event != null) {
+                        viewModel.updateGroupEvent(event.id, title, finalStartTime, finalEndTime);
                       } else {
                         viewModel.addGroupEvent(title, finalStartTime, finalEndTime);
                       }

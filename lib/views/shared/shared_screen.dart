@@ -8,6 +8,7 @@ import '../../widgets/burger_menu.dart';
 import 'group_detail_screen.dart';
 import '../../widgets/top_bar.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/floating_action_button.dart';
 
 // Wrapper para proveer el ViewModel (sin cambios)
 class SharedScreenWrapper extends StatelessWidget {
@@ -30,6 +31,7 @@ class SharedScreen extends StatefulWidget {
 }
 
 class _SharedScreenState extends State<SharedScreen> {
+
   @override
   void initState() {
     super.initState();
@@ -44,10 +46,7 @@ class _SharedScreenState extends State<SharedScreen> {
   void _loadInitialData() {
     final authService = context.read<AuthService>();
     final userId = authService.currentUser?.uid;
-
-    if (userId != null) {
-      // Usamos context.read aquí porque solo necesitamos llamar a la función,
-      // no necesitamos que initState se reconstruya si el ViewModel cambia.
+    if (userId != null && userId.isNotEmpty) {
       context.read<SharedViewModel>().fetchGroups(userId);
     } else {
       print("Error: No user is currently logged in to fetch groups.");
@@ -68,24 +67,42 @@ class _SharedScreenState extends State<SharedScreen> {
         leftControlType: LeftControlType.menu,
         rightControlType: RightControlType.none,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildTotalGroupsCard(colors, viewModel.groups.length),
-            const SizedBox(height: 30),
-            Text('Shared Calendars', style: AppTypography.h4.copyWith(color: colors.onPrimary)),
-            const SizedBox(height: 20),
-            Expanded(child: _buildGroupList(context, colors, viewModel)), // Pasamos el contexto
-          ],
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+            child: _buildTotalGroupsCard(colors, viewModel.groups.length),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Text(
+              'Shared Calendars',
+              style: AppTypography.h4.copyWith(color: colors.onPrimary),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: _buildGroupList(context, colors, viewModel),
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: _buildFloatingActionButton(context, viewModel, colors),
+    );
+  }
+
+  Widget _buildFloatingActionButton(BuildContext context, SharedViewModel viewModel, ColorScheme colors) {
+    return FAB(
+      options: [
+        FabOption(
+          icon: AppIcons.add,
+          label: 'Add Group',
+          onPressed: () => _showAddOrUpdateGroupDialog(context, viewModel),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: colors.primary,
-        onPressed: () => _showAddOrUpdateGroupDialog(context, viewModel),
-        child: Icon(Icons.add, size: 18, color: colors.onPrimary),
-      ),
+      ],
     );
   }
 
@@ -97,8 +114,27 @@ class _SharedScreenState extends State<SharedScreen> {
     if (viewModel.state == ViewState.error) {
       return const Center(child: Text('Failed to load groups.'));
     }
+
     if (viewModel.groups.isEmpty) {
-      return const Center(child: Text('No groups found. Tap + to add one!'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              AppIcons.shared,
+              size: 64,
+              color: colors.onSurface.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No groups found. Tap + to add one!',
+              style: AppTypography.h5.copyWith(
+                color: colors.onSurface.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     return ListView.builder(
@@ -125,7 +161,6 @@ class _SharedScreenState extends State<SharedScreen> {
       },
     );
   }
-
   Widget _buildGroupListItem(BuildContext context, ColorScheme colors, SharedViewModel viewModel, Group group) {
     return InkWell(
       onTap: () {
@@ -193,7 +228,7 @@ class _SharedScreenState extends State<SharedScreen> {
     // Lista de controladores para los campos de email
     final List<TextEditingController> emailControllers = [];
     if (isUpdating) {
-      for (var member in group!.members) {
+      for (var member in group.members) {
         emailControllers.add(TextEditingController(text: member.email));
       }
     } else{
@@ -203,72 +238,87 @@ class _SharedScreenState extends State<SharedScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) {
+        String? emailError;
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
               title: Text(isUpdating ? 'Update Group' : 'Add Group'),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(labelText: 'Group Name')
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Member Emails:', style: TextStyle(fontWeight: FontWeight.bold)),
-                    // Usamos un ListView para la lista dinámica de campos
-                    Expanded(
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: emailControllers.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4.0),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: emailControllers[index],
-                                    decoration: InputDecoration(hintText: 'member${index + 1}@email.com'),
-                                    keyboardType: TextInputType.emailAddress,
+              content: SingleChildScrollView(
+                child: SizedBox(
+                  width: double.maxFinite,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: nameController,
+                        decoration: const InputDecoration(labelText: 'Group Name')
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Member Emails:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      // Usamos un ListView con altura acotada para evitar Expanded dentro de AlertDialog
+                      SizedBox(
+                        height: 150,
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: emailControllers.length,
+                          itemBuilder: (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: emailControllers[index],
+                                      decoration: InputDecoration(hintText: 'member${index + 1}@email.com'),
+                                      keyboardType: TextInputType.emailAddress,
+                                    ),
                                   ),
-                                ),
-                                // Botón para eliminar un campo de email
-                                IconButton(
-                                  icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-                                  onPressed: () {
-                                    // No permitir eliminar el último campo
-                                    if (emailControllers.length > 1) {
-                                      setDialogState(() {
-                                        emailControllers[index].dispose(); // Limpiar el controlador
-                                        emailControllers.removeAt(index);
-                                      });
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                                  // Botón para eliminar un campo de email
+                                  IconButton(
+                                    icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+                                    onPressed: () {
+                                      if (emailControllers.length > 1) {
+                                        final controllerToRemove = emailControllers[index];
+                                        setDialogState(() {
+                                          emailControllers.removeAt(index);
+                                        });
+                                        // Importante: eliminar el controlador después de que el widget haya sido removido del árbol
+                                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                                          controllerToRemove.dispose();
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                    // Botón para añadir un nuevo campo de email
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton.icon(
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add member'),
-                        onPressed: () {
-                          setDialogState(() {
-                            emailControllers.add(TextEditingController());
-                          });
-                        },
+                      // Botón para añadir un nuevo campo de email
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add member'),
+                          onPressed: () {
+                            setDialogState(() {
+                              emailControllers.add(TextEditingController());
+                            });
+                          },
+                        ),
                       ),
-                    ),
-                  ],
+                      if (emailError?.isNotEmpty == true)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            emailError ?? '',
+                            style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
               actions: [
@@ -282,6 +332,15 @@ class _SharedScreenState extends State<SharedScreen> {
                         .where((email) => email.isNotEmpty)
                         .toList();
 
+                    // Validación de correos
+                    final invalidEmails = emails.where((email) => !email.contains('@')).toList();
+                    if (invalidEmails.isNotEmpty) {
+                      setDialogState(() {
+                        emailError = 'All emails must contain "@".';
+                      });
+                      return;
+                    }
+
                     if (name.isNotEmpty && emails.isNotEmpty) {
                       if (isUpdating) {
                         viewModel.updateGroup(group.id, name, emails);
@@ -290,9 +349,9 @@ class _SharedScreenState extends State<SharedScreen> {
                       }
                       Navigator.of(dialogContext).pop();
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please enter a group name and at least one member email.'))
-                      );
+                      setDialogState(() {
+                        emailError = 'Por favor ingresa un nombre de grupo y al menos un correo válido.';
+                      });
                     }
                   },
                   child: Text(isUpdating ? 'Update' : 'Add'),
@@ -303,12 +362,14 @@ class _SharedScreenState extends State<SharedScreen> {
         );
       },
     ).then((_) {
-      // Este bloque se ejecuta cuando el diálogo se cierra.
-      // Es crucial para limpiar todos los controladores y evitar fugas de memoria.
-      nameController.dispose();
-      for (var controller in emailControllers) {
-        controller.dispose();
-      }
+      // Limpieza segura de controladores después de cerrar el diálogo
+      // Ejecutamos en el siguiente frame para asegurarnos de que ya no hay dependientes montados
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        nameController.dispose();
+        for (final c in emailControllers) {
+          c.dispose();
+        }
+      });
     });
   }
 }
