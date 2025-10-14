@@ -13,6 +13,26 @@ import '../services/auth_service.dart';
 enum ViewState { idle, loading, error }
 
 class GroupDetailViewModel extends ChangeNotifier {
+  Future<void> updateGroupEvent(String eventId, String title, DateTime startTime, DateTime endTime) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('groups')
+          .doc(groupId)
+          .collection('events')
+          .doc(eventId)
+          .update({
+        'title': title,
+        'startTime': Timestamp.fromDate(startTime),
+        'endTime': Timestamp.fromDate(endTime),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      await _loadAllEventsForGroup();
+      notifyListeners();
+    } catch (e) {
+      print('Error updating group event: $e');
+      throw e;
+    }
+  }
   final String groupId;
   final GroupService _groupService = GroupService();
   final AuthService _authService = AuthService();
