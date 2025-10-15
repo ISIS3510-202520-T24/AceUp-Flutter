@@ -1,14 +1,14 @@
-// lib/features/groups/viewmodels/group_detail_view_model.dart
+// lib/features/groups/viewmodels/group_detail_viewmodel.dart
 
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../models/calendar_event_model.dart';
-import '../models/user_model.dart';
-import '../services/group_service.dart';
-import '../services/auth_service.dart';
+import '../../models/calendar_event_model.dart';
+import '../../models/user_model.dart';
+import '../../services/shared/group_service.dart';
+import '../../services/auth/auth_service.dart';
 
 enum ViewState { idle, loading, error }
 

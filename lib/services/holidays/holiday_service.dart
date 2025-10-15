@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http; // ignore: uri_does_not_exist
-import '../models/holiday_model.dart';
+import '../../models/holidays/holiday_model.dart';
 
 class HolidayService {
   HolidayService._internal();

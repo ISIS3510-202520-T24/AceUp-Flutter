@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/assignment_model.dart';
-import '../services/assignment_service.dart';
-import '../services/auth_service.dart';
+import '../../models/assignments/assignment_model.dart';
+import '../../services/assignments/assignment_service.dart';
+import '../../services/auth/auth_service.dart';
 
 enum AssignmentsTab { pending, completed }
 

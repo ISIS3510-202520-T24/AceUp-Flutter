@@ -2,9 +2,9 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../models/group_model.dart';
-import '../models/user_model.dart';
-import '../models/calendar_event_model.dart';
+import '../../models/group_model.dart';
+import '../../models/user_model.dart';
+import '../../models/calendar_event_model.dart';
 
 class GroupService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

@@ -1,13 +1,13 @@
-// lib/features/groups/viewmodels/shared_view_model.dart
+// lib/features/groups/viewmodels/shared_viewmodel.dart
 
 import 'dart:developer' as console;
 
 import 'package:flutter/material.dart';
 
-import '../models/group_model.dart';
-import '../services/auth_service.dart';
-import '../services/group_service.dart';
-import '../models/user_model.dart';
+import '../../models/group_model.dart';
+import '../../services/auth/auth_service.dart';
+import '../../services/shared/group_service.dart';
+import '../../models/user_model.dart';
 
 // El enum de estado que usan ambos ViewModels
 enum ViewState { idle, loading, error }

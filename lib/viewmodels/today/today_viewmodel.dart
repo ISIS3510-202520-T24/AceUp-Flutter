@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/assignment_model.dart';
-import '../services/assignment_service.dart';
-import '../services/auth_service.dart';
+import '../../models/assignments/assignment_model.dart';
+import '../../services/assignments/assignment_service.dart';
+import '../../services/auth/auth_service.dart';
+import '../../themes/app_icons.dart';
 
 enum TodayTab { exams, timetable, assignments }
 
@@ -12,15 +13,19 @@ class TodayViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
 
   TodayTab _selectedTab = TodayTab.assignments;
+
   TodayTab get selectedTab => _selectedTab;
 
   TodayViewState _state = TodayViewState.idle;
+
   TodayViewState get state => _state;
 
   List<Assignment> _assignmentsDueToday = [];
+
   List<Assignment> get assignmentsDueToday => _assignmentsDueToday;
 
   String? _errorMessage;
+
   String? get errorMessage => _errorMessage;
 
   int get selectedTabIndex => _selectedTab.index;
@@ -68,7 +73,8 @@ class TodayViewModel extends ChangeNotifier {
 
     try {
       final today = DateTime.now();
-      _assignmentsDueToday = await _assignmentService.getAssignmentsDueToday(userId, today);
+      _assignmentsDueToday =
+      await _assignmentService.getAssignmentsDueToday(userId, today);
 
       // Sort: pending first, then completed
       _assignmentsDueToday.sort((a, b) {
@@ -90,7 +96,8 @@ class TodayViewModel extends ChangeNotifier {
 
   Future<void> toggleAssignmentStatus(Assignment assignment) async {
     final userId = _authService.currentUser?.uid;
-    if (userId == null || assignment.termId == null || assignment.subjectId == null) {
+    if (userId == null || assignment.termId == null ||
+        assignment.subjectId == null) {
       return;
     }
 
@@ -106,7 +113,8 @@ class TodayViewModel extends ChangeNotifier {
       );
 
       // Update local state immediately for better UX
-      final index = _assignmentsDueToday.indexWhere((a) => a.id == assignment.id);
+      final index = _assignmentsDueToday.indexWhere((a) =>
+      a.id == assignment.id);
       if (index != -1) {
         _assignmentsDueToday[index] = assignment.copyWith(status: newStatus);
 
@@ -126,8 +134,15 @@ class TodayViewModel extends ChangeNotifier {
     }
   }
 
-  int get pendingCount => _assignmentsDueToday.where((a) => a.isPending).length;
-  int get completedCount => _assignmentsDueToday.where((a) => a.isCompleted).length;
+  int get pendingCount =>
+      _assignmentsDueToday
+          .where((a) => a.isPending)
+          .length;
+
+  int get completedCount =>
+      _assignmentsDueToday
+          .where((a) => a.isCompleted)
+          .length;
 
   List<String> get exams => [];
 
@@ -165,6 +180,17 @@ class TodayViewModel extends ChangeNotifier {
         return 'Enjoy your free time!';
       case TodayTab.assignments:
         return 'Great job staying ahead!';
+    }
+  }
+
+  IconData get emptyStateIcon {
+    switch (_selectedTab) {
+      case TodayTab.exams:
+        return AppIcons.exam;
+      case TodayTab.timetable:
+        return AppIcons.chalkboard;
+      case TodayTab.assignments:
+        return AppIcons.assignments;
     }
   }
 

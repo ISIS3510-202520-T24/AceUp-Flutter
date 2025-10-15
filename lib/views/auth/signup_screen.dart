@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
-import '../../viewmodels/signup_viewmodel.dart';
+import '../../viewmodels/auth/signup_viewmodel.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});

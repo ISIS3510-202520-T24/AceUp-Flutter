@@ -4,11 +4,14 @@ import 'package:provider/provider.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
+
 import '../../widgets/burger_menu.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
 import '../../widgets/content_switcher.dart';
-import '../../viewmodels/today_viewmodel.dart';
+
+import '../../viewmodels/today/today_viewmodel.dart';
 
 class TodayScreen extends StatelessWidget {
   const TodayScreen({super.key});
@@ -33,11 +36,11 @@ class _TodayScreenContent extends StatelessWidget {
 
     return Scaffold(
       drawer: const BurgerMenu(),
-      appBar: TopBar(
-        title: "Today",
-        leftControlType: LeftControlType.menu,
-        rightControlType: RightControlType.none,
-      ),
+      appBar: TopBar(title: "Today"),
+
+
+
+
       body: Column(
         children: [
           ContentSwitcher(
@@ -195,67 +198,12 @@ class _TodayScreenContent extends StatelessWidget {
     if (viewModel.hasContent) {
       return _buildContentList(viewModel);
     } else {
-      return _buildEmptyState(context, viewModel);
+      return EmptyState(
+        message: viewModel.emptyStateMessage,
+        subtitle: viewModel.emptyStateSubtitle,
+        icon: viewModel.emptyStateIcon,
+      );
     }
-  }
-
-  Widget _buildEmptyState(BuildContext context, TodayViewModel viewModel) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Center(
-      child: Column(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: colors.tertiary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    AppIcons.icons,
-                    size: 40,
-                    color: colors.secondary,
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Text(
-                    viewModel.emptyStateMessage,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: colors.onPrimary,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  viewModel.emptyStateSubtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: colors.onSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-        ],
-      ),
-    );
   }
 
   Widget _buildContentList(TodayViewModel viewModel) {
@@ -322,15 +270,15 @@ class _TodayScreenContent extends StatelessWidget {
     Color priorityColor;
     switch (assignment.priority) {
       case 'High':
-        priorityIcon = AppIcons.importance;
+        priorityIcon = AppIcons.priority;
         priorityColor = AppColors.errorMedium;
         break;
       case 'Low':
-        priorityIcon = AppIcons.importance;
+        priorityIcon = AppIcons.priority;
         priorityColor = AppColors.successMedium;
         break;
       default: // Medium
-        priorityIcon = AppIcons.importance;
+        priorityIcon = AppIcons.priority;
         priorityColor = AppColors.warningMedium;
     }
 

@@ -1,4 +1,4 @@
-import '../services/auth_service.dart';
+import '../../services/auth/auth_service.dart';
 
 class SignUpViewModel {
   final AuthService _auth;

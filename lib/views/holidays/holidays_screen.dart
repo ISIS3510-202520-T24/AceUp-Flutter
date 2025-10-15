@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
-import '../../viewmodels/holidays_viewmodel.dart';
+import '../../viewmodels/holidays/holidays_viewmodel.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
@@ -30,11 +30,7 @@ class HolidaysScreenContent extends StatelessWidget {
 
     return Scaffold(
       drawer: const BurgerMenu(),
-      appBar: TopBar(
-        title: "Holidays",
-        leftControlType: LeftControlType.menu,
-        rightControlType: RightControlType.none,
-      ),
+      appBar: TopBar(title: "Holidays"),
       body: _buildBody(context, viewModel, colors),
       floatingActionButton: FAB(
           options: [
