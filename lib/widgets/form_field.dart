@@ -54,12 +54,12 @@ class _FormFieldState extends State<FormField> {
       style: AppTypography.bodyM.copyWith(color: colors.onSurface),
       decoration: InputDecoration(
         labelText: widget.label,
-        labelStyle: AppTypography.bodyM.copyWith(color: colors.onPrimaryContainer),
+        labelStyle: AppTypography.h5.copyWith(color: colors.onSecondary),
         hintText: widget.hint,
-        hintStyle: AppTypography.bodyS.copyWith(color: colors.onSurfaceVariant),
+        hintStyle: AppTypography.bodyM.copyWith(color: colors.secondary),
         counterText: '',
         filled: true,
-        fillColor: colors.surfaceDim,
+        fillColor: colors.surface,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: colors.outline),
@@ -78,7 +78,7 @@ class _FormFieldState extends State<FormField> {
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colors.outlineVariant),
+          borderSide: BorderSide(color: colors.shadow),
         ),
         errorStyle: TextStyle(color: colors.onError),
         suffixIcon: isPassword

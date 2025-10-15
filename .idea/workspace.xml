@@ -10,42 +10,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="83f1ba98-ac45-48c6-90e8-73adca6f18e6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/lib/views/settings/settings_screen.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/widgets/empty_state.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/widgets/form_field.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/models/assignment_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/models/assignments/assignment_model.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/models/day.dart" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/models/holiday_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/models/holidays/holiday_model.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/assignment_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/assignments/assignment_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/auth_bridge_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/auth/auth_bridge_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/auth_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/auth/auth_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/biometric_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/auth/biometric_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/group_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/shared/group_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/holiday_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/holidays/holiday_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/notification_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/notif/notification_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/secure_store.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/auth/secure_store.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/themes/app_icons.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/themes/app_icons.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/viewmodels/assignments_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/assignments/assignments_viewmodel.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/viewmodels/group_detail_view_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/shared/group_detail_viewmodel.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/viewmodels/holidays_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/holidays/holidays_viewmodel.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/viewmodels/login_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/auth/login_viewmodel.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/viewmodels/shared_view_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/shared/shared_viewmodel.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/viewmodels/signup_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/auth/signup_viewmodel.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/viewmodels/today_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/today/today_viewmodel.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/assignments/assignments_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/assignments/assignments_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/auth/biometric_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/auth/biometric_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/auth/login_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/auth/login_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/auth/logout_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/auth/logout_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/auth/signup_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/auth/signup_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/holidays/holidays_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/holidays/holidays_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/shared/group_detail_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/shared/group_detail_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/shared/shared_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/shared/shared_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/today/today_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/today/today_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/widgets/burger_menu.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/burger_menu.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aceup_clean.iml" beforeDir="false" afterPath="$PROJECT_DIR$/aceup_clean.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/widgets/form_field.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/form_field.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -146,7 +113,7 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "develop",
+    "git-widget-placeholder": "UI/fixes-and-widgets",
     "io.flutter.reload.alreadyRun": "true",
     "last_opened_file_path": "C:/Users/LAURA/AceUp-Flutter/assets/icons",
     "project.structure.last.edited": "SDKs",
