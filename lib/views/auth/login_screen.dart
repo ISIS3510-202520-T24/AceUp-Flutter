@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
-import '../../viewmodels/login_viewmodel.dart';
-import '../../services/auth_service.dart';
-import '../../services/secure_store.dart';
-import '../../services/biometric_service.dart';
+import '../../viewmodels/auth/login_viewmodel.dart';
+import '../../services/auth/auth_service.dart';
+import '../../services/auth/secure_store.dart';
+import '../../services/auth/biometric_service.dart';
 import '../../services/startup_ttfp.dart'; // marca el primer frame
 import '../../widgets/buttons.dart';
 

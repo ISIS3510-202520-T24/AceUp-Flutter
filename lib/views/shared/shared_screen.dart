@@ -3,11 +3,11 @@ import 'package:provider/provider.dart';
 import '../../models/group_model.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
-import '../../viewmodels/shared_view_model.dart';
+import '../../viewmodels/shared/shared_viewmodel.dart';
 import '../../widgets/burger_menu.dart';
 import 'group_detail_screen.dart';
 import '../../widgets/top_bar.dart';
-import '../../services/auth_service.dart';
+import '../../services/auth/auth_service.dart';
 import '../../widgets/floating_action_button.dart';
 
 // Wrapper para proveer el ViewModel (sin cambios)
@@ -90,19 +90,15 @@ class _SharedScreenState extends State<SharedScreen> {
           ),
         ],
       ),
-      floatingActionButton: _buildFloatingActionButton(context, viewModel, colors),
-    );
-  }
-
-  Widget _buildFloatingActionButton(BuildContext context, SharedViewModel viewModel, ColorScheme colors) {
-    return FAB(
-      options: [
-        FabOption(
-          icon: AppIcons.add,
-          label: 'Add Group',
-          onPressed: () => _showAddOrUpdateGroupDialog(context, viewModel),
-        ),
-      ],
+      floatingActionButton: FAB(
+        options: [
+          FabOption(
+            icon: AppIcons.add,
+            label: 'Add Group',
+            onPressed: () => _showAddOrUpdateGroupDialog(context, viewModel),
+          ),
+        ],
+      ),
     );
   }
 
@@ -184,12 +180,12 @@ class _SharedScreenState extends State<SharedScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(group.name, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: colors.onPrimary)),
+                  Text(group.name, style: AppTypography.bodyM.copyWith(color: colors.onSurface)),
                   const SizedBox(height: 4),
                   Text(
                   group.members.map((user) => user.nick).join(', '), // Mapea la lista de AppUser a una lista de nicks y los une
-                  overflow: TextOverflow.ellipsis, 
-                  style: TextStyle(fontSize: 14, color: colors.onPrimaryContainer)
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodyS.copyWith(color: colors.onPrimaryContainer)
                 ),
                 ],
               ),

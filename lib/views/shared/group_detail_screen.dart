@@ -5,9 +5,10 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../models/calendar_event_model.dart';
 import '../../themes/app_icons.dart';
-import '../../viewmodels/group_detail_view_model.dart';
-import '../../viewmodels/shared_view_model.dart' hide ViewState;
+import '../../viewmodels/shared/group_detail_viewmodel.dart';
+import '../../viewmodels/shared/shared_viewmodel.dart' hide ViewState;
 import '../../widgets/burger_menu.dart';
+import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
 import '../../themes/app_typography.dart';
 
@@ -134,11 +135,14 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddGroupEventDialog(context, viewModel),
-        backgroundColor: colors.primary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-        child: Icon(Icons.group_add, color: colors.onPrimary),
+      floatingActionButton: FAB(
+        options: [
+          FabOption(
+            icon: AppIcons.add,
+            label: 'New Group Event',
+            onPressed: () => _showAddGroupEventDialog(context, viewModel),
+          ),
+        ]
       ),
     );
   }

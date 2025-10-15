@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
 import 'views/assignments/assignments_screen.dart';
@@ -14,11 +14,11 @@ import 'views/shared/shared_screen.dart';
 
 import 'themes/app_theme.dart';
 
-import 'services/auth_service.dart';
-import 'services/notification_service.dart';
-import 'viewmodels/login_viewmodel.dart';
-import 'viewmodels/signup_viewmodel.dart';
-import 'viewmodels/holidays_viewmodel.dart';
+import 'services/auth/auth_service.dart';
+import 'services/notif/notification_service.dart';
+import 'viewmodels/auth/login_viewmodel.dart';
+import 'viewmodels/auth/signup_viewmodel.dart';
+import 'viewmodels/holidays/holidays_viewmodel.dart';
 
 import 'package:firebase_auth/firebase_auth.dart'; //ignore: uri_does_not_exist
 import 'package:provider/provider.dart';
@@ -49,24 +49,26 @@ Future<void> main() async {
   // Notificaciones (si ya lo tenías)
   await NotificationService().initNotifications();
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => HolidaysViewModel()),
-        Provider<AuthService>(create: (_) => AuthService()),
-        ChangeNotifierProvider<LoginViewModel>(
-          create: (ctx) => LoginViewModel(ctx.read<AuthService>()),
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
+      .then((value) => runApp(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => HolidaysViewModel()),
+            Provider<AuthService>(create: (_) => AuthService()),
+            ChangeNotifierProvider<LoginViewModel>(
+              create: (ctx) => LoginViewModel(ctx.read<AuthService>()),
+            ),
+            Provider<SignUpViewModel>(
+              create: (ctx) => SignUpViewModel(ctx.read<AuthService>()),
+            ),
+            StreamProvider<User?>(
+              create: (ctx) => ctx.read<AuthService>().authStateChanges,
+              initialData: null,
+            ),
+          ],
+          child: const MyApp(),
         ),
-        Provider<SignUpViewModel>(
-          create: (ctx) => SignUpViewModel(ctx.read<AuthService>()),
-        ),
-        StreamProvider<User?>(
-          create: (ctx) => ctx.read<AuthService>().authStateChanges,
-          initialData: null,
-        ),
-      ],
-      child: const MyApp(),
-    ),
+      )
   );
 }
 

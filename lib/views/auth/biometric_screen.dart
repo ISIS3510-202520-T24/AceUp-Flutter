@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../services/biometric_service.dart';
-import '../../services/auth_service.dart';
-import '../../services/secure_store.dart';
-import '../../viewmodels/login_viewmodel.dart';
+import '../../services/auth/biometric_service.dart';
+import '../../services/auth/auth_service.dart';
+import '../../services/auth/secure_store.dart';
+import '../../viewmodels/auth/login_viewmodel.dart';
 
 class BiometricScreen extends StatefulWidget {
   const BiometricScreen({super.key});

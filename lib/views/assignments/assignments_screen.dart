@@ -5,11 +5,14 @@ import 'package:intl/intl.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
-import '../../viewmodels/assignments_viewmodel.dart';
+
 import '../../widgets/burger_menu.dart';
 import '../../widgets/content_switcher.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
+
+import '../../viewmodels/assignments/assignments_viewmodel.dart';
 
 class AssignmentsScreen extends StatelessWidget {
   const AssignmentsScreen({super.key});
@@ -34,11 +37,11 @@ class _AssignmentsScreenContent extends StatelessWidget {
 
     return Scaffold(
       drawer: const BurgerMenu(),
-      appBar: TopBar(
-        title: "Assignments",
-        leftControlType: LeftControlType.menu,
-        rightControlType: RightControlType.none,
-      ),
+      appBar: TopBar(title: "Assignments"),
+
+
+
+
       body: Column(
         children: [
           ContentSwitcher(
@@ -110,7 +113,10 @@ class _AssignmentsScreenContent extends StatelessWidget {
     if (viewModel.hasContent) {
       return _buildContentList(viewModel);
     } else {
-      return _buildEmptyState(context, viewModel);
+      return EmptyState(
+          message: viewModel.emptyStateMessage,
+          subtitle: viewModel.emptyStateSubtitle,
+          icon: AppIcons.assignments);
     }
   }
 
@@ -200,15 +206,15 @@ class _AssignmentsScreenContent extends StatelessWidget {
     Color priorityColor;
     switch (assignment.priority) {
       case 'High':
-        priorityIcon = AppIcons.importance;
+        priorityIcon = AppIcons.priority;
         priorityColor = AppColors.errorMedium;
         break;
       case 'Low':
-        priorityIcon = AppIcons.importance;
+        priorityIcon = AppIcons.priority;
         priorityColor = AppColors.successMedium;
         break;
       default: // Medium
-        priorityIcon = AppIcons.importance;
+        priorityIcon = AppIcons.priority;
         priorityColor = AppColors.warningMedium;
     }
 
