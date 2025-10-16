@@ -342,7 +342,7 @@ Widget _buildWeekSelector(ColorScheme colors) {
   void _showAddGroupEventDialog(BuildContext context, GroupDetailViewModel viewModel, {CalendarEvent? event}) {
     final isUpdating = event != null;
     final titleController = TextEditingController(text: isUpdating ? event.title : '');
-    
+
     TimeOfDay selectedStartTime = isUpdating ? TimeOfDay.fromDateTime(event.startTime) : const TimeOfDay(hour: 12, minute: 0);
     TimeOfDay selectedEndTime = isUpdating ? TimeOfDay.fromDateTime(event.endTime) : const TimeOfDay(hour: 13, minute: 0);
 
@@ -401,26 +401,21 @@ Widget _buildWeekSelector(ColorScheme colors) {
                       final finalStartTime = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, selectedStartTime.hour, selectedStartTime.minute);
                       final finalEndTime = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, selectedEndTime.hour, selectedEndTime.minute);
 
-                      // Validación de solapamiento para add y update
-                      final allEvents = viewModel.getEventsForDay(_selectedDate);
-                      final conflict = allEvents.any((e) {
-                        // Si es edición, no comparar contra sí mismo
-                        if (isUpdating && event != null && e.id == event.id) return false;
-                        if (e.type == EventType.classSession || e.type == EventType.assignment || e.type == EventType.exam) {
-                          final eStart = e.startTime;
-                          final eEnd = e.endTime;
-                          return finalStartTime.isBefore(eEnd) && finalEndTime.isAfter(eStart);
-                        }
-                        return false;
-                      });
-                      if (conflict) {
+                      // Validación de solapamiento usando el ViewModel
+                      final conflictMsg = viewModel.validateEventSlot(
+                        _selectedDate,
+                        finalStartTime,
+                        finalEndTime,
+                        ignoreEventId: isUpdating ? event.id : null,
+                      );
+                      if (conflictMsg != null) {
                         setDialogState(() {
-                          errorMsg = 'The event is interfering with a class, assignment, or exam. Please choose another time slot.';
+                          errorMsg = conflictMsg;
                         });
                         return;
                       }
 
-                      if (isUpdating && event != null) {
+                      if (isUpdating) {
                         viewModel.updateGroupEvent(event.id, title, finalStartTime, finalEndTime);
                       } else {
                         viewModel.addGroupEvent(title, finalStartTime, finalEndTime);
