@@ -10,7 +10,6 @@ import '../../widgets/top_bar.dart';
 import '../../services/auth/auth_service.dart';
 import '../../widgets/floating_action_button.dart';
 
-// Wrapper para proveer el ViewModel (sin cambios)
 class SharedScreenWrapper extends StatelessWidget {
   const SharedScreenWrapper({super.key});
 
@@ -35,14 +34,11 @@ class _SharedScreenState extends State<SharedScreen> {
   @override
   void initState() {
     super.initState();
-    // Usamos addPostFrameCallback para asegurarnos de que el contexto esté disponible
-    // y para no llamar a setState o notificar a listeners durante un build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
     });
   }
 
-  // Nueva función para iniciar la carga de datos con el UID del usuario actual
   void _loadInitialData() {
     final authService = context.read<AuthService>();
     final userId = authService.currentUser?.uid;
@@ -50,7 +46,6 @@ class _SharedScreenState extends State<SharedScreen> {
       context.read<SharedViewModel>().fetchGroups(userId);
     } else {
       print("Error: No user is currently logged in to fetch groups.");
-      // Opcional: mostrar un SnackBar o manejar el error
     }
   }
 
@@ -62,11 +57,7 @@ class _SharedScreenState extends State<SharedScreen> {
 
     return Scaffold(
       drawer: const BurgerMenu(),
-      appBar: TopBar(
-        title: "Shared",
-        leftControlType: LeftControlType.menu,
-        rightControlType: RightControlType.none,
-      ),
+      appBar: TopBar(title: "Shared"),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -102,7 +93,6 @@ class _SharedScreenState extends State<SharedScreen> {
     );
   }
 
-  // Se pasa el contexto para el SnackBar y el ViewModel
   Widget _buildGroupList(BuildContext context, ColorScheme colors, SharedViewModel viewModel) {
     if (viewModel.state == ViewState.loading) {
       return const Center(child: CircularProgressIndicator());
