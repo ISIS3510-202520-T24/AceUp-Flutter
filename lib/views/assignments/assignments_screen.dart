@@ -10,6 +10,7 @@ import '../../widgets/burger_menu.dart';
 import '../../widgets/content_switcher.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
+import '../../widgets/keep_alive_wrapper.dart';
 import '../../widgets/top_bar.dart';
 
 import '../../viewmodels/assignments/assignments_viewmodel.dart';
@@ -26,31 +27,64 @@ class AssignmentsScreen extends StatelessWidget {
   }
 }
 
-class _AssignmentsScreenContent extends StatelessWidget {
+class _AssignmentsScreenContent extends StatefulWidget {
   const _AssignmentsScreenContent();
+
+  @override
+  State<_AssignmentsScreenContent> createState() =>
+      _AssignmentsScreenContentState();
+}
+
+class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    final viewModel = context.read<AssignmentsViewModel>();
+
+    _tabController = TabController(
+      length: viewModel.tabLabels.length,
+      vsync: this,
+      initialIndex: viewModel.selectedTabIndex,
+    );
+
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        viewModel.selectTab(_tabController.index);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<AssignmentsViewModel>();
     final theme = Theme.of(context);
-    final colors = theme.colorScheme;
 
     return Scaffold(
       drawer: const BurgerMenu(),
       appBar: TopBar(title: "Assignments"),
-
-
-
-
       body: Column(
         children: [
           ContentSwitcher(
             tabs: viewModel.tabLabels,
-            selectedIndex: viewModel.selectedTabIndex,
-            onTabSelected: (index) => viewModel.selectTab(index),
+            controller: _tabController,
           ),
           Expanded(
-            child: _buildContent(context, viewModel),
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                KeepAliveWrapper(child: _buildTabContent(context, viewModel, AssignmentsTab.pending)),
+                KeepAliveWrapper(child: _buildTabContent(context, viewModel, AssignmentsTab.completed)),
+              ],
+            ),
           ),
         ],
       ),
@@ -66,7 +100,7 @@ class _AssignmentsScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, AssignmentsViewModel viewModel) {
+  Widget _buildTabContent(BuildContext context, AssignmentsViewModel viewModel, AssignmentsTab tab) {
     if (viewModel.state == AssignmentsViewState.loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -111,7 +145,7 @@ class _AssignmentsScreenContent extends StatelessWidget {
     }
 
     if (viewModel.hasContent) {
-      return _buildContentList(viewModel);
+      return _buildContentList(context, viewModel, tab);
     } else {
       return EmptyState(
           message: viewModel.emptyStateMessage,
@@ -120,63 +154,8 @@ class _AssignmentsScreenContent extends StatelessWidget {
     }
   }
 
-  Widget _buildEmptyState(BuildContext context, AssignmentsViewModel viewModel) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Center(
-      child: Column(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: colors.tertiary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    AppIcons.icons,
-                    size: 40,
-                    color: colors.secondary,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Text(
-                    viewModel.emptyStateMessage,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: colors.onPrimary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  viewModel.emptyStateSubtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: colors.onSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContentList(AssignmentsViewModel viewModel) {
-    final assignments = viewModel.selectedTab == AssignmentsTab.pending
+  Widget _buildContentList(BuildContext context, AssignmentsViewModel viewModel, AssignmentsTab tab) {
+    final assignments = tab == AssignmentsTab.pending
         ? viewModel.pendingAssignments
         : viewModel.completedAssignments;
 
@@ -195,13 +174,12 @@ class _AssignmentsScreenContent extends StatelessWidget {
 
   Widget _buildAssignmentCard(
       BuildContext context,
-      assignment,
+      dynamic assignment,
       AssignmentsViewModel viewModel,
       ) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    // Priority icon
     IconData priorityIcon;
     Color priorityColor;
     switch (assignment.priority) {
@@ -218,7 +196,6 @@ class _AssignmentsScreenContent extends StatelessWidget {
         priorityColor = AppColors.warningMedium;
     }
 
-    // Format due date
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final dueDate = DateTime(
@@ -232,9 +209,13 @@ class _AssignmentsScreenContent extends StatelessWidget {
       dueDateText = 'Due Today';
     } else if (dueDate.isBefore(today)) {
       final difference = today.difference(dueDate).inDays;
-      dueDateText = difference == 1
-          ? 'Overdue by 1 day'
-          : 'Overdue by $difference days';
+      if (assignment.isPending) {
+        dueDateText = difference == 1
+            ? 'Overdue by 1 day'
+            : 'Overdue by $difference days';
+      } else {
+        dueDateText = DateFormat('MMM d, yyyy').format(assignment.dueDate);
+      }
     } else {
       final difference = dueDate.difference(today).inDays;
       if (difference == 1) {
@@ -265,7 +246,6 @@ class _AssignmentsScreenContent extends StatelessWidget {
             ),
             const SizedBox(width: 8),
 
-            // Assignment details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -278,7 +258,6 @@ class _AssignmentsScreenContent extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
 
-                  // Title
                   Text(
                     assignment.title,
                     style: AppTypography.bodyM.copyWith(
@@ -287,7 +266,6 @@ class _AssignmentsScreenContent extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
 
-                  // Description
                   Text(
                     assignment.description,
                     style: AppTypography.bodyS.copyWith(
@@ -302,25 +280,19 @@ class _AssignmentsScreenContent extends StatelessWidget {
 
             const SizedBox(width: 8),
 
-            // Due date and Priority icon column
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // Due date
                 Text(
                   dueDateText,
                   style: AppTypography.bodyS.copyWith(
                     color: dueDate.isBefore(today) && assignment.isPending
-                        ? Colors.red
+                        ? colors.onError
                         : colors.onPrimaryContainer,
-                    fontWeight: dueDate.isBefore(today) && assignment.isPending
-                        ? FontWeight.bold
-                        : FontWeight.normal,
                   ),
                 ),
                 const SizedBox(height: 8),
 
-                // Priority icon
                 Icon(
                   priorityIcon,
                   size: 21,
