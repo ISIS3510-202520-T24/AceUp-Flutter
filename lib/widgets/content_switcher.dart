@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
-
 import '../themes/app_typography.dart';
 
 class ContentSwitcher extends StatelessWidget {
+  final TabController controller;
   final List<String> tabs;
-  final int selectedIndex;
-  final ValueChanged<int> onTabSelected;
 
   const ContentSwitcher({
     super.key,
+    required this.controller,
     required this.tabs,
-    required this.selectedIndex,
-    required this.onTabSelected,
   });
 
   @override
@@ -24,55 +21,31 @@ class ContentSwitcher extends StatelessWidget {
 
     final double screenWidth = MediaQuery.of(context).size.width;
     final double switcherWidth = screenWidth - outerPadding.horizontal;
-    final double tabWidth = (switcherWidth - innerPadding.horizontal) / tabs.length;
 
     return Container(
-      margin:outerPadding,
-      padding: const EdgeInsets.all(4),
+      margin: outerPadding,
+      padding: innerPadding,
       width: switcherWidth,
+      height: 48,
       decoration: BoxDecoration(
         color: colors.surfaceDim,
         borderRadius: BorderRadius.circular(16),
-      ), 
-      child: Row(
-        spacing: 0.0,
-        children: List.generate(tabs.length, (index) {
-          final isSelected = index == selectedIndex;
-          return _buildTab(
-            context,
-            colors,
-            title: tabs[index],
-            isSelected: isSelected,
-            onTap: () => onTabSelected(index),
-            fixedWidth: tabWidth,
-          );
-        }),
       ),
-    );
-  }
-
-  Widget _buildTab(BuildContext context, ColorScheme colors, {
-    required String title,
-    required bool isSelected,
-    required VoidCallback onTap,
-    required double fixedWidth,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: fixedWidth,
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? colors.primary : Colors.transparent,
+      child: TabBar(
+        controller: controller,
+        indicator: BoxDecoration(
+          color: colors.primary,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text(
-          title,
-          style: isSelected
-              ? AppTypography.h5.copyWith(color: colors.onPrimary)
-              : AppTypography.h5.copyWith(color: colors.inversePrimary),
-        ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: Colors.transparent,
+        labelColor: colors.onPrimary,
+        unselectedLabelColor: colors.inversePrimary,
+        labelStyle: AppTypography.h5,
+        unselectedLabelStyle: AppTypography.h5,
+        splashFactory: NoSplash.splashFactory,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        tabs: tabs.map((label) => Tab(text: label)).toList(),
       ),
     );
   }

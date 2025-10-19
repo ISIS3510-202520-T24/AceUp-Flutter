@@ -1,8 +1,8 @@
 import 'dart:developer' as console;
 
 import 'package:flutter/material.dart';
-import '../models/holiday_model.dart';
-import '../services/holiday_service.dart';
+import '../../models/holidays/holiday_model.dart';
+import '../../services/holidays/holiday_service.dart';
 
 enum HolidayViewState { idle, loading, error, success }
 

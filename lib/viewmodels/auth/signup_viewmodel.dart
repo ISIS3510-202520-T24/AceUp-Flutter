@@ -1,9 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
-
-import '../core/observer/observable.dart';
-import '../models/signup_model.dart';
-import '../models/auth_model.dart';
-import '../services/auth_service.dart';
+import 'package:aceup_clean/core/observer/observable.dart';
+import 'package:aceup_clean/models/signup_model.dart';
+import 'package:aceup_clean/models/auth_model.dart';
+import 'package:aceup_clean/services/auth/auth_service.dart';
 
 class SignUpViewModel extends Observable {
   final AuthService _auth;

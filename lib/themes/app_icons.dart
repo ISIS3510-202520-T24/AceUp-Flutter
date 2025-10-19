@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 // ignore_for_file: undefined_identifier
 
 class AppIcons {
+  /// Navigation
   static IconData burgerMenu = FontAwesomeIcons.bars;
   static IconData arrowLeft = FontAwesomeIcons.angleLeft;
   static IconData arrowRight = FontAwesomeIcons.angleRight;
@@ -11,41 +12,63 @@ class AppIcons {
   static IconData icons = FontAwesomeIcons.icons;
   static IconData logout = FontAwesomeIcons.rightFromBracket;
 
+  /// Actions
+  static IconData arrowUp = FontAwesomeIcons.angleUp;
+  static IconData arrowDown = FontAwesomeIcons.angleDown;
   static IconData visibilityOff = FontAwesomeIcons.solidEyeSlash;
   static IconData visibilityOn = FontAwesomeIcons.solidEye;
 
   static IconData edit = FontAwesomeIcons.pen;
   static IconData add = FontAwesomeIcons.plus;
   static IconData delete = FontAwesomeIcons.trashCan;
-  static IconData importance = FontAwesomeIcons.circleExclamation;
 
+
+  /// Menu items
+  // My Schedules
+  static IconData calendarDay = FontAwesomeIcons.calendarDay;
+  static IconData calendarWeek = FontAwesomeIcons.calendarWeek;
+  static IconData calendarMonth = FontAwesomeIcons.solidCalendarDays;
+  static IconData shared = FontAwesomeIcons.peopleGroup;
+  // My Data
+  static IconData planner = FontAwesomeIcons.graduationCap;
+  static IconData assignments = FontAwesomeIcons.clipboardList;
+  static IconData teacher = FontAwesomeIcons.solidUser;
+  static IconData holidays = FontAwesomeIcons.umbrellaBeach;
+  // Settings
+  static IconData settings = FontAwesomeIcons.gear;
+
+  /// Class details
+  static IconData priority = FontAwesomeIcons.circleExclamation;
+  static IconData notification = FontAwesomeIcons.solidBell;
+  static IconData weight = FontAwesomeIcons.weightHanging;
+  static IconData grade = FontAwesomeIcons.award;
+
+  /// Empty states
   static IconData chalkboard = FontAwesomeIcons.chalkboard;
   static IconData exam = FontAwesomeIcons.flagCheckered;
 
-  static IconData calendarMonth = FontAwesomeIcons.solidCalendarDays;
-  static IconData calendarWeek = FontAwesomeIcons.calendarWeek;
-  static IconData calendarDay = FontAwesomeIcons.calendarDay;
+  static IconData clock = FontAwesomeIcons.clock;
 
-  static IconData planner = FontAwesomeIcons.graduationCap;
-  static IconData assignments = FontAwesomeIcons.clipboardList;
-  static IconData holidays = FontAwesomeIcons.umbrellaBeach;
-  static IconData shared = FontAwesomeIcons.peopleGroup;
-  static IconData teacher = FontAwesomeIcons.solidUser;
-
+  /// Class personalisation
+  // Arts
+  static IconData art = FontAwesomeIcons.palette;
+  static IconData music = FontAwesomeIcons.music;
+  static IconData theatre = FontAwesomeIcons.masksTheater;
+  static IconData film = FontAwesomeIcons.clapperboard;
+  // Humanities
+  static IconData history = FontAwesomeIcons.landmarkDome;
+  static IconData language = FontAwesomeIcons.language;
+  static IconData law = FontAwesomeIcons.gavel;
+  // Life forms
+  static IconData plant = FontAwesomeIcons.seedling;
+  static IconData paw = FontAwesomeIcons.paw;
+  // STEM
   static IconData laptop = FontAwesomeIcons.laptop;
   static IconData laptopCode = FontAwesomeIcons.laptopCode;
   static IconData code = FontAwesomeIcons.code;
   static IconData math = FontAwesomeIcons.calculator;
   static IconData science = FontAwesomeIcons.flask;
-  static IconData history = FontAwesomeIcons.landmarkDome;
-  static IconData language = FontAwesomeIcons.language;
-  static IconData art = FontAwesomeIcons.palette;
-  static IconData music = FontAwesomeIcons.music;
-  static IconData theatre = FontAwesomeIcons.masksTheater;
-  static IconData film = FontAwesomeIcons.clapperboard;
-  static IconData plant = FontAwesomeIcons.seedling;
-  static IconData paw = FontAwesomeIcons.paw;
-  static IconData law = FontAwesomeIcons.gavel;
+  // Entertainment
   static IconData controller = FontAwesomeIcons.gamepad;
   static IconData book = FontAwesomeIcons.book;
   static IconData dice = FontAwesomeIcons.dice;

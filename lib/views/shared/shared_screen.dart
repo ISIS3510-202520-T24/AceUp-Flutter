@@ -3,14 +3,13 @@ import 'package:provider/provider.dart';
 import '../../models/group_model.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
-import '../../viewmodels/shared_view_model.dart';
+import '../../viewmodels/shared/shared_viewmodel.dart';
 import '../../widgets/burger_menu.dart';
 import 'group_detail_screen.dart';
 import '../../widgets/top_bar.dart';
-import '../../services/auth_service.dart';
+import '../../services/auth/auth_service.dart';
 import '../../widgets/floating_action_button.dart';
 
-// Wrapper para proveer el ViewModel (sin cambios)
 class SharedScreenWrapper extends StatelessWidget {
   const SharedScreenWrapper({super.key});
 
@@ -35,14 +34,11 @@ class _SharedScreenState extends State<SharedScreen> {
   @override
   void initState() {
     super.initState();
-    // Usamos addPostFrameCallback para asegurarnos de que el contexto esté disponible
-    // y para no llamar a setState o notificar a listeners durante un build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadInitialData();
     });
   }
 
-  // Nueva función para iniciar la carga de datos con el UID del usuario actual
   void _loadInitialData() {
     final authService = context.read<AuthService>();
     final userId = authService.currentUser?.uid;
@@ -50,7 +46,6 @@ class _SharedScreenState extends State<SharedScreen> {
       context.read<SharedViewModel>().fetchGroups(userId);
     } else {
       print("Error: No user is currently logged in to fetch groups.");
-      // Opcional: mostrar un SnackBar o manejar el error
     }
   }
 
@@ -62,11 +57,7 @@ class _SharedScreenState extends State<SharedScreen> {
 
     return Scaffold(
       drawer: const BurgerMenu(),
-      appBar: TopBar(
-        title: "Shared",
-        leftControlType: LeftControlType.menu,
-        rightControlType: RightControlType.none,
-      ),
+      appBar: TopBar(title: "Shared"),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -90,23 +81,18 @@ class _SharedScreenState extends State<SharedScreen> {
           ),
         ],
       ),
-      floatingActionButton: _buildFloatingActionButton(context, viewModel, colors),
+      floatingActionButton: FAB(
+        options: [
+          FabOption(
+            icon: AppIcons.add,
+            label: 'Add Group',
+            onPressed: () => _showAddOrUpdateGroupDialog(context, viewModel),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildFloatingActionButton(BuildContext context, SharedViewModel viewModel, ColorScheme colors) {
-    return FAB(
-      options: [
-        FabOption(
-          icon: AppIcons.add,
-          label: 'Add Group',
-          onPressed: () => _showAddOrUpdateGroupDialog(context, viewModel),
-        ),
-      ],
-    );
-  }
-
-  // Se pasa el contexto para el SnackBar y el ViewModel
   Widget _buildGroupList(BuildContext context, ColorScheme colors, SharedViewModel viewModel) {
     if (viewModel.state == ViewState.loading) {
       return const Center(child: CircularProgressIndicator());
@@ -184,12 +170,12 @@ class _SharedScreenState extends State<SharedScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(group.name, style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: colors.onPrimary)),
+                  Text(group.name, style: AppTypography.bodyM.copyWith(color: colors.onSurface)),
                   const SizedBox(height: 4),
                   Text(
                   group.members.map((user) => user.nick).join(', '), // Mapea la lista de AppUser a una lista de nicks y los une
-                  overflow: TextOverflow.ellipsis, 
-                  style: TextStyle(fontSize: 14, color: colors.onPrimaryContainer)
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodyS.copyWith(color: colors.onPrimaryContainer)
                 ),
                 ],
               ),

@@ -1,14 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
-import '../../themes/app_icons.dart';
-import '../../themes/app_typography.dart';
-import '../../viewmodels/login_viewmodel.dart';
-import '../../services/secure_store.dart';
-import '../../services/startup_ttfp.dart';
-import '../../models/auth_model.dart';
-
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import 'package:aceup_clean/themes/app_icons.dart';
+import 'package:aceup_clean/themes/app_typography.dart';
+import 'package:aceup_clean/viewmodels/auth/login_viewmodel.dart';
+
+// Solo si este screen usa estos helpers directamente:
+import 'package:aceup_clean/services/auth/secure_store.dart';
+
+import 'package:aceup_clean/services/startup_ttfp.dart'; // tu archivo está en lib/startup_ttfp.dart
+// import 'package:aceup_clean/widgets/buttons.dart'; // déjalo solo si existe
+
+import 'package:aceup_clean/models/auth_model.dart';
+
 class LoginScreen extends StatefulWidget {
   final LoginViewModel vm;
   const LoginScreen({super.key, required this.vm});

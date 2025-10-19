@@ -4,11 +4,15 @@ import 'package:provider/provider.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
+
 import '../../widgets/burger_menu.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
+import '../../widgets/keep_alive_wrapper.dart';
 import '../../widgets/top_bar.dart';
 import '../../widgets/content_switcher.dart';
-import '../../viewmodels/today_viewmodel.dart';
+
+import '../../viewmodels/today/today_viewmodel.dart';
 
 class TodayScreen extends StatelessWidget {
   const TodayScreen({super.key});
@@ -22,8 +26,40 @@ class TodayScreen extends StatelessWidget {
   }
 }
 
-class _TodayScreenContent extends StatelessWidget {
+class _TodayScreenContent extends StatefulWidget {
   const _TodayScreenContent();
+
+  @override
+  State<_TodayScreenContent> createState() => _TodayScreenContentState();
+}
+
+class _TodayScreenContentState extends State<_TodayScreenContent>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    final viewModel = context.read<TodayViewModel>();
+
+    _tabController = TabController(
+      length: viewModel.tabLabels.length,
+      vsync: this,
+      initialIndex: viewModel.selectedTabIndex,
+    );
+
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        viewModel.selectTab(_tabController.index);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,25 +69,22 @@ class _TodayScreenContent extends StatelessWidget {
 
     return Scaffold(
       drawer: const BurgerMenu(),
-      appBar: TopBar(
-        title: "Today",
-        leftControlType: LeftControlType.menu,
-        rightControlType: RightControlType.none,
-      ),
+      appBar: TopBar(title: "Today"),
       body: Column(
         children: [
           ContentSwitcher(
+            controller: _tabController,
             tabs: viewModel.tabLabels,
-            selectedIndex: viewModel.selectedTabIndex,
-            onTabSelected: (index) => viewModel.selectTab(index),
           ),
 
-          // Progress widget (only visible in assignments tab)
-          if (viewModel.selectedTab == TodayTab.assignments)
-            _buildProgressWidget(context, viewModel),
-
           Expanded(
-            child: _buildContent(context, viewModel),
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                KeepAliveWrapper(child: _buildTimetableContent(context, viewModel)),
+                KeepAliveWrapper(child: _buildAssignmentsContent(context, viewModel)),
+              ],
+            ),
           ),
         ],
       ),
@@ -148,125 +181,79 @@ class _TodayScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(BuildContext context, TodayViewModel viewModel) {
+  Widget _buildTimetableContent(BuildContext context, TodayViewModel viewModel) {
+    return _buildTabContent(context, viewModel, TodayTab.timetable);
+  }
+
+  Widget _buildAssignmentsContent(BuildContext context, TodayViewModel viewModel) {
+    return Column(
+      children: [
+        _buildProgressWidget(context, viewModel),
+        Expanded(child: _buildTabContent(context, viewModel, TodayTab.assignments)),
+      ]
+    );
+  }
+
+  Widget _buildTabContent(BuildContext context, TodayViewModel viewModel, TodayTab tab) {
+    final colors = Theme.of(context).colorScheme;
+
     if (viewModel.state == TodayViewState.loading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (viewModel.state == TodayViewState.error) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Failed to load assignments',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: colors.error,
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              viewModel.errorMessage ?? 'An unknown error occurred',
-              style: TextStyle(
-                fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface,
+              const SizedBox(height: 16),
+              Text(
+                'Failed to load data',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: colors.onSurface,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => viewModel.refreshAssignments(),
-              icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
-            ),
-          ],
+              const SizedBox(height: 8),
+              Text(
+                viewModel.errorMessage ?? 'An unknown error occurred',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: colors.onSurface,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => viewModel.refreshAssignments(),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
         ),
       );
     }
 
-    if (viewModel.hasContent) {
-      return _buildContentList(viewModel);
-    } else {
-      return _buildEmptyState(context, viewModel);
+    if (tab == TodayTab.assignments && viewModel.assignmentsDueToday.isNotEmpty) {
+      return _buildAssignmentsList(viewModel);
+    } else if (tab == TodayTab.timetable && viewModel.timetable.isNotEmpty && viewModel.exams.isNotEmpty) {
+      return _buildTimetableList(viewModel.timetable, viewModel.exams);
     }
-  }
 
-  Widget _buildEmptyState(BuildContext context, TodayViewModel viewModel) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Center(
-      child: Column(
-        children: [
-          Expanded(
-            flex: 2,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    color: colors.tertiary,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    AppIcons.icons,
-                    size: 40,
-                    color: colors.secondary,
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                  child: Text(
-                    viewModel.emptyStateMessage,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: colors.onPrimary,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  viewModel.emptyStateSubtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: colors.onSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-        ],
-      ),
+    return EmptyState(
+      message: viewModel.emptyStateMessage,
+      subtitle: viewModel.emptyStateSubtitle,
+      icon: viewModel.emptyStateIcon,
     );
-  }
-
-  Widget _buildContentList(TodayViewModel viewModel) {
-    switch (viewModel.selectedTab) {
-      case TodayTab.exams:
-        return _buildExamsList(viewModel.exams);
-      case TodayTab.timetable:
-        return _buildTimetableList(viewModel.timetable);
-      case TodayTab.assignments:
-        return _buildAssignmentsList(viewModel);
-    }
   }
 
   Widget _buildExamsList(List<String> exams) {
@@ -283,7 +270,7 @@ class _TodayScreenContent extends StatelessWidget {
     );
   }
 
-  Widget _buildTimetableList(List<String> timetable) {
+  Widget _buildTimetableList(List<String> timetable, List<String> exams) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
       itemCount: timetable.length,
@@ -322,15 +309,15 @@ class _TodayScreenContent extends StatelessWidget {
     Color priorityColor;
     switch (assignment.priority) {
       case 'High':
-        priorityIcon = AppIcons.importance;
+        priorityIcon = AppIcons.priority;
         priorityColor = AppColors.errorMedium;
         break;
       case 'Low':
-        priorityIcon = AppIcons.importance;
+        priorityIcon = AppIcons.priority;
         priorityColor = AppColors.successMedium;
         break;
       default: // Medium
-        priorityIcon = AppIcons.importance;
+        priorityIcon = AppIcons.priority;
         priorityColor = AppColors.warningMedium;
     }
 
@@ -349,10 +336,8 @@ class _TodayScreenContent extends StatelessWidget {
               },
               activeColor: colors.primary,
               checkColor: colors.onPrimary,
-              side: BorderSide(color: colors.primary, width: 2),
             ),
             const SizedBox(width: 8),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -388,11 +373,10 @@ class _TodayScreenContent extends StatelessWidget {
 
             const SizedBox(width: 8),
 
-            // Priority icon
             Icon(
               priorityIcon,
-              size: 21,
               color: priorityColor,
+              size: 21,
             ),
           ],
         ),

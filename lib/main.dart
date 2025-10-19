@@ -1,4 +1,3 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -20,21 +19,22 @@ import 'views/shared/shared_screen.dart';
 // Tema
 import 'themes/app_theme.dart';
 
-// Servicios
-import 'services/auth_service.dart';
-import 'services/notification_service.dart';
-import 'services/biometric_service.dart';
-import 'services/startup_ttfp.dart';
+// Servicios y VMs (rutas nuevas)
+import 'package:aceup_clean/services/notif/notification_service.dart';
+import 'package:aceup_clean/services/auth/auth_service.dart';
+import 'package:aceup_clean/services/auth/biometric_service.dart';
 
-// ViewModels
-import 'viewmodels/login_viewmodel.dart';
-import 'viewmodels/signup_viewmodel.dart';
-import 'viewmodels/holidays_viewmodel.dart';
+import 'package:aceup_clean/viewmodels/holidays/holidays_viewmodel.dart';
+import 'package:aceup_clean/viewmodels/auth/login_viewmodel.dart';
+import 'package:aceup_clean/viewmodels/auth/signup_viewmodel.dart';
 
 // Nuestro observer
-import 'core/observer/vm_scope.dart';
+import 'package:aceup_clean/core/observer/vm_scope.dart';
 
-// Provider (solo para Holidays + Auth stream + inyectar servicios)
+// TTFP (está en lib/)
+import 'package:aceup_clean/services/startup_ttfp.dart';
+
+// Provider
 import 'package:provider/provider.dart';
 
 Future<void> main() async {

@@ -1,4 +1,4 @@
-// lib/services/auth_service.dart
+// lib/services/auth/auth_service.dart
 import 'package:firebase_auth/firebase_auth.dart'; // ignore: uri_does_not_exist
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart'; // ignore: uri_does_not_exist

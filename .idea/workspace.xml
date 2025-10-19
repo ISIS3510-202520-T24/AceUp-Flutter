@@ -9,7 +9,15 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="83f1ba98-ac45-48c6-90e8-73adca6f18e6" name="Changes" comment="" />
+    <list default="true" id="83f1ba98-ac45-48c6-90e8-73adca6f18e6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/lib/widgets/keep_alive_wrapper.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/viewmodels/today/today_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/today/today_viewmodel.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/assignments/assignments_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/assignments/assignments_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/shared/shared_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/shared/shared_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/today/today_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/today/today_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/widgets/content_switcher.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/content_switcher.dart" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -49,7 +57,19 @@
       </file>
     </leaf>
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Dart File" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
@@ -97,7 +117,7 @@
     &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
     &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
     &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;feature/48-implement-assigments-screen-and-context-aware-feature&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;develop&quot;,
     &quot;io.flutter.reload.alreadyRun&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/LAURA/AceUp-Flutter/assets/icons&quot;,
     &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
@@ -113,11 +133,11 @@
       <recent name="C:\Users\LAURA\AceUp-Flutter\assets\logos" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\LAURA\AceUp-Flutter\assets\icons" />
-      <recent name="C:\Users\LAURA\AceUp-Flutter\assets\fonts" />
-      <recent name="C:\Users\LAURA\AceUp-Flutter\assets\logos" />
-      <recent name="C:\Users\LAURA\AceUp-Flutter\lib\views\shared" />
-      <recent name="C:\Users\LAURA\AceUp-Flutter\lib\views\auth" />
+      <recent name="C:\Users\LAURA\AceUp-Flutter\lib\services\shared" />
+      <recent name="C:\Users\LAURA\AceUp-Flutter\lib\services\notif" />
+      <recent name="C:\Users\LAURA\AceUp-Flutter\lib\viewmodels\today" />
+      <recent name="C:\Users\LAURA\AceUp-Flutter\lib\viewmodels\auth" />
+      <recent name="C:\Users\LAURA\AceUp-Flutter\lib\viewmodels\holidays" />
     </key>
   </component>
   <component name="RunManager" selected="Flutter.main.dart">
