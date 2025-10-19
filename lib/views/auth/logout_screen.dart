@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../services/auth_service.dart';
+import '../../viewmodels/login_viewmodel.dart';
 
 class LogoutScreen extends StatelessWidget {
-  const LogoutScreen({super.key});
+  final LoginViewModel vm;
+  const LogoutScreen({super.key, required this.vm});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +16,7 @@ class LogoutScreen extends StatelessWidget {
           children: [
             FilledButton.tonal(
               onPressed: () async {
-                await context.read<AuthService>().signOut();
+                await vm.signOut();
                 if (!context.mounted) return;
                 Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
               },

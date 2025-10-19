@@ -1,14 +1,16 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart'; // ignore: uri_does_not_exist
-import 'package:provider/provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/signup_viewmodel.dart';
+import '../../models/signup_model.dart';
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  final SignUpViewModel vm;
+  const SignUpScreen({super.key, required this.vm});
+
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
 }
@@ -22,57 +24,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   bool _agree = false;
   bool _ob1 = true, _ob2 = true;
-  bool _loading = false;
-
-  // Mostrar errores solo tras 1er intento
   bool _showErrors = false;
+
+  void _onVmChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.vm.addListener(_onVmChanged);
+  }
 
   @override
   void dispose() {
+    widget.vm.removeListener(_onVmChanged);
     _nick.dispose(); _email.dispose(); _pass.dispose(); _pass2.dispose();
     super.dispose();
   }
 
-  // ---------------- Validators ----------------
-  String? _vNick(String? v) {
-    final x = (v ?? '').trim();
-    if (x.isEmpty) return 'Choose a nickname';
-    if (x.length > 40) return 'Max 40 characters';
-    return null;
-  }
-
-  final _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-  String? _vEmail(String? v) {
-    final x = (v ?? '').trim();
-    if (x.isEmpty) return 'Enter your email';
-    if (!_emailRegex.hasMatch(x)) return 'Enter a valid email';
-    if (x.length > 40) return 'Max 40 characters';
-    return null;
-  }
-
-  // At least 8 chars, one uppercase letter and one number
-  final _pwdRegex = RegExp(r'^(?=.*[A-Z])(?=.*\d).{8,}$');
-  String? _vPass(String? v) {
-    final x = (v ?? '').trim();
-    if (x.isEmpty) return 'Enter your password';
-    if (x.length > 40) return 'Max 40 characters';
-    if (!_pwdRegex.hasMatch(x)) {
-      return 'Password must be 8+ chars, 1 uppercase, 1 number';
-    }
-    return null;
-  }
-
-  // Confirm password: solo que coincida
-  String? _vConfirm(String? v) {
-    final x = (v ?? '').trim();
-    if (x.isEmpty) return 'Confirm your password';
-    if (x != _pass.text.trim()) return 'Passwords do not match';
-    return null;
-  }
-
-  // --------------- Estilo uniforme ---------------
-  InputDecoration _decorStandard(BuildContext ctx,
-      {String? label, String? hint, Widget? suffix}) {
+  InputDecoration _decorStandard(BuildContext ctx, {String? label, String? hint, Widget? suffix}) {
     final colors = Theme.of(ctx).colorScheme;
     return InputDecoration(
       labelText: label,
@@ -100,7 +71,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  // ---------------- Terms modal (English) ----------------
   void _openTerms() {
     showModalBottomSheet(
       context: context,
@@ -115,45 +85,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
           child: ListView(
             children: [
               Text('Terms & Conditions',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w700)),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
               const SizedBox(height: 12),
-              Text('1. Acceptance of Service',
-                  style: textStyle?.copyWith(fontWeight: FontWeight.w600)),
+              Text('1. Acceptance of Service', style: textStyle?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              const Text(
-                  'By creating an account on AceUp you agree to follow our usage rules, privacy policy, and community guidelines.'),
+              const Text('By creating an account on AceUp you agree to follow our usage rules, privacy policy, and community guidelines.'),
               const SizedBox(height: 12),
-              Text('2. Acceptable Use',
-                  style: textStyle?.copyWith(fontWeight: FontWeight.w600)),
+              Text('2. Acceptable Use', style: textStyle?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              const Text(
-                  'You may not use the service for unlawful activities, spam, or attempts to compromise system security.'),
+              const Text('You may not use the service for unlawful activities, spam, or attempts to compromise system security.'),
               const SizedBox(height: 12),
-              Text('3. Data & Privacy',
-                  style: textStyle?.copyWith(fontWeight: FontWeight.w600)),
+              Text('3. Data & Privacy', style: textStyle?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              const Text(
-                  'We process your data according to the Privacy Policy. You can request deletion of your account at any time.'),
+              const Text('We process your data according to the Privacy Policy. You can request deletion of your account at any time.'),
               const SizedBox(height: 12),
-              Text('4. Intellectual Property',
-                  style: textStyle?.copyWith(fontWeight: FontWeight.w600)),
+              Text('4. Intellectual Property', style: textStyle?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              const Text(
-                  'AceUp trademarks and content belong to their respective owners. Do not use them without permission.'),
+              const Text('AceUp trademarks and content belong to their respective owners. Do not use them without permission.'),
               const SizedBox(height: 12),
-              Text('5. Changes',
-                  style: textStyle?.copyWith(fontWeight: FontWeight.w600)),
+              Text('5. Changes', style: textStyle?.copyWith(fontWeight: FontWeight.w600)),
               const SizedBox(height: 6),
-              const Text(
-                  'We may update these terms. We will notify you of material changes.'),
+              const Text('We may update these terms. We will notify you of material changes.'),
               const SizedBox(height: 20),
-              FilledButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
+              FilledButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
             ],
           ),
         );
@@ -181,14 +135,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
       context: context,
       builder: (_) => const AlertDialog(
         title: Text('We sent you an email ✉️'),
-        content: Text(
-            'Please verify your address (check inbox and spam). You can sign in once your email is verified.'),
+        content: Text('Please verify your address (check inbox and spam). You can sign in once your email is verified.'),
       ),
     );
   }
 
   Future<void> _submit() async {
-    setState(() => _showErrors = true); // desde aquí ya valida visualmente
+    setState(() => _showErrors = true);
     if (!_form.currentState!.validate()) return;
 
     if (!_agree) {
@@ -196,21 +149,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
 
-    setState(() => _loading = true);
-    final (ok, err) = await context.read<SignUpViewModel>().signUpWithEmailPassword(
-          nickname: _nick.text.trim(),
-          email: _email.text.trim(),
-          password: _pass.text.trim(),
-        );
-    if (!mounted) return;
-    setState(() => _loading = false);
+    final vm = widget.vm;
+    vm
+      ..setNick(_nick.text.trim())
+      ..setEmail(_email.text.trim())
+      ..setPass(_pass.text.trim())
+      ..setConfirm(_pass2.text.trim())
+      ..setAccept(true);
 
-    if (ok) {
+    final res = await vm.submit();
+    if (!mounted) return;
+
+    if (res.ok) {
       await _showVerificationDialog();
       if (!mounted) return;
       Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
     } else {
-      _snack(err ?? 'Could not register');
+      _snack(res.message ?? 'Could not register');
     }
   }
 
@@ -230,15 +185,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
           child: RichText(
             text: TextSpan(style: textStyle, children: [
               const TextSpan(text: 'I have read and accept the '),
-              TextSpan(
-                  text: 'Terms & Conditions',
-                  style: linkStyle,
-                  recognizer: TapGestureRecognizer()..onTap = _openTerms),
+              TextSpan(text: 'Terms & Conditions', style: linkStyle, recognizer: TapGestureRecognizer()..onTap = _openTerms),
               const TextSpan(text: ' and the '),
-              TextSpan(
-                  text: 'Privacy Policy',
-                  style: linkStyle,
-                  recognizer: TapGestureRecognizer()..onTap = _openTerms),
+              TextSpan(text: 'Privacy Policy', style: linkStyle, recognizer: TapGestureRecognizer()..onTap = _openTerms),
               const TextSpan(text: '.'),
             ]),
           ),
@@ -249,12 +198,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final vm = widget.vm;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
-    final autoMode = _showErrors
-        ? AutovalidateMode.onUserInteraction
-        : AutovalidateMode.disabled;
+    final autoMode = _showErrors ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled;
 
     return Scaffold(
       appBar: AppBar(surfaceTintColor: Colors.transparent, backgroundColor: Colors.transparent),
@@ -271,18 +219,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   Center(
                     child: Column(
                       children: [
-                        SvgPicture.asset('assets/logos/t_blue.svg', height: 120), // ignore: undefined_identifier
+                        SvgPicture.asset('assets/logos/t_blue.svg', height: 120),
                         const SizedBox(height: 2),
-                        Text('AceUp',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: colors.onPrimary)),
+                        Text('AceUp', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, color: colors.onPrimary)),
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Text('Sign up',
-                      style: AppTypography.h3.copyWith(color: colors.onPrimary)),
+                  Text('Sign up', style: AppTypography.h3.copyWith(color: colors.onPrimary)),
                   const SizedBox(height: 6),
                   Text('Create an account to access your new student lifestyle!',
                       style: AppTypography.bodyS.copyWith(color: colors.onPrimary)),
@@ -291,25 +235,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   TextFormField(
                     controller: _nick,
                     maxLength: 40,
-                    validator: _vNick,
-                    decoration: _decorStandard(context,
-                        label: 'Choose Your Nick', hint: 'e.g., Luc'),
+                    validator: (_) => SignUpForm.validateNick(_nick.text),
+                    decoration: _decorStandard(context, label: 'Choose Your Nick', hint: 'e.g., Luc'),
                   ),
                   const SizedBox(height: 12),
 
                   TextFormField(
                     controller: _email,
                     maxLength: 40,
-                    validator: _vEmail,
-                    decoration: _decorStandard(context,
-                        label: 'Email Address', hint: 'name@email.com'),
+                    validator: (_) => SignUpForm.validateEmail(_email.text),
+                    decoration: _decorStandard(context, label: 'Email Address', hint: 'name@email.com'),
                   ),
                   const SizedBox(height: 12),
 
                   TextFormField(
                     controller: _pass,
                     maxLength: 40,
-                    validator: _vPass,
+                    validator: (_) => SignUpForm.validatePassword(_pass.text),
                     obscureText: _ob1,
                     decoration: _decorStandard(
                       context,
@@ -327,15 +269,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   TextFormField(
                     controller: _pass2,
                     maxLength: 40,
-                    validator: _vConfirm,
+                    validator: (_) => SignUpForm.validateConfirm(_pass.text, _pass2.text),
                     obscureText: _ob2,
                     decoration: _decorStandard(
                       context,
                       label: 'Confirm password',
                       suffix: IconButton(
-                          onPressed: () => setState(() => _ob2 = !_ob2),
-                          icon: Icon(_ob2 ? AppIcons.visibilityOff : AppIcons.visibilityOn),
-                          color: colors.outline,
+                        onPressed: () => setState(() => _ob2 = !_ob2),
+                        icon: Icon(_ob2 ? AppIcons.visibilityOff : AppIcons.visibilityOn),
+                        color: colors.outline,
                       ),
                     ),
                   ),
@@ -348,10 +290,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     width: double.infinity,
                     height: 52,
                     child: FilledButton(
-                      onPressed: _loading ? null : _submit,
-                      child: _loading
-                          ? const SizedBox(
-                              width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                      onPressed: vm.loading ? null : _submit,
+                      child: vm.loading
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                           : const Text('Create account'),
                     ),
                   ),

@@ -1,14 +1,16 @@
+// lib/services/auth_service.dart
 import 'package:firebase_auth/firebase_auth.dart'; // ignore: uri_does_not_exist
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_messaging/firebase_messaging.dart'; //ignore: uri_does_not_exist
+import 'package:firebase_messaging/firebase_messaging.dart'; // ignore: uri_does_not_exist
 
 // ignore_for_file: undefined_class, undefined_identifier, non_type_as_type_argument
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final FirebaseMessaging _fcm = FirebaseMessaging.instance; 
+  final FirebaseMessaging _fcm = FirebaseMessaging.instance;
 
+  // ---- Accesores / estado ----
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
   bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
@@ -17,28 +19,28 @@ class AuthService {
   Future<UserCredential> signUpEmailPassword({
     required String email,
     required String password,
-    String? displayName, // nuestro "nick"
+    String? displayName,
   }) async {
-    final cred = await _auth.createUserWithEmailAndPassword(
-      email: email.trim(),
-      password: password.trim(),
-    );
+    try {
+      final cred = await _auth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
 
-    // Opcional: guardar nick como displayName en Auth
-    if (displayName != null && displayName.trim().isNotEmpty) {
-      await cred.user?.updateDisplayName(displayName.trim());
+      // Opcional: mostrar nick en Firebase Auth
+      if ((displayName ?? '').trim().isNotEmpty) {
+        await cred.user?.updateDisplayName(displayName!.trim());
+      }
+
+      // Asegura perfil en Firestore
+      await _ensureUserDoc(cred.user!, nickname: displayName);
+
+      return cred;
+    } on FirebaseAuthException catch (e) {
+      throw Exception(_friendly(e));
+    } catch (_) {
+      throw Exception('Could not create the account. Please try again.');
     }
-
-    // 🔹 Asegura perfil en Firestore
-    await _ensureUserDoc(
-      cred.user!,
-      nickname: displayName,
-    );
-
-    // Puedes enviar verificación si quieres
-    // await sendEmailVerification();
-
-    return cred;
   }
 
   // ---------- SIGN IN (email/clave) ----------
@@ -46,15 +48,21 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final cred = await _auth.signInWithEmailAndPassword(
-      email: email.trim(),
-      password: password.trim(),
-    );
+    try {
+      final cred = await _auth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password.trim(),
+      );
 
-    // 🔹 Si el doc de perfil no existe (usuarios antiguos), lo creamos
-    await _ensureUserDoc(cred.user!);
+      // Si no hay doc (usuarios antiguos), créalo/actualízalo
+      await _ensureUserDoc(cred.user!);
 
-    return cred;
+      return cred;
+    } on FirebaseAuthException catch (e) {
+      throw Exception(_friendly(e));
+    } catch (_) {
+      throw Exception('Could not sign in. Please try again.');
+    }
   }
 
   // ---------- PERFIL EN FIRESTORE ----------
@@ -66,17 +74,18 @@ class AuthService {
     final ref = _db.collection('users').doc(uid);
     final snap = await ref.get();
 
-    //Lógica para obtener el token de FCM
+    // Intenta obtener FCM token (si falla, no rompe el flujo)
     String? fcmToken;
     try {
       fcmToken = await _fcm.getToken();
+      // ignore: avoid_print
       print('📱 AuthService got FCM Token: $fcmToken');
     } catch (e) {
+      // ignore: avoid_print
       print('Could not get FCM token: $e');
     }
 
     if (!snap.exists) {
-      // Crear documento inicial
       await ref.set({
         'uid': uid,
         'email': user.email,
@@ -85,10 +94,9 @@ class AuthService {
         'fcmTokens': fcmToken != null ? [fcmToken] : [],
       });
     } else {
-      // Actualizar campos importantes sin pisar lo demás
       await ref.set({
         'email': user.email,
-        if (nickname != null && nickname.isNotEmpty) 'nick': nickname,
+        if ((nickname ?? '').trim().isNotEmpty) 'nick': nickname!.trim(),
         if (fcmToken != null) 'fcmTokens': FieldValue.arrayUnion([fcmToken]),
       }, SetOptions(merge: true));
     }
@@ -98,9 +106,10 @@ class AuthService {
   Future<void> updateNickname(String newNick) async {
     final u = _auth.currentUser;
     if (u == null) return;
-    await _db.collection('users').doc(u.uid).set({
-      'nick': newNick.trim(),
-    }, SetOptions(merge: true));
+    await _db.collection('users').doc(u.uid).set(
+      {'nick': newNick.trim()},
+      SetOptions(merge: true),
+    );
     await u.updateDisplayName(newNick.trim());
   }
 
@@ -115,9 +124,47 @@ class AuthService {
   Future<void> reloadUser() async => _auth.currentUser?.reload();
 
   Future<void> requestPasswordReset(String email) async {
-    await _auth.setLanguageCode('en'); // o 'es'
-    await _auth.sendPasswordResetEmail(email: email.trim());
+    try {
+      await _auth.setLanguageCode('en'); // o 'es'
+      await _auth.sendPasswordResetEmail(email: email.trim());
+    } on FirebaseAuthException catch (e) {
+      throw Exception(_friendly(e));
+    } catch (_) {
+      throw Exception('Could not send the reset email. Please try again.');
+    }
   }
 
   Future<void> signOut() => _auth.signOut();
+
+  // ---------- Mapeo de errores a mensajes amigables ----------
+  String _friendly(FirebaseAuthException e) {
+    switch (e.code) {
+      case 'email-already-in-use':
+        return 'This email is already in use.';
+      case 'invalid-email':
+        return 'Enter a valid email address.';
+      case 'user-not-found':
+        return 'No account found for that email.';
+      case 'wrong-password':
+      case 'invalid-credential':          // Web / SDKs recientes
+      case 'invalid-login-credentials':   // variante en algunos SDKs
+        return 'Incorrect email or password.';
+      case 'weak-password':
+        return 'Password is too weak.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'operation-not-allowed':
+        return 'This sign-in method is not enabled.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      case 'network-request-failed':
+        return 'Network error. Check your connection and try again.';
+      case 'expired-action-code':
+        return 'The link has expired. Request a new one.';
+      case 'invalid-action-code':
+        return 'The link is invalid or has already been used.';
+      default:
+        return 'Authentication error. Please try again.';
+    }
+  }
 }

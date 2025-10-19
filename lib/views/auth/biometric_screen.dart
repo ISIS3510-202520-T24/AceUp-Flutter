@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import '../../services/biometric_service.dart';
-import '../../services/auth_service.dart';
-import '../../services/secure_store.dart';
 import '../../viewmodels/login_viewmodel.dart';
 
 class BiometricScreen extends StatefulWidget {
-  const BiometricScreen({super.key});
+  final LoginViewModel vm;
+  const BiometricScreen({super.key, required this.vm});
 
   @override
   State<BiometricScreen> createState() => _BiometricScreenState();
@@ -15,61 +11,41 @@ class BiometricScreen extends StatefulWidget {
 
 class _BiometricScreenState extends State<BiometricScreen> {
   bool _checking = false;
-  String? _debugInfo; // opcional
+  String? _debugInfo;
+
+  void _onVmChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    widget.vm.addListener(_onVmChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.vm.removeListener(_onVmChanged);
+    super.dispose();
+  }
 
   Future<void> _tryAuth() async {
     if (_checking) return;
     setState(() => _checking = true);
 
     try {
-      // Diagnóstico opcional
-      final info = await BiometricService().debugSummary();
+      final info = await widget.vm.debugBiometricSummary();
       if (mounted) setState(() => _debugInfo = info);
 
-      final ok = await BiometricService().authenticate();
+      final res = await widget.vm.loginWithBiometrics();
       if (!mounted) return;
 
-      if (!ok) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Biometric auth cancelled / failed')),
-        );
-        return;
-      }
-
-      // Si hay credenciales guardadas, intenta el login
-      final stored = await SecureStore.biometricCredentials();
-      final email = stored.email;
-      final pass  = stored.password;
-
-      if (email == null || pass == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No saved credentials. Sign in once with email & password.')),
-        );
-        return;
-      }
-
-      final vm = context.read<LoginViewModel>();
-      final (success, err) = await vm.loginWithEmailPassword(email: email, password: pass);
-
-      if (!mounted) return;
-
-      if (success) {
-        final auth = context.read<AuthService>();
-        await auth.reloadUser();
-        if (auth.isEmailVerified) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Welcome back!')),
-          );
-          Navigator.pushReplacementNamed(context, '/today');
-        } else {
-          await auth.signOut();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please verify your email to continue')),
-          );
-        }
+      if (res.ok) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Welcome back!')));
+        Navigator.pushReplacementNamed(context, '/today');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(err ?? 'Could not sign in with biometrics.')),
+          SnackBar(content: Text(res.message ?? 'Biometric auth failed')),
         );
       }
     } finally {
@@ -80,8 +56,6 @@ class _BiometricScreenState extends State<BiometricScreen> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final auth = context.read<AuthService>();
-
     return Scaffold(
       appBar: AppBar(title: const Text('Biometric Login')),
       body: Padding(
@@ -89,14 +63,8 @@ class _BiometricScreenState extends State<BiometricScreen> {
         child: Column(
           children: [
             const SizedBox(height: 12),
-            Text(
-              'Use your fingerprint/face to continue.',
-              style: Theme.of(context).textTheme.bodyLarge,
-              textAlign: TextAlign.center,
-            ),
+            Text('Use your fingerprint/face to continue.', style: Theme.of(context).textTheme.bodyLarge, textAlign: TextAlign.center),
             const SizedBox(height: 24),
-
-            // Botón principal (mismo estilo que el de Sign in normal)
             SizedBox(
               width: double.infinity,
               height: 52,
@@ -104,31 +72,21 @@ class _BiometricScreenState extends State<BiometricScreen> {
                 onPressed: _checking ? null : _tryAuth,
                 icon: const Icon(Icons.fingerprint),
                 label: _checking
-                    ? const SizedBox(
-                        width: 20, height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Text('Sign in with biometrics'),
               ),
             ),
-
             const SizedBox(height: 16),
-
             OutlinedButton(
               onPressed: () async {
-                await auth.signOut();
+                await widget.vm.signOut();
                 if (mounted) Navigator.pushReplacementNamed(context, '/');
               },
               child: const Text('Use another account'),
             ),
-
             const Spacer(),
-
             if (_debugInfo != null)
-              Text(
-                'Debug: $_debugInfo',
-                style: TextStyle(color: colors.outline),
-              ),
+              Text('Debug: $_debugInfo', style: TextStyle(color: colors.outline)),
           ],
         ),
       ),
