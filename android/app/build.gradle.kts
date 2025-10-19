@@ -1,32 +1,26 @@
 plugins {
     id("com.android.application")
-    // START: FlutterFire Configuration
-    id("com.google.gms.google-services")
-    // END: FlutterFire Configuration
-    id("kotlin-android")
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id("org.jetbrains.kotlin.android")
+    id("com.google.gms.google-services") // si usas Firebase
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-
 android {
-    namespace = "com.aceup.aceup_clean"  // tu namespace real
+    namespace = "com.aceup.aceup_clean"
     compileSdk = 36
 
     defaultConfig {
         applicationId = "com.aceup.aceup_clean"
-        minSdk = flutter.minSdkVersion
-        targetSdk = 36
+        minSdk = 23
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+        multiDexEnabled = true
     }
 
     buildTypes {
-        debug {
-            // nada especial
-        }
+        debug {}
         release {
-            // si no minificas, NO uses shrinkResources
             isMinifyEnabled = false
             isShrinkResources = false
             proguardFiles(
@@ -45,7 +39,10 @@ android {
     }
 }
 
-
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation("androidx.multidex:multidex:2.0.1") // opcional
 }
