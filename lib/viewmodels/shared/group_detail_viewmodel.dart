@@ -9,10 +9,17 @@ import '../../models/calendar_event_model.dart';
 import '../../models/user_model.dart';
 import '../../services/shared/group_service.dart';
 import '../../services/auth/auth_service.dart';
+import '../../models/free_block_model.dart';
 
 enum ViewState { idle, loading, error }
 
+
+
 class GroupDetailViewModel extends ChangeNotifier {
+  // Bloques de disponibilidad grupal (lunes a domingo, 30 min)
+  List<FreeBlock> _groupFreeBlocks = [];
+  List<FreeBlock> get groupFreeBlocks => _groupFreeBlocks;
+
   /// Valida si el rango de tiempo propuesto para un evento se solapa con clases, exámenes o tareas.
   /// Si es edición, se puede pasar el eventId para ignorar ese evento.
   /// Retorna null si no hay conflicto, o un mensaje de error si hay solapamiento.
@@ -145,6 +152,18 @@ class GroupDetailViewModel extends ChangeNotifier {
       
       print('🎯 Total events after loading all: ${allEvents.length}');
       _allEvents = allEvents;
+      // Calcular bloques de disponibilidad grupal (lunes a viernes, 6am-9pm)
+      final memberEvents = <String, List<CalendarEvent>>{};
+      for (final member in _groupMembers) {
+        memberEvents[member.nick] = _allEvents.where((e) => e.ownerName == member.nick).toList();
+      }
+      _groupFreeBlocks = await GroupService.calculateGroupFreeBlocks(
+        memberEvents: memberEvents,
+        intervalMinutes: 30,
+        weekdays: [1,2,3,4,5], // Lunes a Viernes
+        startHour: 6,
+        endHour: 21,
+      );
     } catch (e) {
       print('Error loading events: $e');
       throw e;

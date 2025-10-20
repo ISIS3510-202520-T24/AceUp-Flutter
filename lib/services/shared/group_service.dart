@@ -5,9 +5,50 @@ import 'package:flutter/material.dart';
 import '../../models/group_model.dart';
 import '../../models/user_model.dart';
 import '../../models/calendar_event_model.dart';
+import '../../models/free_block_model.dart';
+
 
 class GroupService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  /// Calcula los bloques de tiempo libres para todos los miembros de un grupo.
+  /// [memberEvents] es un mapa de nombre de miembro a su lista de eventos.
+  /// [intervalMinutes] es la duración de cada bloque (ej: 30).
+  /// [weekdays] es la lista de días a mostrar (1=Monday, 7=Sunday).
+  static Future<List<FreeBlock>> calculateGroupFreeBlocks({
+    required Map<String, List<CalendarEvent>> memberEvents,
+    int intervalMinutes = 30,
+    List<int> weekdays = const [1,2,3,4,5], // Lunes a Viernes
+    int startHour = 8,
+    int endHour = 17,
+  }) async {
+    List<FreeBlock> result = [];
+    for (int weekday in weekdays) {
+      for (int hour = startHour; hour < endHour; hour++) {
+        for (int min = 0; min < 60; min += intervalMinutes) {
+          final blockStart = TimeOfDay(hour: hour, minute: min);
+          final blockEnd = TimeOfDay(hour: hour, minute: min + intervalMinutes > 59 ? 59 : min + intervalMinutes);
+          List<String> freeMembers = [];
+          memberEvents.forEach((member, events) {
+            // Buscar si el miembro tiene algún evento que se cruce con este bloque
+            final isBusy = events.any((e) {
+              if (e.startTime.weekday != weekday) return false;
+              final eventStart = TimeOfDay(hour: e.startTime.hour, minute: e.startTime.minute);
+              final eventEnd = TimeOfDay(hour: e.endTime.hour, minute: e.endTime.minute);
+              return _overlaps(blockStart, blockEnd, eventStart, eventEnd);
+            });
+            if (!isBusy) freeMembers.add(member);
+          });
+          result.add(FreeBlock(
+            weekday: weekday,
+            start: blockStart,
+            end: blockEnd,
+            freeMembers: freeMembers,
+          ));
+        }
+      }
+    }
+    return result;
+  }
 
   // --- MÉTODOS DE USUARIO ---
 
@@ -283,6 +324,7 @@ class GroupService {
   }
 }
 
+
 // Método helper para generar eventos recurrentes de clases
 List<CalendarEvent> _generateRecurringClassEvents({
   required String subjectName,
@@ -295,41 +337,20 @@ List<CalendarEvent> _generateRecurringClassEvents({
   required Color color,
 }) {
   List<CalendarEvent> events = [];
-  
   try {
-    // Parsear las horas
     final startTimeParts = startTimeStr.split(':');
     final endTimeParts = endTimeStr.split(':');
-    
     final startHour = int.parse(startTimeParts[0]);
     final startMinute = int.parse(startTimeParts[1]);
     final endHour = int.parse(endTimeParts[0]);
     final endMinute = int.parse(endTimeParts[1]);
-    
-    // Generar eventos para las próximas 12 semanas
     DateTime today = DateTime.now();
-    DateTime startDate = today.subtract(Duration(days: 30)); // Empezar desde hace un mes
-    DateTime endDate = today.add(Duration(days: 90)); // Hasta 3 meses adelante
-
-        for (DateTime current = startDate; current.isBefore(endDate); current = current.add(Duration(days: 1))) {
-      // Verificar si el día actual coincide con el día de la semana de la clase
+    DateTime startDate = today.subtract(Duration(days: 30));
+    DateTime endDate = today.add(Duration(days: 90));
+    for (DateTime current = startDate; current.isBefore(endDate); current = current.add(Duration(days: 1))) {
       if (current.weekday == dayOfWeek) {
-        final startTime = DateTime(
-          current.year,
-          current.month,
-          current.day,
-          startHour,
-          startMinute,
-        );
-        
-        final endTime = DateTime(
-          current.year,
-          current.month,
-          current.day,
-          endHour,
-          endMinute,
-        );
-        
+        final startTime = DateTime(current.year, current.month, current.day, startHour, startMinute);
+        final endTime = DateTime(current.year, current.month, current.day, endHour, endMinute);
         events.add(CalendarEvent(
           id: '${classId}_${current.millisecondsSinceEpoch}',
           title: "Class: $subjectName",
@@ -342,11 +363,18 @@ List<CalendarEvent> _generateRecurringClassEvents({
         ));
       }
     }
-
-      } catch (e) {
+  } catch (e) {
     print('❌ Error generating recurring events for $subjectName: $e');
   }
-  
   return events;
+}
+
+// Helper para verificar solapamientos de bloques de tiempo
+bool _overlaps(TimeOfDay aStart, TimeOfDay aEnd, TimeOfDay bStart, TimeOfDay bEnd) {
+  final aStartMins = aStart.hour * 60 + aStart.minute;
+  final aEndMins = aEnd.hour * 60 + aEnd.minute;
+  final bStartMins = bStart.hour * 60 + bStart.minute;
+  final bEndMins = bEnd.hour * 60 + bEnd.minute;
+  return aStartMins < bEndMins && bStartMins < aEndMins;
 }
 
