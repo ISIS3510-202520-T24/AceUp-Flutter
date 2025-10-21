@@ -1,9 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:aceup_clean/core/observer/observable.dart';
-import 'package:aceup_clean/models/auth_model.dart';
-import 'package:aceup_clean/services/auth/auth_service.dart';
-import 'package:aceup_clean/services/auth/biometric_service.dart';
-import 'package:aceup_clean/services/auth/secure_store.dart';
+import 'package:firebase_auth/firebase_auth.dart'; //ignore: uri_does_not_exist
+import '../../core/observer/observable.dart';
+import '../../models/auth_model.dart';
+import '../../services/auth/auth_service.dart';
+import '../../services/auth/biometric_service.dart';
+import '../../services/auth/secure_store.dart';
+
+// ignore_for_file: type_test_with_undefined_name
 
 class LoginViewModel extends Observable {
   final AuthService _auth;

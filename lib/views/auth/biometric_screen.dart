@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:aceup_clean/viewmodels/auth/login_viewmodel.dart';
+import '../../viewmodels/auth/login_viewmodel.dart';
 
 class BiometricScreen extends StatefulWidget {
   final LoginViewModel vm;

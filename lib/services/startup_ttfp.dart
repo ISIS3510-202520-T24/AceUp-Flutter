@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_analytics/firebase_analytics.dart'; //ignore: uri_does_not_exist
+
+//ignore_for_file: undefined_identifier
 
 /// Mide el tiempo desde main() hasta que el Login hace su primer frame.
 class StartupTTFP {

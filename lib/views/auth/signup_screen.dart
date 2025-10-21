@@ -1,11 +1,12 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:aceup_clean/themes/app_icons.dart';
-import 'package:aceup_clean/themes/app_typography.dart';
-import 'package:aceup_clean/viewmodels/auth/signup_viewmodel.dart';
-import 'package:aceup_clean/models/signup_model.dart';
+import 'package:flutter_svg/flutter_svg.dart'; // ignore: uri_does_not_exist
+import '../../themes/app_icons.dart';
+import '../../themes/app_typography.dart';
+import '../../viewmodels/auth/signup_viewmodel.dart';
+import '../../models/signup_model.dart';
 
+// ignore_for_file: undefined_identifier
 
 class SignUpScreen extends StatefulWidget {
   final SignUpViewModel vm;

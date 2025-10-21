@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 // Firebase
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart' show User;
+import 'package:firebase_auth/firebase_auth.dart' show User; //ignore: uri_does_not_exist
 import 'firebase_options.dart';
 
 // Vistas
@@ -16,23 +16,19 @@ import 'views/holidays/holidays_screen.dart';
 import 'views/today/today_screen.dart';
 import 'views/shared/shared_screen.dart';
 
-// Tema
 import 'themes/app_theme.dart';
 
-// Servicios y VMs (rutas nuevas)
-import 'package:aceup_clean/services/notif/notification_service.dart';
-import 'package:aceup_clean/services/auth/auth_service.dart';
-import 'package:aceup_clean/services/auth/biometric_service.dart';
+import 'services/notif/notification_service.dart';
+import 'services/auth/auth_service.dart';
+import 'services/auth/biometric_service.dart';
 
-import 'package:aceup_clean/viewmodels/holidays/holidays_viewmodel.dart';
-import 'package:aceup_clean/viewmodels/auth/login_viewmodel.dart';
-import 'package:aceup_clean/viewmodels/auth/signup_viewmodel.dart';
+import 'viewmodels/holidays/holidays_viewmodel.dart';
+import 'viewmodels/auth/login_viewmodel.dart';
+import 'viewmodels/auth/signup_viewmodel.dart';
 
-// Nuestro observer
-import 'package:aceup_clean/core/observer/vm_scope.dart';
+import 'core/observer/vm_scope.dart';
 
-// TTFP (está en lib/)
-import 'package:aceup_clean/services/startup_ttfp.dart';
+import 'services/startup_ttfp.dart';
 
 // Provider
 import 'package:provider/provider.dart';
