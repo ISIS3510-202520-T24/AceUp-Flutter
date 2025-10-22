@@ -13,6 +13,7 @@ import '../../widgets/top_bar.dart';
 import '../../widgets/content_switcher.dart';
 
 import '../../viewmodels/today/today_viewmodel.dart';
+import '../assignments/edit_assignment_screen.dart';
 
 class TodayScreen extends StatelessWidget {
   const TodayScreen({super.key});
@@ -103,7 +104,7 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
           FabOption(
             icon: AppIcons.assignments,
             label: 'New Assignment',
-            onPressed: () => _handleAddAction(context, viewModel),
+            onPressed: () => _handleAddAssignmentAction(context, viewModel),
           ),
         ],
       ),
@@ -382,6 +383,18 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
         ),
       ),
     );
+  }
+
+  Future<void> _handleAddAssignmentAction(BuildContext context, TodayViewModel viewModel) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const EditAssignmentScreen(assignment: null),
+      ),
+    );
+
+    if (result == true) {
+      viewModel.refreshAssignments();
+    }
   }
 
   void _handleAddAction(BuildContext context, TodayViewModel viewModel) {
