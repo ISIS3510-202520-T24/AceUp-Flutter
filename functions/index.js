@@ -12,11 +12,12 @@ exports.notifyOnFreeMembers = onSchedule("every 5 minutes", async (event) => {
   logger.info("--- [notifyOnFreeMembers] Function Start ---");
 
   // Obtener hora actual del servidor (UTC)
-  const nowUTC = new Date();
+  const now = new Date();
+  const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
   
-  // Convertir a hora de Bogotá (UTC-5)
-  const nowBogota = new Date(nowUTC.getTime() - 5 * 60 * 60 * 1000);
-  const fiveMinutesAgoBogota = new Date(nowBogota.getTime() - 5 * 60 * 1000);
+  // Convertir a hora de Bogotá solo para logs
+  const nowBogota = new Date(now.getTime() - 5 * 60 * 60 * 1000);
+  const fiveMinutesAgoBogota = new Date(fiveMinutesAgo.getTime() - 5 * 60 * 60 * 1000);
   const db = admin.firestore();
 
   logger.info(`Current time in Bogotá (UTC-5): ${nowBogota.toISOString()}`);
@@ -50,7 +51,7 @@ exports.notifyOnFreeMembers = onSchedule("every 5 minutes", async (event) => {
               .where("endTime", "<=", admin.firestore.Timestamp.fromDate(now))
               .get();
             if (!examsSnap.empty) {
-              logger.info(`   ✅ Member ${memberId} just finished an EXAM in subject ${subjectDoc.id}!`);
+              logger.info(` Member ${memberId} just finished an EXAM in subject ${subjectDoc.id}!`);
               justBecameFree = true;
               break;
             }
@@ -63,25 +64,26 @@ exports.notifyOnFreeMembers = onSchedule("every 5 minutes", async (event) => {
               if (typeof dayOfWeek !== "number" || typeof endTimeStr !== "string") continue;
               
               // Obtener el día de la semana actual en UTC
-              const nowDayOfWeekUTC = now.getUTCDay() === 0 ? 7 : now.getUTCDay();
+              const nowDayOfWeek = now.getUTCDay() === 0 ? 7 : now.getUTCDay();
               
               // Solo revisar si coincide el día de la semana
-              if (nowDayOfWeekUTC === dayOfWeek) {
+              if (nowDayOfWeek === dayOfWeek) {
                 const [hour, minute] = endTimeStr.split(":").map(Number);
                 // Crear fecha de fin de clase para HOY en UTC
-                const classEndTimeTodayUTC = new Date(Date.UTC(
+                // endTimeStr está en hora de Bogotá (UTC-5), así que sumamos 5 horas para convertir a UTC
+                const classEndTimeToday = new Date(Date.UTC(
                   now.getUTCFullYear(), 
                   now.getUTCMonth(), 
                   now.getUTCDate(), 
-                  hour, 
+                  hour + 5, 
                   minute
                 ));
                 
-                logger.info(`   🔍 Checking class ${subjectDoc.data().name}: endTime=${endTimeStr} (${classEndTimeTodayUTC.toISOString()}), window=${fiveMinutesAgo.toISOString()} to ${now.toISOString()}`);
+                logger.info(`Checking class ${subjectDoc.data().name}: endTime=${endTimeStr} (${classEndTimeToday.toISOString()}), window=${fiveMinutesAgo.toISOString()} to ${now.toISOString()}`);
                 
                 // Verificar si la clase terminó en los últimos 5 minutos
-                if (classEndTimeTodayUTC >= fiveMinutesAgo && classEndTimeTodayUTC <= now) {
-                  logger.info(`   ✅ Member ${memberId} just finished a CLASS: ${subjectDoc.data().name}!`);
+                if (classEndTimeToday >= fiveMinutesAgo && classEndTimeToday <= now) {
+                  logger.info(`Member ${memberId} just finished a CLASS: ${subjectDoc.data().name}!`);
                   justBecameFree = true;
                   break;
                 }
@@ -103,27 +105,10 @@ exports.notifyOnFreeMembers = onSchedule("every 5 minutes", async (event) => {
         }
       }
 
-      // --- COOLDOWN: chequear lastFreeNotifyAt ---
+      // --- Notificar si 2 o más miembros están libres ---
       if (recentlyFreedMembers.length >= 2) {
-        const groupRef = db.collection("groups").doc(groupDoc.id);
-        const groupData = groupDoc.data();
-        let lastFreeNotifyAt = groupData.lastFreeNotifyAt;
-        let canNotify = true;
-        if (lastFreeNotifyAt && lastFreeNotifyAt.toDate) {
-          lastFreeNotifyAt = lastFreeNotifyAt.toDate();
-        }
-        if (lastFreeNotifyAt instanceof Date) {
-          const diffMs = now.getTime() - lastFreeNotifyAt.getTime();
-          if (diffMs < 30 * 60 * 1000) { // 30 minutos
-            canNotify = false;
-            logger.info(`   ⏳ Skipping notification for group "${groupName}" due to cooldown (${Math.floor(diffMs/60000)} min ago)`);
-          }
-        }
-        if (canNotify) {
-          logger.info(`   🎉 ${recentlyFreedMembers.length} members are now available simultaneously!`);
-          await notifyOnAvailabilityChange(group, recentlyFreedMembers, now);
-          await groupRef.update({ lastFreeNotifyAt: admin.firestore.Timestamp.fromDate(now) });
-        }
+        logger.info(`   🎉 ${recentlyFreedMembers.length} members are now available simultaneously!`);
+        await notifyOnAvailabilityChange(group, recentlyFreedMembers, now);
       } else if (recentlyFreedMembers.length === 1) {
         logger.info(`Only 1 member became free. Waiting for more members to maximize coordination.`);
       } else {
@@ -131,7 +116,7 @@ exports.notifyOnFreeMembers = onSchedule("every 5 minutes", async (event) => {
       }
     }
   } catch (error) {
-    logger.error("❌ CRITICAL ERROR in notifyOnFreeMembers:", error);
+    logger.error("CRITICAL ERROR in notifyOnFreeMembers:", error);
   }
   logger.info("--- [notifyOnFreeMembers] Function End ---");
 });
@@ -476,7 +461,7 @@ async function notifyOnScheduleUpdate(userId, eventContext = {}) {
       }
     }
   } catch (error) {
-    logger.error(`❌ CRITICAL ERROR in notifyOnScheduleUpdate for user ${userId}:`, error);
+    logger.error(`CRITICAL ERROR in notifyOnScheduleUpdate for user ${userId}:`, error);
   }
 }
 
@@ -593,25 +578,25 @@ async function notifyOnAvailabilityChange(groupData, freedMembers, currentTime) 
 
   if (uidsToNotify.length > 0) {
     await sendNotification(groupName, uidsToNotify, notificationBody);
-    logger.info(`   📢 Notification sent: "${notificationBody}"`);
+    logger.info(`Notification sent: "${notificationBody}"`);
   } else {
     logger.info(`- No other members in the group to notify.`);
   }
 }
 
 async function sendNotification(groupName, uidsToNotify, notificationBody) {
-  logger.info(`   📬 Preparing to notify UIDs: ${uidsToNotify.join(", ")}`);
+  logger.info(`Preparing to notify UIDs: ${uidsToNotify.join(", ")}`);
   const tokens = await getTokensForUids(uidsToNotify);
   if (tokens.length > 0) {
-    logger.info(`   📲 Found ${tokens.length} FCM tokens. Sending notification...`);
+    logger.info(`Found ${tokens.length} FCM tokens. Sending notification...`);
     const message = {
       notification: { title: `Update from ${groupName}`, body: notificationBody },
       tokens: tokens,
     };
     await admin.messaging().sendEachForMulticast(message);
-    logger.info(`   ✅ Notification sent successfully.`);
+    logger.info(`Notification sent successfully.`);
   } else {
-    logger.warn(`   ⚠️ No FCM tokens found for users to notify.`);
+    logger.warn(`No FCM tokens found for users to notify.`);
   }
 }
 
