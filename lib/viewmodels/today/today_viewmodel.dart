@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../models/assignment_model.dart';
-import '../services/assignment_service.dart';
-import '../services/auth_service.dart';
+import '../../models/assignments/assignment_model.dart';
+import '../../services/assignments/assignment_service.dart';
+import '../../services/auth/auth_service.dart';
+import '../../themes/app_icons.dart';
 
-enum TodayTab { exams, timetable, assignments }
+enum TodayTab { timetable, assignments }
 
 enum TodayViewState { idle, loading, error }
 
@@ -11,21 +12,25 @@ class TodayViewModel extends ChangeNotifier {
   final AssignmentService _assignmentService = AssignmentService();
   final AuthService _authService = AuthService();
 
-  TodayTab _selectedTab = TodayTab.assignments;
+  TodayTab _selectedTab = TodayTab.timetable;
+
   TodayTab get selectedTab => _selectedTab;
 
   TodayViewState _state = TodayViewState.idle;
+
   TodayViewState get state => _state;
 
   List<Assignment> _assignmentsDueToday = [];
+
   List<Assignment> get assignmentsDueToday => _assignmentsDueToday;
 
   String? _errorMessage;
+
   String? get errorMessage => _errorMessage;
 
   int get selectedTabIndex => _selectedTab.index;
 
-  final List<String> tabLabels = ['Exams', 'Timetable', 'Assignments'];
+  final List<String> tabLabels = ['Timetable', 'Assignments'];
 
   TodayViewModel() {
     _loadAssignmentsDueToday();
@@ -34,23 +39,12 @@ class TodayViewModel extends ChangeNotifier {
   void selectTab(int index) {
     if (index >= 0 && index < TodayTab.values.length) {
       _selectedTab = TodayTab.values[index];
-
-      // Reload assignments when switching to assignments tab
-      if (_selectedTab == TodayTab.assignments) {
-        _loadAssignmentsDueToday();
-      }
-
       notifyListeners();
     }
   }
 
   void selectTabByEnum(TodayTab tab) {
     _selectedTab = tab;
-
-    if (_selectedTab == TodayTab.assignments) {
-      _loadAssignmentsDueToday();
-    }
-
     notifyListeners();
   }
 
@@ -68,9 +62,9 @@ class TodayViewModel extends ChangeNotifier {
 
     try {
       final today = DateTime.now();
-      _assignmentsDueToday = await _assignmentService.getAssignmentsDueToday(userId, today);
+      _assignmentsDueToday =
+      await _assignmentService.getAssignmentsDueToday(userId, today);
 
-      // Sort: pending first, then completed
       _assignmentsDueToday.sort((a, b) {
         if (a.isPending && b.isCompleted) return -1;
         if (a.isCompleted && b.isPending) return 1;
@@ -90,7 +84,8 @@ class TodayViewModel extends ChangeNotifier {
 
   Future<void> toggleAssignmentStatus(Assignment assignment) async {
     final userId = _authService.currentUser?.uid;
-    if (userId == null || assignment.termId == null || assignment.subjectId == null) {
+    if (userId == null || assignment.termId == null ||
+        assignment.subjectId == null) {
       return;
     }
 
@@ -105,12 +100,11 @@ class TodayViewModel extends ChangeNotifier {
         newStatus,
       );
 
-      // Update local state immediately for better UX
-      final index = _assignmentsDueToday.indexWhere((a) => a.id == assignment.id);
+      final index = _assignmentsDueToday.indexWhere((a) =>
+      a.id == assignment.id);
       if (index != -1) {
         _assignmentsDueToday[index] = assignment.copyWith(status: newStatus);
 
-        // Re-sort: pending first, then completed
         _assignmentsDueToday.sort((a, b) {
           if (a.isPending && b.isCompleted) return -1;
           if (a.isCompleted && b.isPending) return 1;
@@ -126,8 +120,15 @@ class TodayViewModel extends ChangeNotifier {
     }
   }
 
-  int get pendingCount => _assignmentsDueToday.where((a) => a.isPending).length;
-  int get completedCount => _assignmentsDueToday.where((a) => a.isCompleted).length;
+  int get pendingCount =>
+      _assignmentsDueToday
+          .where((a) => a.isPending)
+          .length;
+
+  int get completedCount =>
+      _assignmentsDueToday
+          .where((a) => a.isCompleted)
+          .length;
 
   List<String> get exams => [];
 
@@ -137,10 +138,8 @@ class TodayViewModel extends ChangeNotifier {
 
   bool get hasContent {
     switch (_selectedTab) {
-      case TodayTab.exams:
-        return exams.isNotEmpty;
       case TodayTab.timetable:
-        return timetable.isNotEmpty;
+        return timetable.isNotEmpty && exams.isNotEmpty;
       case TodayTab.assignments:
         return _assignmentsDueToday.isNotEmpty;
     }
@@ -148,23 +147,28 @@ class TodayViewModel extends ChangeNotifier {
 
   String get emptyStateMessage {
     switch (_selectedTab) {
-      case TodayTab.exams:
-        return 'You have no exams scheduled for today';
       case TodayTab.timetable:
-        return 'You have no classes scheduled for today';
+        return 'No classes left for today';
       case TodayTab.assignments:
-        return 'No assignments due today!';
+        return 'No assignments due today';
     }
   }
 
   String get emptyStateSubtitle {
     switch (_selectedTab) {
-      case TodayTab.exams:
-        return 'Time to relax and prepare!';
       case TodayTab.timetable:
         return 'Enjoy your free time!';
       case TodayTab.assignments:
         return 'Great job staying ahead!';
+    }
+  }
+
+  IconData get emptyStateIcon {
+    switch (_selectedTab) {
+      case TodayTab.timetable:
+        return AppIcons.chalkboard;
+      case TodayTab.assignments:
+        return AppIcons.assignments;
     }
   }
 

@@ -1,12 +1,13 @@
 // lib/features/groups/views/group_detail_screen.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../models/calendar_event_model.dart';
+import '../../models/free_block_model.dart';
 import '../../themes/app_icons.dart';
-import '../../viewmodels/group_detail_view_model.dart';
-import '../../viewmodels/shared_view_model.dart' hide ViewState;
+import '../../viewmodels/shared/group_detail_viewmodel.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/top_bar.dart';
 import '../../themes/app_typography.dart';
@@ -36,32 +37,46 @@ class GroupDetailScreen extends StatefulWidget {
 }
 
 class _GroupDetailScreenState extends State<GroupDetailScreen> {
+  // Configuración de timeline
+  static const double _hourRowHeight = 80.0; // px por hora
+  
+  // Devuelve el lunes de la semana de la fecha dada
+  DateTime _getMonday(DateTime date) {
+    return date.subtract(Duration(days: date.weekday - 1));
+  }
   late DateTime _selectedDate;
+  late DateTime _weekStartDate; // lunes de la semana actual
   List<Day> _weekDays = [];
-  late PageController _pageController;
-  final int _initialPage = 5000;
+  Timer? _nowTimer; // para actualizar la línea de "ahora"
+  DateTime _now = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _selectedDate = DateUtils.dateOnly(DateTime.now()); 
-    _pageController = PageController(initialPage: _initialPage);
-    _generateWeekDaysFor(_selectedDate);
+  _selectedDate = DateUtils.dateOnly(DateTime.now());
+  _weekStartDate = _getMonday(_selectedDate);
+  _generateWeekDaysFor(_weekStartDate);
+  // Actualizar la línea de la hora actual cada minuto
+  _now = DateTime.now();
+  _nowTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+    if (!mounted) return;
+    setState(() {
+      _now = DateTime.now();
+    });
+  });
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
-    super.dispose();
+  _nowTimer?.cancel();
+  super.dispose();
   }
 
   void _generateWeekDaysFor(DateTime date) {
     _weekDays = [];
-    int currentDayOfWeek = date.weekday;
-    DateTime firstDayOfWeek = date.subtract(Duration(days: currentDayOfWeek - 1));
-
-    for (int i = 0; i < 7; i++) {
-      final weekDay = firstDayOfWeek.add(Duration(days: i));
+    // Solo lunes a viernes
+    for (int i = 0; i < 5; i++) {
+      final weekDay = date.add(Duration(days: i));
       _weekDays.add(
         Day(
           date: weekDay,
@@ -75,7 +90,6 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.read<GroupDetailViewModel>();
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
 
@@ -87,352 +101,355 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         rightControlType: RightControlType.none,
         onRightPressed: () {},
       ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            color: colors.tertiary,
-            child: Row(
-              children: [
-                IconButton(
-                  icon: Icon(AppIcons.arrowLeft, size: 20),
-                  color: colors.onTertiary,
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                Text(
-                  widget.groupName,
-                  style: AppTypography.h4.copyWith(
-                    color: colors.onPrimary,
+      body: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          if (details.primaryVelocity == null) return;
+          if (details.primaryVelocity! < 0) {
+            // Swipe left: next week
+            setState(() {
+              _weekStartDate = _weekStartDate.add(const Duration(days: 7));
+              _generateWeekDaysFor(_weekStartDate);
+            });
+          } else if (details.primaryVelocity! > 0) {
+            // Swipe right: previous week
+            setState(() {
+              _weekStartDate = _weekStartDate.subtract(const Duration(days: 7));
+              _generateWeekDaysFor(_weekStartDate);
+            });
+          }
+        },
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              color: colors.tertiary,
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Icon(AppIcons.arrowLeft, size: 20),
+                    color: colors.onTertiary,
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
-                ),
-              ],
+                  Text(
+                    widget.groupName,
+                    style: AppTypography.h4.copyWith(
+                      color: colors.onPrimary,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          _buildWeekSelector(colors),
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              onPageChanged: (index) {
-                final newDate = DateUtils.dateOnly(DateTime.now()).add(Duration(days: index - _initialPage));
-                if (!DateUtils.isSameDay(_selectedDate, newDate)) {
-                  setState(() {
-                    _selectedDate = newDate;
-                    _generateWeekDaysFor(newDate);
-                  });
-                }
-              },
-              itemBuilder: (context, index) {
-                final dateForPage = DateUtils.dateOnly(DateTime.now()).add(Duration(days: index - _initialPage));
-                return Consumer<GroupDetailViewModel>(
-                  builder: (context, vm, child) {
-                    final eventsForPage = vm.getEventsForDay(dateForPage);
-                    return _buildEventList(context, vm, eventsForPage, dateForPage);
-                  }
-                );
-              },
+            _buildWeekSelector(colors),
+            Expanded(
+              child: Consumer<GroupDetailViewModel>(
+                builder: (context, vm, child) {
+                  return _buildGroupAvailabilityGrid(vm);
+                },
+              ),
             ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddGroupEventDialog(context, viewModel),
-        backgroundColor: colors.primary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-        child: Icon(Icons.group_add, color: colors.onPrimary),
+          ],
+        ),
       ),
     );
   }
+      // Grilla semanal tipo timeline (Lun-Vie). Días en columnas y tiempo en el eje Y.
+      Widget _buildGroupAvailabilityGrid(GroupDetailViewModel vm) {
+        // Configuración visual y de tiempo
+    const int startHour = 6; // 6 AM
+    const int endHour = 21;  // 9 PM
+    const int intervalMinutes = 30;
+    // Solo lunes a viernes de la semana seleccionada
+    final days = List.generate(5, (i) => _weekStartDate.add(Duration(days: i)));
 
-// EN group_detail_screen.dart
-Widget _buildWeekSelector(ColorScheme colors) {
-  return Container(
-    padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0), // Añadido padding horizontal
-    color: Colors.white,
-    child: Row(
-      children: [
-        IconButton(
-          icon: Icon(Icons.arrow_left, color: colors.onPrimaryContainer),
-          onPressed: () {
-            _pageController.animateToPage(
-              _pageController.page!.round() - 7,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
-          },
-        ),
-        Expanded(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: _weekDays.map((day) {
-              final isSelected = DateUtils.isSameDay(day.date, _selectedDate);
-              // Ahora el `Expanded` está aquí, envolviendo directamente el DayItem
-              return Expanded(
-                child: _buildDayItem(colors, day, isSelected: isSelected, onTap: () {
-                  if (!DateUtils.isSameDay(_selectedDate, day.date)) {
-                    final today = DateUtils.dateOnly(DateTime.now());
-                    final difference = day.date.difference(today).inDays;
-                    _pageController.animateToPage(
-                      _initialPage + difference, 
-                      duration: const Duration(milliseconds: 400), 
-                      curve: Curves.easeInOut,
-                    );
-                  }
-                }),
-              );
-            }).toList(),
-          ),
-        ),
-        IconButton(
-          icon: Icon(Icons.arrow_right, color: colors.onPrimaryContainer),
-          onPressed: () {
-            _pageController.animateToPage(
-              _pageController.page!.round() + 7,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
-          },
-        ),
-      ],
-    ),
-  );
-} 
-  
-  Widget _buildDayItem(ColorScheme colors, Day day, {required bool isSelected, required VoidCallback onTap}) {
-  // Para que MON, TUE, WED... se muestren en varias líneas si es necesario
-  final shortNameFormatted = day.shortName.replaceAllMapped(RegExp(r'.'), (match) => '${match.group(0)}\n').trim();
+    // Altura total del timeline
+    final double pxPerMinute = _hourRowHeight / 60.0;
+    final double totalHeight = (endHour - startHour) * 60 * pxPerMinute;
 
-  return GestureDetector(
-    onTap: onTap,
-    // Usamos un Material para el efecto de splash (ripple) al tocar
-    child: Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16), // Para que el splash sea redondeado
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? colors.secondary : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
+    // Unir bloques consecutivos con los mismos miembros para limpiar la vista
+    final mergedByDay = _mergeFreeBlocksByDay(vm.groupFreeBlocks, intervalMinutes, days);
+
+    // Preparativos para resaltar el día actual y dibujar la línea de la hora actual
+    final DateTime now = _now;
+    final bool isTodayInView = days.any((d) => DateUtils.isSameDay(d, now));
+    final int nowMinutesOfDay = now.hour * 60 + now.minute;
+    final bool isNowInRange = nowMinutesOfDay >= startHour * 60 && nowMinutesOfDay <= endHour * 60;
+    double nowTop = (nowMinutesOfDay - startHour * 60) * pxPerMinute;
+    if (nowTop.isNaN) nowTop = 0;
+    nowTop = nowTop.clamp(0.0, totalHeight);
+
+    // Timeline sin cabecera duplicada (usamos el selector de semana arriba)
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        child: SizedBox(
+          height: totalHeight,
+          child: Stack(
             children: [
-              Text(
-                shortNameFormatted,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isSelected ? colors.onSecondary : colors.onPrimaryContainer,
-                  fontWeight: FontWeight.bold,
-                  height: 1.1, // Reduce el espacio entre líneas
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+              // Columna de horas
+              SizedBox(
+                width: 50,
+                child: Column(
+                  children: [
+                    for (int h = startHour; h < endHour; h++)
+                      SizedBox(
+                        height: _hourRowHeight,
+                        child: Align(
+                          alignment: Alignment.topRight,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 6.0, top: 2),
+                            child: Text(
+                              DateFormat('ha').format(DateTime(0, 1, 1, h)).toLowerCase(),
+                              style: const TextStyle(fontSize: 10, color: Colors.black54),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                maxLines: 3,
               ),
-              const SizedBox(height: 4),
-              Text(
-                day.dayNumber.toString(),
-                style: TextStyle(
-                  fontSize: 18,
-                  color: isSelected ? colors.onSecondary : colors.onSurfaceVariant,
-                  fontWeight: FontWeight.bold,
+                const SizedBox(width: 4),
+              // Área de columnas por día
+              Expanded(
+                child: Row(
+                  children: [
+                    for (int i = 0; i < days.length; i++)
+                      Expanded(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          child: Stack(
+                            children: [
+                              // Fondo + líneas por hora
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[50],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.black12),
+                                ),
+                              ),
+                              ...List.generate(endHour - startHour, (idx) {
+                                final top = idx * _hourRowHeight;
+                                return Positioned(
+                                  top: top,
+                                  left: 0,
+                                  right: 0,
+                                  child: Container(height: 1, color: Colors.black12),
+                                );
+                              }),
+                              // Bloques de disponibilidad para el día i (weekday days[i])
+                              ...[
+                                for (final b in (mergedByDay[days[i]] ?? const <FreeBlock>[]))
+                                  if (b.freeMembers.isNotEmpty)
+                                    _buildPositionedFreeBlock(b, startHour, endHour, pxPerMinute)
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
+                ],
+              ),
+              // Línea de tiempo actual (desde la columna de horas hasta el extremo derecho)
+              if (isTodayInView && isNowInRange)
+                Positioned(
+                  top: nowTop,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 2,
+                    color: Colors.redAccent,
+                  ),
+                ),
             ],
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-  Widget _buildEventList(BuildContext context, GroupDetailViewModel viewModel, List<CalendarEvent> events, DateTime forDate) {
-    if (viewModel.state == ViewState.loading && events.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (viewModel.state == ViewState.error) {
-      return const Center(child: Text('Failed to load events.'));
-    }
-    if (events.isEmpty) {
-      return Center(child: Text('No events for ${DateFormat('MMMM d').format(forDate)}'));
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(8.0),
-      itemCount: events.length,
-      itemBuilder: (context, index) {
-        final event = events[index];
-        final startTime = DateFormat.jm().format(event.startTime);
-        final endTime = DateFormat.jm().format(event.endTime);
-
-        final canDismiss = event.type == EventType.group;
-
-        Widget eventTile = Card(
-          elevation: 2.0,
-          margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-          shape: RoundedRectangleBorder(
-            side: BorderSide(color: event.color, width: 2.0),
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          child: ListTile(
-            leading: _getIconForEventType(event.type),
-            title: Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('${event.ownerName} | $startTime - $endTime'),
-            onLongPress: canDismiss 
-              ? () => _showAddGroupEventDialog(context, viewModel, event: event)
-              : null,
-          ),
-        );
-        
-        if (canDismiss) {
-          return Dismissible(
-            key: Key(event.id),
-            direction: DismissDirection.endToStart,
-            confirmDismiss: (_) async {
-              return await showDialog<bool>(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: const Text('Are you sure you want to delete the event?'),
-                    content: Text('Event: "${event.title}"'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: const Text('No'),
+  // Widget para construir el selector de semana
+  Widget _buildWeekSelector(ColorScheme scheme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
+      color: Colors.white,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Columna de horas vacía para alinear con el grid
+          SizedBox(width: 50),
+          const SizedBox(width: 4),
+          // Días alineados exactamente con las columnas de bloques
+          Expanded(
+            child: Row(
+              children: List.generate(5, (i) {
+                final day = _weekDays[i];
+                final isToday = DateUtils.isSameDay(day.date, DateTime.now());
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedDate = DateUtils.dateOnly(day.date);
+                      });
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 2),
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isToday ? scheme.primary.withOpacity(0.22) : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                        border: isToday
+                            ? Border.all(color: scheme.primary, width: 2)
+                            : null,
                       ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.of(context).pop(true),
-                        child: const Text('Yes'),
+                      child: Column(
+                        children: [
+                          Text(day.shortName,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          Text(day.dayNumber.toString(),
+                              style: const TextStyle(fontSize: 12)),
+                        ],
                       ),
-                    ],
-                  );
-                },
-              ) ?? false;
-            },
-            onDismissed: (_) {
-              viewModel.deleteGroupEvent(event.id);
-              ScaffoldMessenger.of(context)..removeCurrentSnackBar()..showSnackBar(SnackBar(content: Text('"${event.title}" eliminado')));
-            },
-            background: Container(color: Colors.red.shade400, alignment: Alignment.centerRight, padding: const EdgeInsets.symmetric(horizontal: 20.0), child: const Icon(Icons.delete, color: Colors.white)),
-            child: eventTile,
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+      // Devuelve un mapa de día de semana -> lista de FreeBlocks ya fusionados por día
+  // Une bloques consecutivos con los mismos miembros para cada día visible
+  Map<DateTime, List<FreeBlock>> _mergeFreeBlocksByDay(List<FreeBlock> blocks, int intervalMinutes, List<DateTime> days) {
+    final map = <DateTime, List<FreeBlock>>{};
+    for (final day in days) {
+      // Filtrar bloques por el día de la semana (weekday)
+      final dayBlocks = blocks
+          .where((b) => b.weekday == day.weekday && b.freeMembers.isNotEmpty)
+          .toList()
+        ..sort((a, b) => _toMinutes(a.start).compareTo(_toMinutes(b.start)));
+
+      final merged = <FreeBlock>[];
+      for (final b in dayBlocks) {
+        if (merged.isEmpty) {
+          merged.add(b);
+          continue;
+        }
+        final last = merged.last;
+        final contiguous = _toMinutes(b.start) == _toMinutes(last.end);
+        final samePeople = _sameMembers(last.freeMembers, b.freeMembers);
+        if (contiguous && samePeople) {
+          // extender el último
+          merged[merged.length - 1] = FreeBlock(
+            weekday: last.weekday,
+            start: last.start,
+            end: b.end,
+            freeMembers: last.freeMembers,
           );
         } else {
-          return eventTile;
+          merged.add(b);
         }
-      },
-    );
-  }
-
-  Icon _getIconForEventType(EventType type) {
-    switch (type) {
-      case EventType.assignment: return const Icon(Icons.assignment, color: Colors.blue);
-      case EventType.exam: return const Icon(Icons.school, color: Colors.red);
-      case EventType.classSession: return const Icon(Icons.book, color: Colors.green);
-      case EventType.group: return const Icon(Icons.group, color: Colors.orange);
-      case EventType.personal:
-      default: return const Icon(Icons.person, color: Colors.grey);
+      }
+      map[day] = merged;
     }
+    return map;
   }
-  
-  void _showAddGroupEventDialog(BuildContext context, GroupDetailViewModel viewModel, {CalendarEvent? event}) {
-    final isUpdating = event != null;
-    final titleController = TextEditingController(text: isUpdating ? event.title : '');
-    
-    TimeOfDay selectedStartTime = isUpdating ? TimeOfDay.fromDateTime(event.startTime) : const TimeOfDay(hour: 12, minute: 0);
-    TimeOfDay selectedEndTime = isUpdating ? TimeOfDay.fromDateTime(event.endTime) : const TimeOfDay(hour: 13, minute: 0);
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        String errorMsg = '';
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text(isUpdating ? 'Update Group Event' : 'Add Group Event for ${DateFormat('MMMM d').format(_selectedDate)}'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Event Title')),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  // Convierte TimeOfDay a minutos
+  int _toMinutes(TimeOfDay t) => t.hour * 60 + t.minute;
+
+  // Compara listas de miembros
+  bool _sameMembers(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    final sa = [...a]..sort();
+    final sb = [...b]..sort();
+    for (int i = 0; i < sa.length; i++) {
+      if (sa[i] != sb[i]) return false;
+    }
+    return true;
+  }
+
+  // Mapea cantidad de personas libres a un color
+  Color _colorForCount(int count) {
+    if (count <= 2) return Colors.indigo;
+    if (count <= 4) return Colors.purple;
+    return Colors.teal;
+  }
+
+  // Construye el widget posicionado para un FreeBlock ya fusionado
+      Positioned _buildPositionedFreeBlock(FreeBlock b, int startHour, int endHour, double pxPerMinute) {
+        final startMins = (_toMinutes(b.start) - startHour * 60).clamp(0, (endHour - startHour) * 60);
+        final endMins = (_toMinutes(b.end) - startHour * 60).clamp(0, (endHour - startHour) * 60);
+        final height = ((endMins - startMins) * pxPerMinute).toDouble();
+        final top = startMins * pxPerMinute;
+        final colors = _colorForCount(b.freeMembers.length);
+        final label = b.freeMembers.join(', ');
+        return Positioned(
+          top: top,
+          left: 4,
+          right: 4,
+          height: height <= 0 ? 1 : height,
+          child: GestureDetector(
+            onLongPress: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Members Available'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Start Time:'),
-                      TextButton(
-                        onPressed: () async {
-                          final TimeOfDay? picked = await showTimePicker(context: context, initialTime: selectedStartTime);
-                          if (picked != null) { setDialogState(() => selectedStartTime = picked); }
-                        },
-                        child: Text(selectedStartTime.format(context), style: const TextStyle(fontSize: 16)),
-                      ),
+                      for (final member in b.freeMembers)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2.0),
+                          child: Text(member, style: const TextStyle(fontSize: 16)),
+                        ),
                     ],
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('End Time:'),
-                      TextButton(
-                        onPressed: () async {
-                          final TimeOfDay? picked = await showTimePicker(context: context, initialTime: selectedEndTime);
-                          if (picked != null) { setDialogState(() => selectedEndTime = picked); }
-                        },
-                        child: Text(selectedEndTime.format(context), style: const TextStyle(fontSize: 16)),
-                      ),
-                    ],
-                  ),
-                  if (errorMsg.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(errorMsg, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: const Text('Close'),
                     ),
-                ],
-              ),
-              actions: [
-                TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-                ElevatedButton(
-                  onPressed: () {
-                    final title = titleController.text;
-                    if (title.isNotEmpty) {
-                      final finalStartTime = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, selectedStartTime.hour, selectedStartTime.minute);
-                      final finalEndTime = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, selectedEndTime.hour, selectedEndTime.minute);
-
-                      // Validación de solapamiento para add y update
-                      final allEvents = viewModel.getEventsForDay(_selectedDate);
-                      final conflict = allEvents.any((e) {
-                        // Si es edición, no comparar contra sí mismo
-                        if (isUpdating && event != null && e.id == event.id) return false;
-                        if (e.type == EventType.classSession || e.type == EventType.assignment || e.type == EventType.exam) {
-                          final eStart = e.startTime;
-                          final eEnd = e.endTime;
-                          return finalStartTime.isBefore(eEnd) && finalEndTime.isAfter(eStart);
-                        }
-                        return false;
-                      });
-                      if (conflict) {
-                        setDialogState(() {
-                          errorMsg = 'The event is interfering with a class, assignment, or exam. Please choose another time slot.';
-                        });
-                        return;
-                      }
-
-                      if (isUpdating && event != null) {
-                        viewModel.updateGroupEvent(event.id, title, finalStartTime, finalEndTime);
-                      } else {
-                        viewModel.addGroupEvent(title, finalStartTime, finalEndTime);
-                      }
-                      Navigator.of(context).pop();
-                    }
-                  },
-                  child: Text(isUpdating ? 'Update' : 'Add'),
+                  ],
                 ),
-              ],
-            );
-          },
+              );
+            },
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 1),
+              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
+              decoration: BoxDecoration(
+                color: colors.withOpacity(0.25),
+                border: Border.all(color: colors, width: 2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                    height: 1.3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+          ),
         );
-      },
-    );
-  }
+      }
+
+  // Removed old list view implementation in favor of timeline layout
 }
 
 // Modelo de ayuda para el selector de día

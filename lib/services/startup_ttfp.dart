@@ -1,69 +1,48 @@
-import 'dart:io' show Platform;
+import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:package_info_plus/package_info_plus.dart'; // ignore: uri_does_not_exist
-import 'package:supabase_flutter/supabase_flutter.dart'; // ignore: uri_does_not_exist
+import 'package:firebase_analytics/firebase_analytics.dart'; //ignore: uri_does_not_exist
 
-// ignore_for_file: undefined_identifier
+//ignore_for_file: undefined_identifier
 
+/// Mide el tiempo desde main() hasta que el Login hace su primer frame.
 class StartupTTFP {
   static final Stopwatch _sw = Stopwatch();
-  static bool _started = false;
   static bool _sent = false;
 
-  /// Llamar lo más arriba posible en `main()` ANTES de runApp().
+  /// Llamar en main() ANTES de Firebase.initializeApp y runApp().
   static void start() {
-    if (_started) return;
-    _started = true;
-    _sw
-      ..reset()
-      ..start();
-    debugPrint('[startup_ttfp] stopwatch started');
-    // ignore: avoid_print
-    print('[startup_ttfp] stopwatch started');
+    if (!_sw.isRunning && !_sent) {
+      // por si quedó de una corrida previa
+      _sw.reset();
+      _sw.start();
+      debugPrint('[startup_ttfp] stopwatch started');
+    }
   }
 
-  /// Llamar cuando el primer frame del Login ya se haya RASTERIZADO.
-  /// Este método espera a `endOfFrame` para capturar realmente el tiempo visual.
+  /// Llamar en LoginScreen.initState() dentro de un postFrameCallback.
   static Future<void> markLoginFirstFrame() async {
-    if (!_started || _sent) return;
-
-    // Espera a que termine el frame actual (asegura que el frame se dibujó)
-    await SchedulerBinding.instance.endOfFrame;
-
-    _sw.stop();
-    final rawUs = _sw.elapsedMicroseconds;
-    final rawMs = (rawUs / 1000).round();
-    final ms = rawMs <= 0 ? 1 : rawMs;
-
-    // LOG fuerte para tu script (print y debugPrint)
-    debugPrint('[startup_events_v2] native rawMs=$ms');
-    // ignore: avoid_print
-    print('[startup_events_v2] native rawMs=$ms');
-
+    if (_sent || !_sw.isRunning) return;
     try {
-      final info = await PackageInfo.fromPlatform();
-      final platform =
-          Platform.isAndroid ? 'android' : (Platform.isIOS ? 'ios' : 'other');
-      final buildType = kReleaseMode ? 'release' : (kProfileMode ? 'profile' : 'debug');
+      _sw.stop();
+      final ms = _sw.elapsedMilliseconds;
+      final seconds = ms / 1000.0;
+      debugPrint('[startup_ttfp] elapsed = ${ms}ms (${seconds}s)');
 
-      await Supabase.instance.client.from('startup_events').insert({
-        'ts': DateTime.now().toUtc().toIso8601String(),
-        'load_ms': ms,
-        'platform': platform,
-        'app_version': info.version,
-        'build_type': buildType,
-      });
+      // 🔴 clave: marcar como debug en web/entorno dev
+      final params = <String, Object>{
+        'tiempo_carga_ms': ms,      // INT
+        'tiempo_carga_s': seconds,  // DOUBLE
+        if (kIsWeb || kDebugMode) 'debug_mode': 1,
+      };
 
-      debugPrint('[startup_events] insert OK (ms=$ms)');
-      // ignore: avoid_print
-      print('[startup_events] insert OK (ms=$ms)');
-    } catch (e) {
-      debugPrint('[startup_events] insert FAIL: $e');
-      // ignore: avoid_print
-      print('[startup_events] insert FAIL: $e');
+      await FirebaseAnalytics.instance.logEvent(
+        name: 'time_login_ttfp',
+        parameters: params,
+      );
+      _sent = true;
+      debugPrint('[startup_ttfp] event time_login_ttfp sent');
+    } catch (e, st) {
+      debugPrint('[startup_ttfp] send fail: $e\n$st');
     }
-
-    _sent = true;
   }
 }

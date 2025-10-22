@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/services.dart';
+
+// Firebase
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart' show User; //ignore: uri_does_not_exist
 import 'firebase_options.dart';
 
+// Vistas
 import 'views/assignments/assignments_screen.dart';
 import 'views/auth/logout_screen.dart';
 import 'views/auth/login_screen.dart';
@@ -14,95 +18,126 @@ import 'views/shared/shared_screen.dart';
 
 import 'themes/app_theme.dart';
 
-import 'services/auth_service.dart';
-import 'services/notification_service.dart';
-import 'viewmodels/login_viewmodel.dart';
-import 'viewmodels/signup_viewmodel.dart';
-import 'viewmodels/holidays_viewmodel.dart';
+import 'services/notif/notification_service.dart';
+import 'services/auth/auth_service.dart';
+import 'services/auth/biometric_service.dart';
 
-import 'package:firebase_auth/firebase_auth.dart'; //ignore: uri_does_not_exist
-import 'package:provider/provider.dart';
+import 'viewmodels/holidays/holidays_viewmodel.dart';
+import 'viewmodels/auth/login_viewmodel.dart';
+import 'viewmodels/auth/signup_viewmodel.dart';
 
-import 'package:supabase_flutter/supabase_flutter.dart' hide User; // ignore: uri_does_not_exist
+import 'core/observer/vm_scope.dart';
+
 import 'services/startup_ttfp.dart';
 
-//ignore_for_file: undefined_identifier, non_type_as_type_argument
+// Provider
+import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ⬇⬇⬇ Arranca el cronómetro ANTES de cualquier await/inicialización pesada
+  // 1) Arranca TTFP lo antes posible
   StartupTTFP.start();
 
-  // Inicializa Supabase para que StartupTTFP pueda insertar métricas
-  await Supabase.initialize(
-    url: 'https://qaotvqrayazjhkykevbo.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFhb3R2cXJheWF6amhreWtldmJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1OTYwNTcsImV4cCI6MjA3NTE3MjA1N30.R9i8RqEUFMzx6Uh0q2vHZ7H8gDVYzb1A0CbhiE030kc',
-  );
-
-  // Firebase (si ya lo tenías)
+  // 2) Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Notificaciones (si ya lo tenías)
+  // 3) Notificaciones
   await NotificationService().initNotifications();
 
+  // 4) Servicios y VMs (para nuestro Observer)
+  final authService = AuthService();
+  final bioService = BiometricService();
+
+  final loginVM = LoginViewModel(authService, bioService);
+  final signUpVM = SignUpViewModel(authService);
+
+  // 5) Registrar en VmRegistry (nuestro contenedor simple)
+  final registry = VmRegistry()
+    ..put<AuthService>(authService)
+    ..put<BiometricService>(bioService)
+    ..put<LoginViewModel>(loginVM)
+    ..put<SignUpViewModel>(signUpVM);
+
+  // Opcional: ver claves registradas en consola
+  registry.debugPrintKeys();
+
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => HolidaysViewModel()),
-        Provider<AuthService>(create: (_) => AuthService()),
-        ChangeNotifierProvider<LoginViewModel>(
-          create: (ctx) => LoginViewModel(ctx.read<AuthService>()),
-        ),
-        Provider<SignUpViewModel>(
-          create: (ctx) => SignUpViewModel(ctx.read<AuthService>()),
-        ),
-        StreamProvider<User?>(
-          create: (ctx) => ctx.read<AuthService>().authStateChanges,
-          initialData: null,
-        ),
-      ],
-      child: const MyApp(),
+    // Importante: VmScope por ENCIMA de MaterialApp
+    VmScope(
+      registry: registry,
+      // Debajo usamos Provider para Holidays y el stream de Auth
+      child: MultiProvider(
+        providers: [
+          // Holidays usa ChangeNotifier
+          ChangeNotifierProvider(create: (_) => HolidaysViewModel()),
+
+          // Exponer servicios si en alguna vista lees context.read<AuthService>()
+          Provider<AuthService>.value(value: authService),
+          Provider<BiometricService>.value(value: bioService),
+
+          // Stream del estado de autenticación (si lo usas en otras pantallas)
+          StreamProvider<User?>(
+            create: (_) => authService.authStateChanges,
+            initialData: null,
+          ),
+        ],
+        child: const AceUpApp(),
+      ),
     ),
   );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class AceUpApp extends StatelessWidget {
+  const AceUpApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'AceUp',
       debugShowCheckedModeBanner: false,
+
+      // Tus temas como estaban
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
 
+      // Ajustes de status/nav bar según brillo actual del tema
       builder: (context, child) {
         final brightness = Theme.of(context).brightness;
-
-        SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness:
-          brightness == Brightness.dark ? Brightness.light : Brightness.dark,
-          systemNavigationBarColor: Colors.transparent,
-          systemNavigationBarIconBrightness:
-          brightness == Brightness.dark ? Brightness.light : Brightness.dark,
-          systemNavigationBarContrastEnforced: false,
-        ));
+        SystemChrome.setSystemUIOverlayStyle(
+          SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness:
+                brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarIconBrightness:
+                brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+            systemNavigationBarContrastEnforced: false,
+          ),
+        );
         return child!;
       },
 
+      // Rutas — inyectamos los VM desde VmScope SOLO donde se necesitan
+      initialRoute: '/',
       routes: {
-        '/': (context) => const LoginScreen(),
-        '/signup': (context) => const SignUpScreen(),
-        '/biometric': (context) => const BiometricScreen(),
+        '/': (context) => LoginScreen(
+              vm: VmScope.of(context).get<LoginViewModel>(),
+            ),
+        '/signup': (context) => SignUpScreen(
+              vm: VmScope.of(context).get<SignUpViewModel>(),
+            ),
+        '/biometric': (context) => BiometricScreen(
+              vm: VmScope.of(context).get<LoginViewModel>(),
+            ),
         '/today': (context) => const TodayScreen(),
         '/holidays': (context) => const HolidaysScreen(),
-        '/account': (context) => const LogoutScreen(),
+        '/account': (context) => LogoutScreen(
+              vm: VmScope.of(context).get<LoginViewModel>(),
+            ),
         '/shared': (context) => const SharedScreenWrapper(),
         '/assignments': (context) => const AssignmentsScreen(),
       },

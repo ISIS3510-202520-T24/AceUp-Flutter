@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/assignment_model.dart';
+import '../../models/assignments/assignment_model.dart';
 
 class AssignmentService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

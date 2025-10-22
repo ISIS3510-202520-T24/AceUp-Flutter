@@ -34,6 +34,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: colors.secondary,
       elevation: 0.0,
+      leadingWidth: 80.0,
       title: Text(
         title,
         style: AppTypography.h3.copyWith(color: colors.onPrimary),
@@ -63,7 +64,10 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
       case LeftControlType.cancel:
         return TextButton(
           onPressed: onLeftPressed ?? () => Navigator.of(context).maybePop(),
-          child: Text("Cancel", style: AppTypography.actionM.copyWith(color: colors.onSecondary)),
+          child: Text(
+              "Cancel",
+              style: AppTypography.actionM.copyWith(color: colors.onSecondary),
+          ),
         );
     }
   }

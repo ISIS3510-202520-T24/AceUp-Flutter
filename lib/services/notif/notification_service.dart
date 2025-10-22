@@ -1,4 +1,4 @@
-// lib/services/notification_service.dart
+// lib/services/notif/notification_service.dart
 
 import 'package:firebase_messaging/firebase_messaging.dart'; //ignore: uri_does_not_exist
 
