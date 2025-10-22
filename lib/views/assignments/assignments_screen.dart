@@ -14,6 +14,7 @@ import '../../widgets/keep_alive_wrapper.dart';
 import '../../widgets/top_bar.dart';
 
 import '../../viewmodels/assignments/assignments_viewmodel.dart';
+import 'edit_assignment_screen.dart';
 
 class AssignmentsScreen extends StatelessWidget {
   const AssignmentsScreen({super.key});
@@ -227,91 +228,107 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
       }
     }
 
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 12.0),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Checkbox(
-              value: assignment.isCompleted,
-              onChanged: (value) {
-                viewModel.toggleAssignmentStatus(assignment);
-              },
-              activeColor: colors.primary,
-              checkColor: colors.onPrimary,
-              side: BorderSide(color: colors.primary, width: 2),
-            ),
-            const SizedBox(width: 8),
+    return InkWell(
+      onTap: () async {
+        final result = await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => EditAssignmentScreen(assignment: assignment),
+          ),
+        );
+        if (result == true) {
+          viewModel.refreshAssignments();
+        }
+      },
 
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: Card(
+        elevation: 0,
+        margin: const EdgeInsets.only(bottom: 12.0),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Checkbox(
+                value: assignment.isCompleted,
+                onChanged: (value) {
+                  viewModel.toggleAssignmentStatus(assignment);
+                },
+                activeColor: colors.primary,
+                checkColor: colors.onPrimary,
+                side: BorderSide(color: colors.primary, width: 2),
+              ),
+              const SizedBox(width: 8),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      assignment.subjectName,
+                      style: AppTypography.h5.copyWith(
+                        color: colors.onSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+
+                    Text(
+                      assignment.title,
+                      style: AppTypography.bodyM.copyWith(
+                        color: colors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+
+                    Text(
+                      assignment.description,
+                      style: AppTypography.bodyS.copyWith(
+                        color: colors.onPrimaryContainer,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    assignment.subjectName,
-                    style: AppTypography.h5.copyWith(
-                      color: colors.onSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-
-                  Text(
-                    assignment.title,
-                    style: AppTypography.bodyM.copyWith(
-                      color: colors.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-
-                  Text(
-                    assignment.description,
+                    dueDateText,
                     style: AppTypography.bodyS.copyWith(
-                      color: colors.onPrimaryContainer,
+                      color: dueDate.isBefore(today) && assignment.isPending
+                          ? colors.onError
+                          : colors.onPrimaryContainer,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+
+                  Icon(
+                    priorityIcon,
+                    size: 21,
+                    color: priorityColor,
                   ),
                 ],
               ),
-            ),
-
-            const SizedBox(width: 8),
-
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  dueDateText,
-                  style: AppTypography.bodyS.copyWith(
-                    color: dueDate.isBefore(today) && assignment.isPending
-                        ? colors.onError
-                        : colors.onPrimaryContainer,
-                  ),
-                ),
-                const SizedBox(height: 8),
-
-                Icon(
-                  priorityIcon,
-                  size: 21,
-                  color: priorityColor,
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _handleAddAction(BuildContext context, AssignmentsViewModel viewModel) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Add new assignment - Coming soon!'),
-        duration: Duration(seconds: 2),
+  Future<void> _handleAddAction(BuildContext context, AssignmentsViewModel viewModel) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const EditAssignmentScreen(assignment: null),
       ),
     );
+
+    if (result == true) {
+      viewModel.refreshAssignments();
+    }
   }
 }
