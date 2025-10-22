@@ -57,6 +57,67 @@ class GroupService {
     return snapshot.docs.map((doc) => AppUser.fromFirestore(doc)).toList();
   }
 
+  /// Versión optimizada para grupos: solo carga clases (sin personal/assignments/exams)
+  /// No requiere color porque la vista de grupos no muestra colores por usuario
+  Future<List<CalendarEvent>> getClassEventsOnlyForUser(AppUser user) async {
+    List<CalendarEvent> allEvents = [];
+    final userId = user.uid;
+
+    try {
+      
+      // Cargar SOLO clases (sin personal, assignments ni exams)
+      final termsSnap = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('terms')
+          .get();
+      
+
+      for (var termDoc in termsSnap.docs) {
+        
+        final subjectsSnap = await termDoc.reference.collection('subjects').get();
+        
+        for (var subjectDoc in subjectsSnap.docs) {
+          final subjectData = subjectDoc.data();
+          final subjectName = subjectData['name'] ?? 'Unknown Subject';
+          
+          // SOLO cargar clases
+          final classesSnap = await subjectDoc.reference.collection('classes').get();
+          
+          for (var classDoc in classesSnap.docs) {
+            final data = classDoc.data();
+            
+            // Verificar que tenemos los datos necesarios
+            if (data['dayOfWeek'] != null && data['startTime'] != null && data['endTime'] != null) {
+              final int dayOfWeek = data['dayOfWeek']; // 1 para Lunes, 7 para Domingo
+              final String startTimeStr = data['startTime']; // ej. "08:00"
+              final String endTimeStr = data['endTime'];   // ej. "09:20"
+                            
+              // Generar eventos recurrentes para las clases
+              // Color verde por defecto para clases (no se usa en vista de grupos)
+              final classEvents = _generateRecurringClassEvents(
+                subjectName: subjectName,
+                dayOfWeek: dayOfWeek,
+                startTimeStr: startTimeStr,
+                endTimeStr: endTimeStr,
+                classId: classDoc.id,
+                userId: userId,
+                userName: user.nick,
+                color: Colors.green,
+              );
+              
+              allEvents.addAll(classEvents);
+            }
+          }
+        }
+      }
+      return allEvents;
+      
+    } catch (e) {
+      return [];
+    }
+  }
+
   Future<List<CalendarEvent>> getCalendarEventsForUser(AppUser user, Color color) async {
     List<CalendarEvent> allEvents = [];
     final userId = user.uid;
@@ -67,8 +128,6 @@ class GroupService {
     }
 
     try {
-    print('🔄 Loading personal events for user: ${user.nick}');
-    
     // 1. Cargar eventos personales de users/{userId}/events
     final personalEventsSnap = await _firestore
         .collection('users')
@@ -76,7 +135,6 @@ class GroupService {
         .collection('events')
         .get();
     
-    print('📅 Personal events found: ${personalEventsSnap.docs.length}');
     
     allEvents.addAll(personalEventsSnap.docs.map((doc) {
       final data = doc.data();
@@ -99,22 +157,17 @@ class GroupService {
         .collection('terms')
         .get();
     
-    print('📚 Terms found: ${termsSnap.docs.length}');
 
     for (var termDoc in termsSnap.docs) {
-      print('🔍 Processing term: ${termDoc.id}');
       
       final subjectsSnap = await termDoc.reference.collection('subjects').get();
-      print('📖 Subjects found in term ${termDoc.id}: ${subjectsSnap.docs.length}');
       
       for (var subjectDoc in subjectsSnap.docs) {
         final subjectData = subjectDoc.data();
         final subjectName = subjectData['name'] ?? 'Unknown Subject';
-        print('📝 Processing subject: $subjectName');
         
         // 2.1 Cargar exámenes
         final examsSnap = await subjectDoc.reference.collection('exams').get();
-        print('🎯 Exams found in $subjectName: ${examsSnap.docs.length}');
 
         allEvents.addAll(examsSnap.docs.map((doc) {
           final data = doc.data();
@@ -131,9 +184,7 @@ class GroupService {
         }));
         
         // 2.2 Cargar assignments (tareas)
-        final assignmentsSnap = await subjectDoc.reference.collection('assignments').get();
-        print('📋 Assignments found in $subjectName: ${assignmentsSnap.docs.length}');
-        
+        final assignmentsSnap = await subjectDoc.reference.collection('assignments').get();        
         allEvents.addAll(assignmentsSnap.docs.map((doc) {
           final data = doc.data();
           final dueDate = _safeTimestampToDate(data['dueDate']);
@@ -150,9 +201,7 @@ class GroupService {
         }));
 
         // 2.3 Cargar clases
-        final classesSnap = await subjectDoc.reference.collection('classes').get();
-        print('🏫 Classes found in $subjectName: ${classesSnap.docs.length}');
-        
+        final classesSnap = await subjectDoc.reference.collection('classes').get();        
         for (var classDoc in classesSnap.docs) {
           final data = classDoc.data();
           
@@ -161,9 +210,7 @@ class GroupService {
             final int dayOfWeek = data['dayOfWeek']; // 1 para Lunes, 7 para Domingo
             final String startTimeStr = data['startTime']; // ej. "08:00"
             final String endTimeStr = data['endTime'];   // ej. "09:20"
-            
-            print('📅 Processing class: $subjectName on day $dayOfWeek from $startTimeStr to $endTimeStr');
-            
+                        
             // Generar eventos recurrentes para las clases
             final classEvents = _generateRecurringClassEvents(
               subjectName: subjectName,
@@ -177,17 +224,14 @@ class GroupService {
             );
             
             allEvents.addAll(classEvents);
-            print('✅ Added ${classEvents.length} class events for $subjectName');
           }
         }
       }
     }
 
-    print('🎉 Total events loaded for ${user.nick}: ${allEvents.length}');
     return allEvents;
     
   } catch (e) {
-    print('❌ Error loading events for user ${user.nick}: $e');
     return [];
   }
 
@@ -228,7 +272,7 @@ class GroupService {
         // Si encontramos al usuario, añadimos su UID a la lista
         memberUids.add(querySnapshot.docs.first.id);
       } else {
-        print('Warning: User with email $email not found.');
+        throw Exception('User with email $email not found.');
       }
     }
 
@@ -272,7 +316,6 @@ class GroupService {
     
     return Group.fromFirestore(snapshot);
   } catch (e) {
-    print('Error getting group details: $e');
     throw Exception('Failed to get group details: $e');
   }
 }
@@ -364,7 +407,7 @@ List<CalendarEvent> _generateRecurringClassEvents({
       }
     }
   } catch (e) {
-    print('❌ Error generating recurring events for $subjectName: $e');
+    throw Exception('Error generating recurring events for $subjectName: $e');
   }
   return events;
 }
