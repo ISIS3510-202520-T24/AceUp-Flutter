@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+// lib/views/auth/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -9,7 +9,6 @@ import '../../themes/app_typography.dart';
 import '../../viewmodels/auth/login_viewmodel.dart';
 
 import '../../services/auth/secure_store.dart';
-
 import '../../services/startup_ttfp.dart';
 
 import '../../models/auth_model.dart';
@@ -222,17 +221,23 @@ class _LoginScreenState extends State<LoginScreen> {
       ..setPassword(password);
 
     final res = await widget.vm.login();
+
     if (!mounted) return;
 
     if (!res.ok) {
       if (res.needsEmailVerification) {
         await _showVerifyDialog();
       }
-      _showSnack(res.message ?? 'Wrong email or password.');
+      _showSnack(res.message ?? 'Login failed');
       return;
     }
 
-    // Post-login: biometría
+    // NOTA: El ViewModel ya habilita automáticamente:
+    // - Modo offline (PBKDF2) para este email/clave/uid
+    // - Cache de user settings en SharedPreferences
+    // Aquí solo gestionamos la biometría como UX extra.
+
+    // Post-login: biometría (opcional, con prompts propios)
     final check = await widget.vm.biometricPostLoginCheck(email);
     if (check.supported) {
       if (!check.enabled) {
