@@ -6,25 +6,40 @@ import 'package:flutter/material.dart';
 
 import '../../models/group_model.dart';
 import '../../services/auth/auth_service.dart';
-import '../../services/shared/group_service.dart';
+import '../../data/repositories/shared_repository.dart';
+import '../../core/connectivity/connectivity_manager.dart';
 import '../../models/user_model.dart';
 
 // El enum de estado que usan ambos ViewModels
 enum ViewState { idle, loading, error }
 
 class SharedViewModel extends ChangeNotifier {
-  final GroupService _groupService = GroupService();
-  List<AppUser> availableUsers = []; // Nueva lista para el selector
+  final SharedRepository _repository;
+  final ConnectivityManager _connectivity;
   
+  List<AppUser> availableUsers = []; // Nueva lista para el selector
   List<Group> groups = [];
   
   ViewState _state = ViewState.idle;
   ViewState get state => _state;
+  
+  bool _isOnline = true;
+  bool get isOnline => _isOnline;
 
   String? _currentUserId;
 
-  SharedViewModel() {
-    fetchAllUsers();
+  SharedViewModel({
+    required SharedRepository repository,
+    required ConnectivityManager connectivity,
+  })  : _repository = repository,
+        _connectivity = connectivity {
+    // Listen to connectivity changes
+    _connectivity.onConnectivityChanged.listen((isOnline) {
+      _isOnline = isOnline;
+      notifyListeners();
+    });
+    
+    // fetchAllUsers(); // TODO: Implement with repository
   }
 
   // Metodo privado para cambiar el estado y notificar a la UI
@@ -36,23 +51,20 @@ class SharedViewModel extends ChangeNotifier {
     });
   }
 
-  // --- MÉTODOS EXISTENTES ---
+  // --- MÉTODOS EXISTENTES (ACTUALIZADOS PARA OFFLINE-FIRST) ---
 
   Future<void> fetchGroups(String userId) async {
     _currentUserId = userId; 
 
     _setState(ViewState.loading);
     try {
-      groups = await _groupService.getGroupsForUser(userId);
+      // Usa el repositorio offline-first: intenta cache local primero
+      groups = await _repository.getGroupsForUser(userId);
 
-      if (availableUsers.isEmpty) {
-        await fetchAllUsers();
-      }
-
+      // Cargar miembros de cada grupo
       for (var group in groups) {
-        group.members = availableUsers
-            .where((user) => group.memberUids.contains(user.uid))
-            .toList();
+        final members = await _repository.getGroupMembers(group.id);
+        group.members = members;
       }
 
       _setState(ViewState.idle);
@@ -62,9 +74,9 @@ class SharedViewModel extends ChangeNotifier {
     }
   }
 
-  // --- NUEVOS MÉTODOS CRUD QUE FALTABAN ---
+  // --- NUEVOS MÉTODOS CRUD (ACTUALIZADOS PARA OFFLINE-FIRST) ---
 
-  /// Añade un nuevo grupo a Firestore y luego actualiza la lista local.
+  /// Añade un nuevo grupo - se guarda localmente y se sincroniza en background
   Future<void> addGroup(String name, List<String> memberEmails) async {
     try {
       final authService = AuthService();
@@ -73,7 +85,17 @@ class SharedViewModel extends ChangeNotifier {
         memberEmails.add(currentUserEmail);
       }
 
-      await _groupService.addGroup(name, memberEmails);
+      // TODO: Convert emails to UIDs (requires user lookup)
+      // For now, create group with empty members - to be implemented
+      final newGroup = Group(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        name: name,
+        memberUids: [], // TODO: Resolve emails to UIDs
+      );
+
+      await _repository.createGroup(newGroup);
+      
+      // Refresh groups
       if (_currentUserId != null) {
         await fetchGroups(_currentUserId!);
       }
@@ -82,10 +104,18 @@ class SharedViewModel extends ChangeNotifier {
     }
   }
 
-  /// Actualiza un grupo existente en Firestore y luego actualiza la lista local.
+  /// Actualiza un grupo existente - se guarda localmente y se sincroniza en background
   Future<void> updateGroup(String id, String name, List<String> memberEmails) async {
     try {
-      await _groupService.updateGroup(id, name, memberEmails);
+      // TODO: Convert emails to UIDs
+      final updatedGroup = Group(
+        id: id,
+        name: name,
+        memberUids: [], // TODO: Resolve emails to UIDs
+      );
+
+      await _repository.updateGroup(updatedGroup);
+      
       if (_currentUserId != null) {
         await fetchGroups(_currentUserId!);
       }
@@ -94,30 +124,31 @@ class SharedViewModel extends ChangeNotifier {
     }
   }
 
-  /// Elimina un grupo. Usa una actualización "optimista" para la UI.
+  /// Elimina un grupo con actualización optimista
   Future<void> deleteGroup(String id) async {
     // 1. Actualización optimista: Borra el grupo de la lista local inmediatamente
-    //    para que la UI responda al instante.
     final index = groups.indexWhere((group) => group.id == id);
-    if (index == -1) return; // No se encontró el grupo
+    if (index == -1) return;
     
     final groupToDelete = groups.removeAt(index);
     notifyListeners();
 
-    // 2. Llama al servicio para borrar el grupo de la base de datos.
+    // 2. Llama al repositorio para borrar (se sincroniza en background)
     try {
-      await _groupService.deleteGroup(id);
+      await _repository.deleteGroup(id);
     } catch (e) {
       console.log('Error deleting group: $e');
-      // 3. Si la eliminación falla, revierte el cambio en la UI para mantener la consistencia.
+      // 3. Si falla, revierte el cambio
       groups.insert(index, groupToDelete);
       notifyListeners();
     }
   }
 
-    Future<void> fetchAllUsers() async {
+  Future<void> fetchAllUsers() async {
+    // TODO: Implement with repository/cache
+    // For now, this would need a separate service or repository method
     try {
-      availableUsers = await _groupService.getAllUsers();
+      // availableUsers = await _repository.getAllUsers();
       notifyListeners();
     } catch (e) {
       print('Error fetching users: $e');
