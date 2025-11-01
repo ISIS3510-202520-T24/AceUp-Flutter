@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 // Firebase
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' show User; //ignore: uri_does_not_exist
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 
 // Vistas
@@ -21,12 +22,17 @@ import 'themes/app_theme.dart';
 import 'services/notif/notification_service.dart';
 import 'services/auth/auth_service.dart';
 import 'services/auth/biometric_service.dart';
+import 'services/shared/sync_service.dart';
 
 import 'viewmodels/holidays/holidays_viewmodel.dart';
 import 'viewmodels/auth/login_viewmodel.dart';
 import 'viewmodels/auth/signup_viewmodel.dart';
 
 import 'core/observer/vm_scope.dart';
+import 'core/connectivity/connectivity_manager.dart';
+
+import 'data/local/database/app_database.dart';
+import 'data/repositories/shared_repository.dart';
 
 import 'services/startup_ttfp.dart';
 
@@ -44,20 +50,47 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 3) Notificaciones
+  // 3) Initialize local database
+  final database = AppDatabase();
+  
+  // 4) Initialize connectivity manager
+  final connectivity = ConnectivityManager();
+  await connectivity.initialize();
+  
+  // 5) Initialize SharedRepository
+  final sharedRepository = SharedRepository(
+    database: database,
+    firestore: FirebaseFirestore.instance,
+    connectivity: connectivity,
+  );
+  
+  // 6) Start background sync service
+  final syncService = SyncService(
+    database: database,
+    firestore: FirebaseFirestore.instance,
+    connectivity: connectivity,
+  );
+  syncService.startPeriodicSync();
+  
+  print('✅ Eventual connectivity initialized');
+
+  // 7) Notificaciones
   await NotificationService().initNotifications();
 
-  // 4) Servicios y VMs (para nuestro Observer)
+  // 8) Servicios y VMs (para nuestro Observer)
   final authService = AuthService();
   final bioService = BiometricService();
 
   final loginVM = LoginViewModel(authService, bioService);
   final signUpVM = SignUpViewModel(authService);
 
-  // 5) Registrar en VmRegistry (nuestro contenedor simple)
+  // 9) Registrar en VmRegistry (nuestro contenedor simple)
   final registry = VmRegistry()
     ..put<AuthService>(authService)
     ..put<BiometricService>(bioService)
+    ..put<SharedRepository>(sharedRepository)
+    ..put<ConnectivityManager>(connectivity)
+    ..put<SyncService>(syncService)
     ..put<LoginViewModel>(loginVM)
     ..put<SignUpViewModel>(signUpVM);
 
@@ -77,6 +110,11 @@ Future<void> main() async {
           // Exponer servicios si en alguna vista lees context.read<AuthService>()
           Provider<AuthService>.value(value: authService),
           Provider<BiometricService>.value(value: bioService),
+          Provider<SharedRepository>.value(value: sharedRepository),
+          Provider<ConnectivityManager>.value(value: connectivity),
+          
+          // SyncService es ChangeNotifier, debe usar ChangeNotifierProvider
+          ChangeNotifierProvider<SyncService>.value(value: syncService),
 
           // Stream del estado de autenticación (si lo usas en otras pantallas)
           StreamProvider<User?>(

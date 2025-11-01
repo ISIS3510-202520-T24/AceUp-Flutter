@@ -41,7 +41,10 @@ class GroupDao extends DatabaseAccessor<AppDatabase> with _$GroupDaoMixin {
   
   /// Insertar nuevo grupo
   Future<void> insertGroup(GroupsCompanion group) async {
-    await into(groups).insert(group);
+    await into(groups).insert(
+      group,
+      mode: InsertMode.insertOrReplace,
+    );
   }
   
   /// Actualizar grupo
