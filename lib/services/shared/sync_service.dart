@@ -2,18 +2,22 @@
 
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../../core/connectivity/connectivity_manager.dart';
 import '../../data/local/database/app_database.dart';
-import '../../data/local/database/tables/shared_tables.dart';
 
 /// Service that handles background synchronization of local changes to Firestore
-class SyncService {
+class SyncService extends ChangeNotifier {
   final AppDatabase _db;
   final FirebaseFirestore _firestore;
   final ConnectivityManager _connectivity;
   
   Timer? _syncTimer;
   bool _isSyncing = false;
+  int _pendingOperationsCount = 0;
+
+  bool get isSyncing => _isSyncing;
+  int get pendingOperationsCount => _pendingOperationsCount;
 
   SyncService({
     required AppDatabase database,
@@ -21,7 +25,10 @@ class SyncService {
     required ConnectivityManager connectivity,
   })  : _db = database,
         _firestore = firestore,
-        _connectivity = connectivity;
+        _connectivity = connectivity {
+    // Initialize pending count
+    _updatePendingCount();
+  }
 
   /// Start periodic sync (every 30 seconds when online)
   void startPeriodicSync({Duration interval = const Duration(seconds: 30)}) {
@@ -56,6 +63,7 @@ class SyncService {
     }
 
     _isSyncing = true;
+    notifyListeners();
     print('🔄 Starting sync...');
 
     try {
@@ -75,6 +83,8 @@ class SyncService {
           await _syncItem(item);
           await _db.syncDao.removeFromSyncQueue(item.id);
           successCount++;
+          _pendingOperationsCount--;
+          notifyListeners();
         } catch (e) {
           print('❌ Sync failed for ${item.entityType} ${item.entityId}: $e');
           await _db.syncDao.updateSyncError(item.id, e.toString(), item.retryCount);
@@ -87,11 +97,21 @@ class SyncService {
       // Clean up items with too many failures
       await _db.syncDao.clearFailedSyncItems();
       
+      await _updatePendingCount();
+      
     } catch (e) {
       print('❌ Sync error: $e');
     } finally {
       _isSyncing = false;
+      notifyListeners();
     }
+  }
+
+  /// Update pending operations count
+  Future<void> _updatePendingCount() async {
+    final items = await _db.syncDao.getPendingSyncItems();
+    _pendingOperationsCount = items.length;
+    notifyListeners();
   }
 
   /// Sync a single item to Firestore
@@ -205,7 +225,9 @@ class SyncService {
   }
 
   /// Dispose resources
+  @override
   void dispose() {
     stopPeriodicSync();
+    super.dispose();
   }
 }

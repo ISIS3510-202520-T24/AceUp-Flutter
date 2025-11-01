@@ -168,6 +168,27 @@ class SharedRepository {
     )).toList();
   }
 
+  /// Get all users from Firestore (for member selection)
+  /// This is not cached as user list needs to be fresh
+  Future<List<models.AppUser>> getAllUsers() async {
+    if (!_connectivity.isOnline) {
+      print('⚠️  Offline - cannot fetch all users');
+      return [];
+    }
+
+    try {
+      print('☁️  Fetching all users from Firestore...');
+      final snapshot = await _firestore.collection('users').get();
+      
+      return snapshot.docs.map((doc) {
+        return models.AppUser.fromFirestore(doc);
+      }).toList();
+    } catch (e) {
+      print('❌ Error fetching users: $e');
+      return [];
+    }
+  }
+
   /// Add member to group (queues for sync)
   Future<void> addMemberToGroup(String groupId, String userId) async {
     await _db.groupDao.addMember(db.GroupMembersCompanion.insert(
@@ -322,5 +343,68 @@ class SharedRepository {
       default:
         return models.EventType.personal;
     }
+  }
+
+  // ==================== FREE BLOCKS CALCULATION ====================
+
+  /// Calculate free blocks for group (static utility method)
+  /// Returns time slots where ALL members are free
+  static List<Map<String, dynamic>> calculateGroupFreeBlocks({
+    required Map<String, List<models.CalendarEvent>> memberEvents,
+    int intervalMinutes = 30,
+    List<int> weekdays = const [1, 2, 3, 4, 5], // Mon-Fri
+    int startHour = 6,
+    int endHour = 21,
+  }) {
+    List<Map<String, dynamic>> result = [];
+    
+    for (int weekday in weekdays) {
+      for (int hour = startHour; hour < endHour; hour++) {
+        for (int min = 0; min < 60; min += intervalMinutes) {
+          final blockStart = TimeOfDay(hour: hour, minute: min);
+          int endMin = min + intervalMinutes;
+          int endHourAdjusted = hour;
+          if (endMin >= 60) {
+            endMin = 0;
+            endHourAdjusted++;
+          }
+          final blockEnd = TimeOfDay(hour: endHourAdjusted, minute: endMin);
+          
+          List<String> freeMembers = [];
+          
+          memberEvents.forEach((member, events) {
+            // Check if member has any event that overlaps with this block
+            final isBusy = events.any((e) {
+              if (e.startTime.weekday != weekday) return false;
+              final eventStart = TimeOfDay(hour: e.startTime.hour, minute: e.startTime.minute);
+              final eventEnd = TimeOfDay(hour: e.endTime.hour, minute: e.endTime.minute);
+              return _overlaps(blockStart, blockEnd, eventStart, eventEnd);
+            });
+            
+            if (!isBusy) freeMembers.add(member);
+          });
+          
+          result.add({
+            'weekday': weekday,
+            'startHour': blockStart.hour,
+            'startMinute': blockStart.minute,
+            'endHour': blockEnd.hour,
+            'endMinute': blockEnd.minute,
+            'freeMembers': freeMembers.join(','),
+          });
+        }
+      }
+    }
+    
+    return result;
+  }
+
+  /// Check if two time ranges overlap
+  static bool _overlaps(TimeOfDay start1, TimeOfDay end1, TimeOfDay start2, TimeOfDay end2) {
+    final s1 = start1.hour * 60 + start1.minute;
+    final e1 = end1.hour * 60 + end1.minute;
+    final s2 = start2.hour * 60 + start2.minute;
+    final e2 = end2.hour * 60 + end2.minute;
+    return s1 < e2 && s2 < e1;
   }
 }

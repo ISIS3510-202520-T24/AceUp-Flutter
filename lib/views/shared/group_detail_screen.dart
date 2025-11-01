@@ -13,6 +13,7 @@ import '../../widgets/top_bar.dart';
 import '../../themes/app_typography.dart';
 import '../../data/repositories/shared_repository.dart';
 import '../../core/connectivity/connectivity_manager.dart';
+import '../../widgets/connectivity_indicator.dart';
 
 
 // Wrapper
@@ -111,59 +112,72 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         rightControlType: RightControlType.none,
         onRightPressed: () {},
       ),
-      body: GestureDetector(
-        onHorizontalDragEnd: (details) {
-          if (details.primaryVelocity == null) return;
-          if (details.primaryVelocity! < 0) {
-            // Swipe left: next week
-            setState(() {
-              _weekStartDate = _weekStartDate.add(const Duration(days: 7));
-              _generateWeekDaysFor(_weekStartDate);
-            });
-          } else if (details.primaryVelocity! > 0) {
-            // Swipe right: previous week
-            setState(() {
-              _weekStartDate = _weekStartDate.subtract(const Duration(days: 7));
-              _generateWeekDaysFor(_weekStartDate);
-            });
-          }
-        },
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              color: colors.tertiary,
-              child: Row(
+      body: Column(
+        children: [
+          // Offline banner
+          const OfflineBanner(),
+          
+          // Connectivity indicator
+          const ConnectivityIndicator(),
+          
+          Expanded(
+            child: GestureDetector(
+              onHorizontalDragEnd: (details) {
+                if (details.primaryVelocity == null) return;
+                if (details.primaryVelocity! < 0) {
+                  // Swipe left: next week
+                  setState(() {
+                    _weekStartDate = _weekStartDate.add(const Duration(days: 7));
+                    _generateWeekDaysFor(_weekStartDate);
+                  });
+                } else if (details.primaryVelocity! > 0) {
+                  // Swipe right: previous week
+                  setState(() {
+                    _weekStartDate = _weekStartDate.subtract(const Duration(days: 7));
+                    _generateWeekDaysFor(_weekStartDate);
+                  });
+                }
+              },
+              child: Column(
                 children: [
-                  IconButton(
-                    icon: Icon(AppIcons.arrowLeft, size: 20),
-                    color: colors.onTertiary,
-                    onPressed: () => Navigator.of(context).pop(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    color: colors.tertiary,
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(AppIcons.arrowLeft, size: 20),
+                          color: colors.onTertiary,
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                        Text(
+                          widget.groupName,
+                          style: AppTypography.h4.copyWith(
+                            color: colors.onPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  Text(
-                    widget.groupName,
-                    style: AppTypography.h4.copyWith(
-                      color: colors.onPrimary,
+                  _buildWeekSelector(colors),
+                  Expanded(
+                    child: Consumer<GroupDetailViewModel>(
+                      builder: (context, vm, child) {
+                        return _buildGroupAvailabilityGrid(vm);
+                      },
                     ),
                   ),
                 ],
               ),
             ),
-            _buildWeekSelector(colors),
-            Expanded(
-              child: Consumer<GroupDetailViewModel>(
-                builder: (context, vm, child) {
-                  return _buildGroupAvailabilityGrid(vm);
-                },
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-      // Grilla semanal tipo timeline (Lun-Vie). Días en columnas y tiempo en el eje Y.
-      Widget _buildGroupAvailabilityGrid(GroupDetailViewModel vm) {
+  
+  // Grilla semanal tipo timeline (Lun-Vie). Días en columnas y tiempo en el eje Y.
+  Widget _buildGroupAvailabilityGrid(GroupDetailViewModel vm) {
         // Configuración visual y de tiempo
     const int startHour = 6; // 6 AM
     const int endHour = 21;  // 9 PM

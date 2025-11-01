@@ -85,12 +85,18 @@ class SharedViewModel extends ChangeNotifier {
         memberEmails.add(currentUserEmail);
       }
 
-      // TODO: Convert emails to UIDs (requires user lookup)
-      // For now, create group with empty members - to be implemented
+      // Ensure users are loaded
+      if (availableUsers.isEmpty) {
+        await fetchAllUsers();
+      }
+
+      // Convert emails to UIDs
+      final memberUids = _emailsToUids(memberEmails);
+      
       final newGroup = Group(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: name,
-        memberUids: [], // TODO: Resolve emails to UIDs
+        memberUids: memberUids,
       );
 
       await _repository.createGroup(newGroup);
@@ -107,11 +113,18 @@ class SharedViewModel extends ChangeNotifier {
   /// Actualiza un grupo existente - se guarda localmente y se sincroniza en background
   Future<void> updateGroup(String id, String name, List<String> memberEmails) async {
     try {
-      // TODO: Convert emails to UIDs
+      // Ensure users are loaded
+      if (availableUsers.isEmpty) {
+        await fetchAllUsers();
+      }
+
+      // Convert emails to UIDs
+      final memberUids = _emailsToUids(memberEmails);
+      
       final updatedGroup = Group(
         id: id,
         name: name,
-        memberUids: [], // TODO: Resolve emails to UIDs
+        memberUids: memberUids,
       );
 
       await _repository.updateGroup(updatedGroup);
@@ -145,13 +158,25 @@ class SharedViewModel extends ChangeNotifier {
   }
 
   Future<void> fetchAllUsers() async {
-    // TODO: Implement with repository/cache
-    // For now, this would need a separate service or repository method
     try {
-      // availableUsers = await _repository.getAllUsers();
+      availableUsers = await _repository.getAllUsers();
       notifyListeners();
     } catch (e) {
       print('Error fetching users: $e');
     }
+  }
+
+  /// Helper to convert emails to UIDs
+  List<String> _emailsToUids(List<String> emails) {
+    return emails
+        .map((email) {
+          final user = availableUsers.firstWhere(
+            (u) => u.email.toLowerCase() == email.toLowerCase(),
+            orElse: () => AppUser(uid: '', nick: '', email: ''),
+          );
+          return user.uid;
+        })
+        .where((uid) => uid.isNotEmpty)
+        .toList();
   }
 }

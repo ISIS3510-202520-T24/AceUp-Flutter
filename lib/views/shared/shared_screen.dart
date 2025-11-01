@@ -11,6 +11,7 @@ import '../../services/auth/auth_service.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../data/repositories/shared_repository.dart';
 import '../../core/connectivity/connectivity_manager.dart';
+import '../../widgets/connectivity_indicator.dart';
 
 class SharedScreenWrapper extends StatelessWidget {
   const SharedScreenWrapper({super.key});
@@ -70,6 +71,12 @@ class _SharedScreenState extends State<SharedScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Offline banner
+          const OfflineBanner(),
+          
+          // Connectivity indicator
+          const ConnectivityIndicator(),
+          
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: _buildTotalGroupsCard(colors, viewModel.groups.length),

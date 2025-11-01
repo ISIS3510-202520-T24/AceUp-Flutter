@@ -78,8 +78,7 @@ class GroupDetailViewModel extends ChangeNotifier {
       // Obtener eventos del grupo desde el repositorio (offline-first)
       _allEvents = await _repository.getEventsForGroup(groupId);
       
-      // TODO: Implementar conversión de bloques del caché
-      // Por ahora calculamos los bloques directamente
+      // Calcular bloques de disponibilidad grupal
       await _calculateGroupFreeBlocks();
     } catch (e) {
       print('Error loading events: $e');
@@ -96,9 +95,35 @@ class GroupDetailViewModel extends ChangeNotifier {
           .toList();
     }
     
-    // TODO: Implement free blocks calculation
-    // For now, using empty list - this would need the logic from GroupService
-    _groupFreeBlocks = [];
+    // Calcular free blocks usando el método estático del repositorio
+    final blocksRaw = SharedRepository.calculateGroupFreeBlocks(
+      memberEvents: memberEvents,
+      intervalMinutes: 30,
+      weekdays: [1, 2, 3, 4, 5], // Lunes a Viernes
+      startHour: 6,
+      endHour: 21,
+    );
+    
+    // Convertir de Map a FreeBlock
+    _groupFreeBlocks = blocksRaw.map((block) {
+      return FreeBlock(
+        weekday: block['weekday'] as int,
+        start: TimeOfDay(
+          hour: block['startHour'] as int,
+          minute: block['startMinute'] as int,
+        ),
+        end: TimeOfDay(
+          hour: block['endHour'] as int,
+          minute: block['endMinute'] as int,
+        ),
+        freeMembers: (block['freeMembers'] as String).split(','),
+      );
+    }).toList();
+    
+    // Opcional: Cachear los bloques calculados
+    if (blocksRaw.isNotEmpty) {
+      await _repository.cacheFreeBlocks(groupId, blocksRaw);
+    }
   }
 
   Future<void> refreshData() async {
