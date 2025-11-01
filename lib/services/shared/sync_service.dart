@@ -27,25 +27,43 @@ class SyncService extends ChangeNotifier {
         _firestore = firestore,
         _connectivity = connectivity {
     // Initialize pending count
-    _updatePendingCount();
+    _updatePendingCount().then((_) {
+      // If we have pending items and we're online, sync immediately
+      if (_pendingOperationsCount > 0 && _connectivity.isOnline) {
+        print('📦 Found $_pendingOperationsCount pending items on startup, syncing...');
+        syncPendingOperations();
+      }
+    });
+    
+    // Listen for connectivity changes and sync when coming back online
+    _connectivity.onConnectivityChanged.listen((isOnline) {
+      print('📡 Connectivity changed: ${isOnline ? "ONLINE" : "OFFLINE"}');
+      if (isOnline && !_isSyncing && _pendingOperationsCount > 0) {
+        print('📡 Connection restored with pending items, triggering sync...');
+        syncPendingOperations();
+      }
+    });
   }
 
   /// Start periodic sync (every 30 seconds when online)
   void startPeriodicSync({Duration interval = const Duration(seconds: 30)}) {
     _syncTimer?.cancel();
     
-    _syncTimer = Timer.periodic(interval, (_) {
-      if (_connectivity.isOnline && !_isSyncing) {
+    _syncTimer = Timer.periodic(interval, (_) async {
+      // Re-check connectivity status manually before each sync attempt
+      await _connectivity.checkConnectivity();
+      
+      if (_connectivity.isOnline && !_isSyncing && _pendingOperationsCount > 0) {
+        print('⏰ Periodic sync triggered (${_pendingOperationsCount} pending)');
         syncPendingOperations();
       }
     });
-
-    // Also sync when connectivity is restored
-    _connectivity.onConnectivityChanged.listen((isOnline) {
-      if (isOnline && !_isSyncing) {
-        syncPendingOperations();
-      }
-    });
+    
+    // Trigger immediate sync if online and have pending items
+    if (_connectivity.isOnline && !_isSyncing && _pendingOperationsCount > 0) {
+      print('🚀 Starting immediate sync on service start');
+      syncPendingOperations();
+    }
   }
 
   /// Stop periodic sync
@@ -74,7 +92,7 @@ class SyncService extends ChangeNotifier {
         return;
       }
 
-      print('📤 Syncing ${pendingItems.length} items...');
+      print('📤 Syncing ${pendingItems.length} pending items...');
       int successCount = 0;
       int failCount = 0;
 

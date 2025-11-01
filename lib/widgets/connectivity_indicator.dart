@@ -74,20 +74,20 @@ class ConnectivityIndicator extends StatelessWidget {
     if (!isOnline) {
       final pending = syncService.pendingOperationsCount;
       return pending > 0
-          ? 'Sin conexión - $pending cambio${pending > 1 ? 's' : ''} pendiente${pending > 1 ? 's' : ''}'
-          : 'Sin conexión - trabajando offline';
+          ? 'No connection - $pending pending change${pending > 1 ? 's' : ''}'
+          : 'No connection - working offline';
     }
 
     if (syncService.isSyncing) {
-      return 'Sincronizando cambios...';
+      return 'Syncing changes...';
     }
 
     final pending = syncService.pendingOperationsCount;
     if (pending > 0) {
-      return '$pending operación${pending > 1 ? 'es' : ''} en cola';
+      return '$pending operation${pending > 1 ? 's' : ''} in queue';
     }
 
-    return 'Todo sincronizado';
+    return 'All synced';
   }
 }
 
@@ -114,7 +114,7 @@ class OfflineBanner extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Modo offline - Los cambios se sincronizarán cuando vuelva la conexión',
+              'Offline mode - Changes will sync when connection is restored',
               style: TextStyle(
                 fontSize: 12,
                 color: colors.onErrorContainer,
@@ -136,7 +136,7 @@ class ConnectivityAppBarIcon extends StatelessWidget {
     final connectivity = context.watch<ConnectivityManager>();
     final syncService = context.watch<SyncService>();
 
-    if (connectivity.isOnline && !syncService.isSyncing) {
+    if (connectivity.isOnline && !syncService.isSyncing && syncService.pendingOperationsCount == 0) {
       return const SizedBox.shrink();
     }
 
@@ -151,20 +151,33 @@ class ConnectivityAppBarIcon extends StatelessWidget {
         ),
         tooltip: connectivity.isOnline 
             ? (syncService.isSyncing 
-                ? 'Sincronizando...' 
-                : '${syncService.pendingOperationsCount} operación(es) pendiente(s)')
-            : 'Sin conexión',
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                connectivity.isOnline
-                    ? 'Sincronización: ${syncService.pendingOperationsCount} operación(es) pendiente(s)'
-                    : 'Sin conexión a Internet',
+                ? 'Syncing...' 
+                : '${syncService.pendingOperationsCount} pending operation(s)')
+            : 'No connection',
+        onPressed: () async {
+          if (connectivity.isOnline && syncService.pendingOperationsCount > 0 && !syncService.isSyncing) {
+            // Force manual sync
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Forcing sync...'),
+                duration: Duration(seconds: 1),
               ),
-              duration: const Duration(seconds: 2),
-            ),
-          );
+            );
+            await syncService.syncPendingOperations();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  connectivity.isOnline
+                      ? (syncService.isSyncing 
+                          ? 'Sync in progress...'
+                          : 'Sync: ${syncService.pendingOperationsCount} pending operation(s)')
+                      : 'No Internet connection',
+                ),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
         },
       ),
     );

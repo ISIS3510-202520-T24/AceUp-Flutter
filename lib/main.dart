@@ -112,7 +112,9 @@ Future<void> main() async {
           Provider<BiometricService>.value(value: bioService),
           Provider<SharedRepository>.value(value: sharedRepository),
           Provider<ConnectivityManager>.value(value: connectivity),
-          Provider<SyncService>.value(value: syncService),
+          
+          // SyncService es ChangeNotifier, debe usar ChangeNotifierProvider
+          ChangeNotifierProvider<SyncService>.value(value: syncService),
 
           // Stream del estado de autenticación (si lo usas en otras pantallas)
           StreamProvider<User?>(

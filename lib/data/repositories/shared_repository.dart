@@ -98,7 +98,49 @@ class SharedRepository {
       createdAt: DateTime.now(),
     ));
 
-    // 2. Queue for sync
+    // 2. Insert group members into GroupMembers table
+    for (final uid in group.memberUids) {
+      try {
+        String nick = 'User';
+        String email = '';
+        
+        // First, try to get from cache
+        final cachedUser = await _db.userDao.getCachedUser(uid);
+        if (cachedUser != null) {
+          nick = cachedUser.nick;
+          email = cachedUser.email;
+        } else if (_connectivity.isOnline) {
+          // If not cached and online, fetch from Firestore
+          final userDoc = await _firestore.collection('users').doc(uid).get();
+          if (userDoc.exists) {
+            final userData = userDoc.data();
+            nick = userData?['nick'] ?? 'User';
+            email = userData?['email'] ?? '';
+            
+            // Cache the user for future use
+            await _db.userDao.cacheUser(db.CachedUsersCompanion.insert(
+              uid: uid,
+              nick: nick,
+              email: email,
+              cachedAt: DateTime.now(),
+            ));
+          }
+        }
+
+        await _db.groupDao.addMember(db.GroupMembersCompanion.insert(
+          id: '${group.id}_$uid',
+          groupId: group.id,
+          userId: uid,
+          userNick: nick,
+          userEmail: email,
+          joinedAt: DateTime.now(),
+        ));
+      } catch (e) {
+        print('⚠️  Failed to add member $uid: $e');
+      }
+    }
+
+    // 3. Queue for sync
     await _db.syncDao.addToSyncQueue(db.SyncQueueCompanion.insert(
       entityType: 'group',
       entityId: group.id,
@@ -126,6 +168,50 @@ class SharedRepository {
       createdAt: dbGroup.createdAt,
       updatedAt: DateTime.now(),
     ));
+
+    // Update group members: remove old ones and add new ones
+    await _db.groupDao.removeAllMembers(group.id);
+    
+    for (final uid in group.memberUids) {
+      try {
+        String nick = 'User';
+        String email = '';
+        
+        // First, try to get from cache
+        final cachedUser = await _db.userDao.getCachedUser(uid);
+        if (cachedUser != null) {
+          nick = cachedUser.nick;
+          email = cachedUser.email;
+        } else if (_connectivity.isOnline) {
+          // If not cached and online, fetch from Firestore
+          final userDoc = await _firestore.collection('users').doc(uid).get();
+          if (userDoc.exists) {
+            final userData = userDoc.data();
+            nick = userData?['nick'] ?? 'User';
+            email = userData?['email'] ?? '';
+            
+            // Cache the user for future use
+            await _db.userDao.cacheUser(db.CachedUsersCompanion.insert(
+              uid: uid,
+              nick: nick,
+              email: email,
+              cachedAt: DateTime.now(),
+            ));
+          }
+        }
+
+        await _db.groupDao.addMember(db.GroupMembersCompanion.insert(
+          id: '${group.id}_$uid',
+          groupId: group.id,
+          userId: uid,
+          userNick: nick,
+          userEmail: email,
+          joinedAt: DateTime.now(),
+        ));
+      } catch (e) {
+        print('⚠️  Failed to update member $uid: $e');
+      }
+    }
 
     await _db.syncDao.addToSyncQueue(db.SyncQueueCompanion.insert(
       entityType: 'group',
@@ -169,7 +255,7 @@ class SharedRepository {
   }
 
   /// Get all users from Firestore (for member selection)
-  /// This is not cached as user list needs to be fresh
+  /// Users are cached for offline access
   Future<List<models.AppUser>> getAllUsers() async {
     if (!_connectivity.isOnline) {
       print('⚠️  Offline - cannot fetch all users');
@@ -180,9 +266,22 @@ class SharedRepository {
       print('☁️  Fetching all users from Firestore...');
       final snapshot = await _firestore.collection('users').get();
       
-      return snapshot.docs.map((doc) {
+      final users = snapshot.docs.map((doc) {
         return models.AppUser.fromFirestore(doc);
       }).toList();
+      
+      // Cache all users for offline access
+      final userCompanions = users.map((user) => db.CachedUsersCompanion.insert(
+        uid: user.uid,
+        nick: user.nick,
+        email: user.email,
+        cachedAt: DateTime.now(),
+      )).toList();
+      
+      await _db.userDao.cacheUsersBatch(userCompanions);
+      print('📦 Cached ${users.length} users for offline access');
+      
+      return users;
     } catch (e) {
       print('❌ Error fetching users: $e');
       return [];
@@ -224,9 +323,204 @@ class SharedRepository {
   }
 
   /// Get events for group (offline-first)
+  /// Generates recurring events from class schedules
   Future<List<models.CalendarEvent>> getEventsForGroup(String groupId) async {
-    final events = await _db.eventDao.getEventsForGroup(groupId);
-    return events.map(_eventFromDb).toList();
+    // Get all members of the group
+    final members = await getGroupMembers(groupId);
+    
+    // 1. Try to load classes from local cache
+    final allClasses = <db.ClassTemplate>[];
+    bool hasCachedData = false;
+    
+    for (final member in members) {
+      final userClasses = await _db.memberScheduleDao.getUserClasses(member.uid);
+      if (userClasses.isNotEmpty) {
+        allClasses.addAll(userClasses);
+        hasCachedData = true;
+      }
+    }
+
+    // 2. If no cached data and online, fetch from Firestore
+    if (!hasCachedData && _connectivity.isOnline) {
+      print('☁️  Fetching class schedules for group $groupId from Firestore...');
+      await _fetchAndCacheGroupSchedules(members);
+      
+      // Reload from cache after fetching
+      allClasses.clear();
+      for (final member in members) {
+        final userClasses = await _db.memberScheduleDao.getUserClasses(member.uid);
+        allClasses.addAll(userClasses);
+      }
+    }
+
+    // 3. Convert class templates to recurring events for current week
+    final events = _generateEventsFromClasses(allClasses, members);
+    
+    print('📦 Generated ${events.length} recurring events from ${allClasses.length} class templates');
+    return events;
+  }
+
+  /// Fetch class schedules from Firestore and cache them
+  Future<void> _fetchAndCacheGroupSchedules(List<models.AppUser> members) async {
+    for (final member in members) {
+      try {
+        // Fetch terms
+        final termsSnapshot = await _firestore
+            .collection('users')
+            .doc(member.uid)
+            .collection('terms')
+            .get();
+
+        for (final termDoc in termsSnapshot.docs) {
+          final termData = termDoc.data();
+          
+          // Cache term
+          await _db.memberScheduleDao.cacheUserTerms(member.uid, [
+            db.TermsCompanion.insert(
+              id: termDoc.id,
+              userId: member.uid,
+              name: termData['name'] ?? 'Term',
+              startDate: Value(termData['startDate'] != null 
+                  ? (termData['startDate'] as Timestamp).toDate() 
+                  : null),
+              endDate: Value(termData['endDate'] != null 
+                  ? (termData['endDate'] as Timestamp).toDate() 
+                  : null),
+            ),
+          ]);
+
+          // Fetch subjects for this term
+          final subjectsSnapshot = await _firestore
+              .collection('users')
+              .doc(member.uid)
+              .collection('terms')
+              .doc(termDoc.id)
+              .collection('subjects')
+              .get();
+
+          for (final subjectDoc in subjectsSnapshot.docs) {
+            final subjectData = subjectDoc.data();
+            
+            // Cache subject
+            await _db.memberScheduleDao.cacheTermSubjects(termDoc.id, [
+              db.SubjectsCompanion.insert(
+                id: subjectDoc.id,
+                termId: termDoc.id,
+                userId: member.uid,
+                name: subjectData['name'] ?? 'Subject',
+                code: Value(subjectData['code']),
+              ),
+            ]);
+
+            // Fetch classes for this subject
+            final classesSnapshot = await _firestore
+                .collection('users')
+                .doc(member.uid)
+                .collection('terms')
+                .doc(termDoc.id)
+                .collection('subjects')
+                .doc(subjectDoc.id)
+                .collection('classes')
+                .get();
+
+            final classesList = <db.ClassTemplatesCompanion>[];
+            for (final classDoc in classesSnapshot.docs) {
+              final classData = classDoc.data();
+              classesList.add(db.ClassTemplatesCompanion.insert(
+                id: classDoc.id,
+                subjectId: subjectDoc.id,
+                userId: member.uid,
+                dayOfWeek: classData['dayOfWeek'] ?? 1,
+                startTime: classData['startTime'] ?? '08:00',
+                endTime: classData['endTime'] ?? '09:00',
+                location: Value(classData['location']),
+              ));
+            }
+
+            if (classesList.isNotEmpty) {
+              await _db.memberScheduleDao.cacheSubjectClasses(subjectDoc.id, classesList);
+            }
+          }
+        }
+        
+        print('✅ Cached schedule for ${member.nick}');
+      } catch (e) {
+        print('⚠️  Failed to fetch schedule for ${member.nick}: $e');
+      }
+    }
+  }
+
+  /// Generate recurring events from class templates for the current/next week
+  List<models.CalendarEvent> _generateEventsFromClasses(
+    List<db.ClassTemplate> classes,
+    List<models.AppUser> members,
+  ) {
+    final events = <models.CalendarEvent>[];
+    final now = DateTime.now();
+    
+    // Get the start of current week (Monday)
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    final weekDates = List.generate(7, (i) => startOfWeek.add(Duration(days: i)));
+
+    for (final classTemplate in classes) {
+      // Find the owner
+      final owner = members.firstWhere(
+        (m) => m.uid == classTemplate.userId,
+        orElse: () => models.AppUser(uid: classTemplate.userId, nick: 'User', email: ''),
+      );
+
+      // dayOfWeek: 1=Monday, 7=Sunday
+      final classDay = weekDates[classTemplate.dayOfWeek - 1];
+      
+      // Parse start and end times
+      final startTimeParts = classTemplate.startTime.split(':');
+      final endTimeParts = classTemplate.endTime.split(':');
+      
+      final startTime = DateTime(
+        classDay.year,
+        classDay.month,
+        classDay.day,
+        int.parse(startTimeParts[0]),
+        int.parse(startTimeParts[1]),
+      );
+      
+      final endTime = DateTime(
+        classDay.year,
+        classDay.month,
+        classDay.day,
+        int.parse(endTimeParts[0]),
+        int.parse(endTimeParts[1]),
+      );
+
+      events.add(models.CalendarEvent(
+        id: '${classTemplate.id}_${classDay.millisecondsSinceEpoch}',
+        title: 'Class', // Could fetch subject name if needed
+        startTime: startTime,
+        endTime: endTime,
+        type: models.EventType.classSession,
+        ownerId: owner.uid,
+        ownerName: owner.nick,
+        color: Colors.blue, // Could vary by subject
+      ));
+    }
+
+    return events;
+  }
+
+  models.EventType _parseEventType(String type) {
+    switch (type.toLowerCase()) {
+      case 'assignment':
+        return models.EventType.assignment;
+      case 'exam':
+        return models.EventType.exam;
+      case 'class':
+      case 'classsession':
+        return models.EventType.classSession;
+      case 'group':
+        return models.EventType.group;
+      default:
+        return models.EventType.personal;
+    }
   }
 
   /// Cache group events (from Firestore)
@@ -298,6 +592,7 @@ class SharedRepository {
   }
 
   Future<void> _cacheGroup(models.Group group) async {
+    // 1. Insert/update the group itself
     await _db.groupDao.insertGroup(db.GroupsCompanion.insert(
       id: group.id,
       name: group.name,
@@ -305,13 +600,62 @@ class SharedRepository {
       createdBy: '', // Placeholder
       createdAt: DateTime.now(),
     ));
+
+    // 2. Cache group members in GroupMembers table
+    // First, get user details for each member UID
+    for (final uid in group.memberUids) {
+      try {
+        String nick = 'User';
+        String email = '';
+        
+        // First, try to get from cache
+        final cachedUser = await _db.userDao.getCachedUser(uid);
+        if (cachedUser != null) {
+          nick = cachedUser.nick;
+          email = cachedUser.email;
+        } else if (_connectivity.isOnline) {
+          // If not cached and online, fetch from Firestore
+          final userDoc = await _firestore.collection('users').doc(uid).get();
+          if (userDoc.exists) {
+            final userData = userDoc.data();
+            nick = userData?['nick'] ?? 'User';
+            email = userData?['email'] ?? '';
+            
+            // Cache the user for future use
+            await _db.userDao.cacheUser(db.CachedUsersCompanion.insert(
+              uid: uid,
+              nick: nick,
+              email: email,
+              cachedAt: DateTime.now(),
+            ));
+          }
+        }
+
+        // Insert member into GroupMembers table
+        await _db.groupDao.addMember(db.GroupMembersCompanion.insert(
+          id: '${group.id}_$uid',
+          groupId: group.id,
+          userId: uid,
+          userNick: nick,
+          userEmail: email,
+          joinedAt: DateTime.now(),
+        ));
+      } catch (e) {
+        print('⚠️  Failed to cache member $uid: $e');
+      }
+    }
   }
 
   models.Group _groupFromDb(db.Group dbGroup) {
+    // Handle empty or malformed member_uids field
+    final memberUids = dbGroup.memberUids.isEmpty 
+        ? <String>[]
+        : dbGroup.memberUids.split(',').where((s) => s.isNotEmpty).toList();
+    
     return models.Group(
       id: dbGroup.id,
       name: dbGroup.name,
-      memberUids: dbGroup.memberUids.split(','),
+      memberUids: memberUids,
     );
   }
 
@@ -326,23 +670,6 @@ class SharedRepository {
       ownerName: dbEvent.ownerName,
       color: Color(dbEvent.colorValue),
     );
-  }
-
-  models.EventType _parseEventType(String type) {
-    switch (type.toLowerCase()) {
-      case 'assignment':
-        return models.EventType.assignment;
-      case 'exam':
-        return models.EventType.exam;
-      case 'classsession':
-        return models.EventType.classSession;
-      case 'group':
-        return models.EventType.group;
-      case 'personal':
-        return models.EventType.personal;
-      default:
-        return models.EventType.personal;
-    }
   }
 
   // ==================== FREE BLOCKS CALCULATION ====================
