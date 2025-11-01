@@ -4,6 +4,7 @@ import '../../models/auth_model.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/auth/biometric_service.dart';
 import '../../services/auth/secure_store.dart';
+import '../../services/auth/offline_auth_service.dart';
 
 // ignore_for_file: type_test_with_undefined_name
 
@@ -50,45 +51,82 @@ class LoginViewModel extends Observable {
 
   // ==== Acciones ====
   Future<AuthResult> login() async {
-    final e1 = LoginForm.validateEmail(_form.email);
-    final e2 = LoginForm.validatePassword(_form.password);
-    if (e1 != null || e2 != null) {
-      final msg = e1 ?? e2 ?? 'Fix the errors';
-      _error = msg;
-      notify();
-      return AuthResult.fail(msg);
+  final e1 = LoginForm.validateEmail(_form.email);
+  final e2 = LoginForm.validatePassword(_form.password);
+  if (e1 != null || e2 != null) {
+    final msg = e1 ?? e2 ?? 'Fix the errors';
+    _error = msg;
+    notify();
+    return AuthResult.fail(msg);
+  }
+
+  _loading = true;
+  _error = null;
+  notify();
+
+  try {
+    // ONLINE primero
+    await _auth.signInEmailPassword(
+      email: _form.email,
+      password: _form.password,
+    );
+    await _auth.reloadUser();
+
+    if (!_auth.isEmailVerified) {
+      await _auth.signOut();
+      return const AuthResult(
+        ok: false,
+        message: 'Please verify your email to continue',
+        needsEmailVerification: true,
+      );
     }
 
-    _loading = true;
-    _error = null;
-    notify();
-
-    try {
-      await _auth.signInEmailPassword(
+    // === Opt-in automático: habilitar offline + cachear settings ===
+    final uid = _auth.currentUser?.uid;
+    if (uid != null) {
+      await OfflineAuthService.enableOfflineForCredentials(
         email: _form.email,
         password: _form.password,
+        uid: uid,
       );
-      await _auth.reloadUser();
 
-      if (!_auth.isEmailVerified) {
-        await _auth.signOut();
-        return const AuthResult(
-          ok: false,
-          message: 'Please verify your email to continue',
-          needsEmailVerification: true,
-        );
-      }
-      return AuthResult.success();
-    } catch (e) {
-      final msg = _friendlyAuthMessage(e);
-      _error = msg;
-      notify();
-      return AuthResult.fail(msg);
-    } finally {
-      _loading = false;
-      notify();
+      // puedes ajustar estos defaults; son livianos y seguros
+      await OfflineAuthService.cacheUserSettings(
+        uid: uid,
+        settings: {
+          "theme": "system",
+          "notifications": true,
+          "favoriteGroups": <String>[],
+        },
+      );
     }
+
+    return AuthResult.success();
+  } catch (e) {
+    // Fallback OFFLINE por red caída: email + password (PBKDF2 local)
+    final ok = await OfflineAuthService.tryOfflinePassword(
+      email: _form.email,
+      password: _form.password,
+    );
+    if (ok) {
+      final info = await OfflineAuthService.offlineSessionInfo();
+      if (info.uid != null && info.email != null) {
+        _auth.startOfflineSession(uid: info.uid!, email: info.email!);
+        return const AuthResult(ok: true, message: 'Signed in offline');
+        }
+    }
+
+    final msg = _friendlyAuthMessage(e);
+    _error = msg;
+    notify();
+    return AuthResult.fail(msg);
+  } finally {
+    _loading = false;
+    notify();
   }
+}
+
+
 
   Future<AuthResult> forgotPassword(String email) async {
     final err = LoginForm.validateEmail(email);
@@ -104,48 +142,79 @@ class LoginViewModel extends Observable {
   Future<void> resendVerificationEmail() => _auth.sendEmailVerification();
 
   Future<AuthResult> loginWithBiometrics() async {
-    final supported = await _bio.canUseBiometrics();
-    if (!supported) {
-      return AuthResult.fail('Biometrics not supported/enrolled');
-    }
-    final ok = await _bio.authenticate();
-    if (!ok) return AuthResult.fail('Biometric cancelled / failed');
+  final supported = await _bio.canUseBiometrics();
+  if (!supported) return AuthResult.fail('Biometrics not supported/enrolled');
 
-    final creds = await SecureStore.biometricCredentials();
-    final email = creds.email;
-    final pass = creds.password;
-    if (email == null || pass == null) {
-      return AuthResult.fail(
-        'No saved credentials. Sign in once with email & password.',
+  final okBio = await _bio.authenticate();
+  if (!okBio) return AuthResult.fail('Biometric cancelled / failed');
+
+  final creds = await SecureStore.biometricCredentials();
+  final email = creds.email;
+  final pass  = creds.password;
+  if (email == null || pass == null) {
+    return AuthResult.fail('No saved credentials. Sign in once with email & password.');
+  }
+
+  _loading = true;
+  _error = null;
+  notify();
+
+  try {
+    // ONLINE primero
+    await _auth.signInEmailPassword(email: email, password: pass);
+    await _auth.reloadUser();
+
+    if (!_auth.isEmailVerified) {
+      await _auth.signOut();
+      return const AuthResult(
+        ok: false,
+        message: 'Please verify your email to continue',
+        needsEmailVerification: true,
       );
     }
 
-    _loading = true;
-    _error = null;
-    notify();
+    // === Opt-in automático: habilitar offline + cachear settings ===
+    final uid = _auth.currentUser?.uid;
+    if (uid != null) {
+      await OfflineAuthService.enableOfflineForCredentials(
+        email: email,
+        password: pass,
+        uid: uid,
+      );
 
-    try {
-      await _auth.signInEmailPassword(email: email, password: pass);
-      await _auth.reloadUser();
-      if (!_auth.isEmailVerified) {
-        await _auth.signOut();
-        return const AuthResult(
-          ok: false,
-          message: 'Please verify your email to continue',
-          needsEmailVerification: true,
-        );
-      }
-      return AuthResult.success();
-    } catch (e) {
-      final msg = _friendlyAuthMessage(e);
-      _error = msg;
-      notify();
-      return AuthResult.fail(msg);
-    } finally {
-      _loading = false;
-      notify();
+      await OfflineAuthService.cacheUserSettings(
+        uid: uid,
+        settings: {
+          "theme": "system",
+          "notifications": true,
+          "favoriteGroups": <String>[],
+        },
+      );
     }
+
+    return AuthResult.success();
+  } catch (e) {
+    // Fallback OFFLINE por red caída: biometría + sesión local habilitada
+    final can = await OfflineAuthService.tryOfflineBiometric();
+    if (can) {
+      final info = await OfflineAuthService.offlineSessionInfo();
+      if (info.uid != null && info.email != null) {
+        _auth.startOfflineSession(uid: info.uid!, email: info.email!);
+        return const AuthResult(ok: true, message: 'Signed in offline');
+      }
+    }
+
+    final msg = _friendlyAuthMessage(e);
+    _error = msg;
+    notify();
+    return AuthResult.fail(msg);
+  } finally {
+    _loading = false;
+    notify();
   }
+}
+
+
 
   Future<String?> debugBiometricSummary() => _bio.debugSummary();
 
@@ -201,4 +270,38 @@ class LoginViewModel extends Observable {
     final s = error.toString();
     return s.replaceFirst('Exception: ', '');
   }
+    /// Llamar tras un login ONLINE exitoso, si el usuario acepta el prompt.
+  Future<void> enableOfflineWithCurrentCredentials() async {
+    final uid = _auth.currentUser?.uid;
+    final email = _form.email;
+    final password = _form.password;
+    if (uid != null && email.isNotEmpty && password.isNotEmpty) {
+      await OfflineAuthService.enableOfflineForCredentials(
+        email: email,
+        password: password,
+        uid: uid,
+      );
+    }
+  }
+
+  /// Guarda user settings en SharedPreferences (JSON) para mejor UX offline.
+  Future<void> cacheUserSettingsOffline(Map<String, dynamic> settings) async {
+    final uid = _auth.currentUserId;
+    if (uid == null) return;
+    await OfflineAuthService.cacheUserSettings(uid: uid, settings: settings);
+  }
+    /// Limpia toda la huella de sesión offline (SecureStorage + estado en AuthService).
+  Future<void> clearOfflineSession() async {
+    _auth.clearOfflineSession();                 // borra uid/email offline en AuthService
+    await OfflineAuthService.disableOffline();   // borra claves/salt/hash/flags en SecureStorage
+    notify();                                    // por si alguna UI muestra estado de sesión
+  }
+
+  /// Cierra sesión completa respetando MVVM (online + offline).
+  Future<void> signOutAll() async {
+    await _auth.signOut();       // tu signOut normal (Firebase)
+    await clearOfflineSession(); // y luego limpieza offline
+  }
+
+
 }

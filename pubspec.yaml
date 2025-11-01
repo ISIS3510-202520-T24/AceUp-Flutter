@@ -46,6 +46,8 @@ dependencies:
   supabase_flutter: ^2.10.2
   package_info_plus: ^8.3.1
   firebase_analytics: ^12.0.3
+  crypto: ^3.0.3
+  shared_preferences: ^2.2.2
   
   # Local Storage - SQLite
   drift: ^2.14.0
@@ -62,9 +64,7 @@ dependencies:
   
   # Image caching
   cached_network_image: ^3.3.0
-  
-  # Preferences
-  shared_preferences: ^2.2.2
+
   
   # Connectivity detection
   connectivity_plus: ^6.0.5
