@@ -1,60 +1,60 @@
 // lib/views/auth/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import 'package:flutter_svg/flutter_svg.dart'; //ignore: uri_does_not_exist
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/auth/login_viewmodel.dart';
 
-import '../../services/auth/secure_store.dart';
-import '../../services/startup_ttfp.dart';
-
-import '../../models/auth_model.dart';
-
-// ignore_for_file: undefined_identifier
-
+/// Pantalla de Login
+/// Requiere que le inyectes un LoginViewModel (por Provider, VmScope, etc.)
 class LoginScreen extends StatefulWidget {
   final LoginViewModel vm;
-  const LoginScreen({super.key, required this.vm});
+  const LoginScreen({
+    super.key,
+    required this.vm,
+  });
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _form = GlobalKey<FormState>();
-  final _email = TextEditingController();
-  final _pass = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
-  bool _obscure = true;
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
+
   bool _showErrors = false;
+  bool _obscure = true;
   bool _checkingBio = false;
-
-  void _onVmChanged() {
-    if (mounted) setState(() {});
-  }
 
   @override
   void initState() {
     super.initState();
-    // Marca el primer frame del Login para el TTFP (no await)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      StartupTTFP.markLoginFirstFrame();
-    });
+    // Escuchar cambios del VM para redibujar
     widget.vm.addListener(_onVmChanged);
   }
 
   @override
   void dispose() {
     widget.vm.removeListener(_onVmChanged);
-    _email.dispose();
-    _pass.dispose();
+    _emailCtrl.dispose();
+    _passCtrl.dispose();
     super.dispose();
   }
 
-  InputDecoration _decorStandard(BuildContext ctx, {String? hint, Widget? suffix}) {
+  void _onVmChanged() {
+    if (mounted) setState(() {});
+  }
+
+  // === InputDecoration consistente con tu estilo ===
+  InputDecoration _decorStandard(
+    BuildContext ctx, {
+    String? hint,
+    Widget? suffix,
+  }) {
     final colors = Theme.of(ctx).colorScheme;
     return InputDecoration(
       hintText: hint,
@@ -89,215 +89,198 @@ class _LoginScreenState extends State<LoginScreen> {
         SnackBar(
           behavior: SnackBarBehavior.floating,
           backgroundColor: cs.surfaceDim,
-          content: Text(msg, style: TextStyle(color: cs.onSurfaceVariant)),
           margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          content: Text(
+            msg,
+            style: TextStyle(color: cs.onSurfaceVariant),
+          ),
         ),
       );
   }
 
-  Future<void> _openForgotPassword() async {
-    final form = GlobalKey<FormState>();
-    final ctrl = TextEditingController(text: _email.text.trim());
-    bool showErrors = false;
+  /// Diálogo para preguntar si reemplazar credenciales biométricas guardadas.
+  Future<bool> _askReplaceDialog({
+    required String title,
+    required String message,
+    String positive = 'Replace',
+    String negative = 'Keep current',
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(negative),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(positive),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
+  }
 
-    await showDialog(
+  /// Diálogo cuando el usuario todavía no verificó el correo
+  Future<void> _showVerifyDialog() async {
+    await showDialog<void>(
       context: context,
       builder: (ctx) {
-        final cs = Theme.of(ctx).colorScheme;
-        InputDecoration _decor() => InputDecoration(
-              labelText: 'Email',
-              hintText: 'name@email.com',
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: cs.outlineVariant),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: cs.primary, width: 1.5),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: cs.error, width: 1.6),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: cs.error, width: 1.8),
-              ),
-              errorStyle: TextStyle(color: cs.error),
-            );
-
-        return StatefulBuilder(
-          builder: (ctx, setDialog) => AlertDialog(
-            title: const Text('Reset password'),
-            content: Form(
-              key: form,
-              autovalidateMode:
-                  showErrors ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
-              child: TextFormField(
-                controller: ctrl,
-                keyboardType: TextInputType.emailAddress,
-                maxLength: 40,
-                inputFormatters: [
-                  // Bloquea el carácter ';' al escribir
-                  FilteringTextInputFormatter.deny(RegExp(r'[;]')),
-                ],
-                decoration: _decor().copyWith(
-                  counterText: '', // oculta el contador si no lo quieres ver
-                ),
-                validator: (v) => LoginForm.validateEmail(v ?? ''),
-              ),
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-              FilledButton(
-                onPressed: () async {
-                  setDialog(() => showErrors = true);
-                  if (!form.currentState!.validate()) return;
-                  final res = await widget.vm.forgotPassword(ctrl.text.trim());
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    _showSnack(res.message ?? (res.ok ? 'Email sent' : 'Could not send reset email'));
-                  }
-                },
-                child: const Text('Send'),
-              ),
-            ],
+        return AlertDialog(
+          title: const Text('Email not verified'),
+          content: const Text(
+            'Your email is not verified yet. Would you like us to resend a verification email?',
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await widget.vm.resendVerificationEmail();
+                if (!mounted) return;
+                _showSnack('Verification email sent.');
+              },
+              child: const Text('Resend'),
+            ),
+          ],
         );
       },
     );
   }
 
-  Future<void> _showVerifyDialog() async {
-    await showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Verify your email'),
-        content: const Text('We sent a verification email. Please verify your address before continuing.'),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              await widget.vm.resendVerificationEmail();
-              if (mounted) _showSnack('Verification email re-sent');
-            },
-            child: const Text('Resend'),
-          ),
-          FilledButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
-        ],
-      ),
-    );
-  }
-
-  Future<bool> _askReplaceDialog({
-    required String title,
-    required String message,
-    String positive = 'Replace',
-    String negative = 'Not now',
-  }) async {
-    final res = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(negative)),
-          FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(positive)),
-        ],
-      ),
-    );
-    return res == true;
-  }
-
+  /// Acción principal de Login (botón "Login").
+  ///
+  /// Flujo:
+  /// - valida form
+  /// - vm.login()
+  /// - si necesita verificación, mostramos diálogo
+  /// - si OK, preguntamos por biometría / guardamos credenciales
+  /// - navegamos a /today
   Future<void> _submit() async {
-    setState(() => _showErrors = true);
-    if (!_form.currentState!.validate()) return;
+    setState(() {
+      _showErrors = true;
+    });
 
-    final email = _email.text.trim();
-    final password = _pass.text.trim();
+    if (!_formKey.currentState!.validate()) return;
 
-    widget.vm
-      ..setEmail(email)
-      ..setPassword(password);
+    final email = _emailCtrl.text.trim();
+    final password = _passCtrl.text;
+
+    // pasar credenciales al VM
+    widget.vm.setEmail(email);
+    widget.vm.setPassword(password);
 
     final res = await widget.vm.login();
-
     if (!mounted) return;
 
     if (!res.ok) {
+      // login falló
       if (res.needsEmailVerification) {
+        // correo sin verificar -> pop up para reenviar
         await _showVerifyDialog();
       }
       _showSnack(res.message ?? 'Login failed');
       return;
     }
 
-    // NOTA: El ViewModel ya habilita automáticamente:
-    // - Modo offline (PBKDF2) para este email/clave/uid
-    // - Cache de user settings en SharedPreferences
-    // Aquí solo gestionamos la biometría como UX extra.
+    // Login OK (online o offline). Ahora biometría como UX opcional:
+    final canStore = await widget.vm.canStoreBiometric();
+    if (canStore) {
+      final check = await widget.vm.checkBiometricCredentials();
+      final storedEmail = (check.storedEmail ?? '');
 
-    // Post-login: biometría (opcional, con prompts propios)
-    final check = await widget.vm.biometricPostLoginCheck(email);
-    if (check.supported) {
-      if (!check.enabled) {
-        final ok = await _askReplaceDialog(
-          title: 'Enable quick login?',
-          message: 'Save $email for biometric login?',
-          positive: 'Save',
-          negative: 'Not now',
+      if (storedEmail.isEmpty ||
+          storedEmail.toLowerCase() == email.toLowerCase()) {
+        // o no había nada, o ya coincide este usuario
+        await widget.vm.saveBiometricCredentials(
+          email: email,
+          password: password,
         );
-        if (ok) {
-          await widget.vm.saveBiometricCredentials(email: email, password: password);
-        }
       } else {
-        final stored = (check.storedEmail ?? '');
-        if (stored.isEmpty || stored.toLowerCase() == email.toLowerCase()) {
-          await widget.vm.saveBiometricCredentials(email: email, password: password);
-        } else {
-          final replace = await _askReplaceDialog(
-            title: 'Replace quick-login account?',
-            message: 'Biometrics is set for $stored. Replace with $email?',
-            positive: 'Replace',
-            negative: 'Keep current',
+        // había otra cuenta guardada → preguntar si reemplazar
+        final replace = await _askReplaceDialog(
+          title: 'Replace quick-login account?',
+          message:
+              'Biometrics is set for $storedEmail. Replace with $email?',
+          positive: 'Replace',
+          negative: 'Keep current',
+        );
+        if (replace) {
+          await widget.vm.saveBiometricCredentials(
+            email: email,
+            password: password,
           );
-          if (replace) {
-            await widget.vm.saveBiometricCredentials(email: email, password: password);
-          }
         }
       }
     }
 
-    _showSnack('Welcome back, ${widget.vm.displayNameOrEmail} 👋');
+    _showSnack('Welcome back, ${widget.vm.displayNameOrEmail} 🔥');
+    if (!mounted) return;
     Navigator.pushReplacementNamed(context, '/today');
   }
 
-  Future<void> _onBiometricPressed() async {
+  /// "Forgot password?" link
+  Future<void> _forgotPassword() async {
+    final email = _emailCtrl.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      _showSnack('Enter your email first.');
+      return;
+    }
+
+    final res = await widget.vm.forgotPassword(email);
+    if (res.ok) {
+      _showSnack('Reset link sent to $email');
+    } else {
+      _showSnack(res.message ?? 'Could not send reset link');
+    }
+  }
+
+  /// Botón "Sign in with biometrics"
+  Future<void> _loginWithBiometric() async {
     if (_checkingBio) return;
-    setState(() => _checkingBio = true);
+    setState(() {
+      _checkingBio = true;
+    });
+
     try {
       final res = await widget.vm.loginWithBiometrics();
-      if (!mounted) return;
-      if (res.ok) {
-        _showSnack('Welcome back!');
-        Navigator.pushReplacementNamed(context, '/today');
-      } else {
+      if (!res.ok) {
         if (res.needsEmailVerification) {
           await _showVerifyDialog();
         }
-        _showSnack(res.message ?? 'Could not sign in with biometrics.');
+        _showSnack(res.message ?? 'Biometric login failed.');
+        return;
       }
+
+      _showSnack('Welcome back, ${widget.vm.displayNameOrEmail} 🔥');
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/today');
     } finally {
-      if (mounted) setState(() => _checkingBio = false);
+      if (mounted) {
+        setState(() {
+          _checkingBio = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final loading = widget.vm.loading;
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final autoMode = _showErrors ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled;
+    final vm = widget.vm;
+
+    final isLight = theme.brightness == Brightness.light;
 
     return Scaffold(
       backgroundColor: colors.surfaceDim,
@@ -305,7 +288,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // ---------- TOP ----------
+            // ---------- TOP: Logo AceUp grande ----------
             Expanded(
               flex: 3,
               child: Column(
@@ -314,7 +297,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Flexible(
                     child: SvgPicture.asset(
-                      theme.brightness == Brightness.light
+                      isLight
                           ? 'assets/logos/t_blue.svg'
                           : 'assets/logos/t_white.svg',
                       width: MediaQuery.of(context).size.width * 0.5,
@@ -337,96 +320,178 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
 
-            // ---------- BOTTOM ----------
+            // ---------- BOTTOM: Formulario ----------
             Expanded(
               flex: 4,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 child: Form(
-                  key: _form,
-                  autovalidateMode: autoMode,
+                  key: _formKey,
+                  autovalidateMode: _showErrors
+                      ? AutovalidateMode.onUserInteraction
+                      : AutovalidateMode.disabled,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const SizedBox(height: 12),
-                      Text('Welcome Back!',
-                          style: AppTypography.h1.copyWith(color: colors.onPrimary)),
-                      const SizedBox(height: 12),
-                      TextFormField(
-                        controller: _email,
-                        maxLength: 40,
-                        keyboardType: TextInputType.emailAddress,
-                        validator: (_) => LoginForm.validateEmail(_email.text),
-                        decoration: _decorStandard(context, hint: 'Email Address'),
+                      Text(
+                        'Welcome Back!',
+                        style: AppTypography.h1.copyWith(
+                          color: colors.onPrimary,
+                        ),
                       ),
                       const SizedBox(height: 12),
+
+                      // EMAIL
                       TextFormField(
-                        controller: _pass,
+                        controller: _emailCtrl,
+                        maxLength: 40,
+                        keyboardType: TextInputType.emailAddress,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.deny(RegExp(r'[;]')),
+                        ],
+                        validator: (_) {
+                          final v = _emailCtrl.text.trim();
+                          if (v.isEmpty) return 'Email required';
+                          if (!v.contains('@')) return 'Invalid email';
+                          return null;
+                        },
+                        decoration: _decorStandard(
+                          context,
+                          hint: 'Email Address',
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // PASSWORD
+                      TextFormField(
+                        controller: _passCtrl,
                         maxLength: 40,
                         obscureText: _obscure,
-                        validator: (_) => LoginForm.validatePassword(_pass.text),
+                        validator: (_) {
+                          final v = _passCtrl.text;
+                          if (v.isEmpty) return 'Password required';
+                          if (v.length < 6) return 'Min 6 chars';
+                          return null;
+                        },
                         decoration: _decorStandard(
                           context,
                           hint: 'Password',
                           suffix: IconButton(
-                            onPressed: () => setState(() => _obscure = !_obscure),
-                            icon: Icon(_obscure ? AppIcons.visibilityOff : AppIcons.visibilityOn, size: 18),
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
+                            icon: Icon(
+                              _obscure
+                                  ? AppIcons.visibilityOff
+                                  : AppIcons.visibilityOn,
+                              size: 18,
+                            ),
                             color: colors.outline,
                           ),
                         ),
                       ),
+
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: TextButton(onPressed: _openForgotPassword, child: const Text('Forgot password?')),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 52,
-                        child: FilledButton(
-                          onPressed: loading ? null : _submit,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: colors.primary,
-                            foregroundColor: colors.onPrimary,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: loading
-                              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                              : const Text('Login', style: AppTypography.actionM),
+                        child: TextButton(
+                          onPressed: vm.loading ? null : _forgotPassword,
+                          child: const Text('Forgot password?'),
                         ),
                       ),
 
-                      // Biometría (si hay soporte)
-                      const SizedBox(height: 6),
-                      FutureBuilder<bool>(
-                        future: widget.vm.canUseBiometrics(),
-                        builder: (context, snap) {
-                          if (snap.connectionState != ConnectionState.done) return const SizedBox.shrink();
-                          final canBio = snap.data == true;
-                          if (!canBio) return const SizedBox.shrink();
+                      const SizedBox(height: 8),
 
-                          return SizedBox(
-                            height: 52,
-                            child: OutlinedButton.icon(
-                              onPressed: _checkingBio ? null : _onBiometricPressed,
-                              icon: Icon(AppIcons.fingerprint),
-                              label: _checkingBio
-                                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                                  : const Text('Sign in with biometrics', style: AppTypography.actionM),
+                      // LOGIN button
+                      SizedBox(
+                        height: 52,
+                        child: FilledButton(
+                          onPressed: vm.loading ? null : _submit,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: colors.primary,
+                            foregroundColor: colors.onPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                          );
-                        },
+                          ),
+                          child: vm.loading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  'Login',
+                                  style: AppTypography.actionM,
+                                ),
+                        ),
                       ),
+
+                      // biometría
+                      const SizedBox(height: 6),
+                      SizedBox(
+                        height: 52,
+                        child: OutlinedButton.icon(
+                          onPressed: (vm.loading || _checkingBio)
+                              ? null
+                              : _loginWithBiometric,
+                          icon: const Icon(Icons.fingerprint),
+                          label: _checkingBio
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  'Sign in with biometrics',
+                                  style: AppTypography.actionM,
+                                ),
+                        ),
+                      ),
+
                       const SizedBox(height: 16),
+
+                      // link a signup
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('New to AceUp? ', style: AppTypography.bodyS.copyWith(color: colors.onPrimary)),
+                          Text(
+                            'New to AceUp? ',
+                            style: AppTypography.bodyS.copyWith(
+                              color: colors.onPrimary,
+                            ),
+                          ),
                           TextButton(
-                            onPressed: () => Navigator.pushNamed(context, '/signup'),
+                            onPressed: vm.loading
+                                ? null
+                                : () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/signup',
+                                    );
+                                  },
                             child: const Text('Register now'),
                           ),
                         ],
                       ),
+
+                      // Mostrar error global del VM si existe
+                      if (vm.error != null && vm.error!.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          vm.error!,
+                          style: AppTypography.bodyS.copyWith(
+                            color: colors.error,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
