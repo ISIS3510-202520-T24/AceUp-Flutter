@@ -1,200 +1,287 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/auth/auth_service.dart';
+
 import '../themes/app_typography.dart';
 import '../themes/app_icons.dart';
+
+import '../services/auth/auth_service.dart';
+import '../services/profile/profile_notifier.dart';
 
 class BurgerMenu extends StatelessWidget {
   const BurgerMenu({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
+    final colors = Theme.of(context).colorScheme;
     final currentRoute = ModalRoute.of(context)?.settings.name;
+
+    final auth = context.read<AuthService>();
+    final email = auth.currentUser?.email ?? '';
+    final fallbackNick = auth.currentUser?.displayName ?? 'Student';
+
+    // 👇 escuchar nickname/foto globales
+    final profile = context.watch<ProfileNotifier>();
+
+    final shownNick = (profile.nickname.trim().isNotEmpty)
+        ? profile.nickname
+        : (fallbackNick.isNotEmpty ? fallbackNick : email);
+
+    // resolver imagen del avatar
+    ImageProvider? avatarImage;
+    final avatarPath = profile.avatarLocalPath;
+
+    if (avatarPath != null && avatarPath.startsWith('asset:')) {
+      avatarImage = AssetImage(
+        avatarPath.replaceFirst('asset:', ''),
+      );
+    } else if (avatarPath != null && avatarPath.isNotEmpty) {
+      avatarImage = FileImage(File(avatarPath));
+    } else {
+      // fallback inicial si nunca se guardó nada:
+      avatarImage = const AssetImage('assets/avatars/avatar_1.png');
+    }
 
     return Drawer(
       child: Column(
         children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-            decoration: BoxDecoration(color: colors.onPrimary),
-            child: SafeArea(
-              bottom: false,
-              child: Text(
-                "AceUp",
-                style: AppTypography.logo.copyWith(color: colors.tertiary),
+          // header user
+          SafeArea(
+            bottom: false,
+            child: Container(
+              width: double.infinity,
+              color: colors.surfaceContainerHigh,
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: colors.primaryContainer,
+                    backgroundImage: avatarImage,
+                    child: avatarImage == null
+                        ? Text(
+                            shownNick.isNotEmpty
+                                ? shownNick[0].toUpperCase()
+                                : '?',
+                            style: AppTypography.h3.copyWith(
+                              color: colors.onPrimary,
+                            ),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          shownNick,
+                          style: AppTypography.h4.copyWith(
+                            color: colors.onPrimary,
+                          ),
+                        ),
+                        Text(
+                          email,
+                          style: AppTypography.bodyS.copyWith(
+                            color: colors.secondary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
 
+          // menu items
           Expanded(
             child: ListView(
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: EdgeInsets.zero,
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Text(
-                    "My Schedules",
-                    style: AppTypography.h4.copyWith(color: colors.onPrimary),
-                  ),
-                ),
-                _buildMenuItem(
+                const SizedBox(height: 8),
+                _sectionHeader(context, "Schedule"),
+                _menuItem(
                   context: context,
                   title: "Today",
                   icon: AppIcons.calendarDay,
                   route: '/today',
                   isSelected: currentRoute == '/today',
-                  colors: colors,
                 ),
-                _buildMenuItem(
+                _menuItem(
                   context: context,
                   title: "Week View",
                   icon: AppIcons.calendarWeek,
                   route: null,
                   isSelected: false,
-                  colors: colors,
                   isComingSoon: true,
                 ),
-                _buildMenuItem(
+                _menuItem(
                   context: context,
                   title: "Calendar",
                   icon: AppIcons.calendarMonth,
                   route: null,
                   isSelected: false,
-                  colors: colors,
                   isComingSoon: true,
                 ),
-                _buildMenuItem(
+                _menuItem(
                   context: context,
                   title: "Shared",
                   icon: AppIcons.shared,
                   route: '/shared',
                   isSelected: currentRoute == '/shared',
-                  colors: colors,
                 ),
 
                 const SizedBox(height: 16),
-
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  child: Text(
-                    "My Data",
-                    style: AppTypography.h4.copyWith(color: colors.onPrimary),
-                  ),
-                ),
-                _buildMenuItem(
+                _sectionHeader(context, "My Data"),
+                _menuItem(
                   context: context,
                   title: "Planner",
                   icon: AppIcons.planner,
                   route: null,
                   isSelected: false,
-                  colors: colors,
                   isComingSoon: true,
                 ),
-                _buildMenuItem(
+                _menuItem(
                   context: context,
                   title: "Assignments",
                   icon: AppIcons.assignments,
                   route: '/assignments',
                   isSelected: currentRoute == '/assignments',
-                  colors: colors,
                 ),
-                _buildMenuItem(
+                _menuItem(
                   context: context,
                   title: "Teachers",
                   icon: AppIcons.teacher,
                   route: null,
                   isSelected: false,
-                  colors: colors,
                   isComingSoon: true,
                 ),
-                _buildMenuItem(
+                _menuItem(
                   context: context,
                   title: "Holidays",
                   icon: AppIcons.holidays,
                   route: '/holidays',
                   isSelected: currentRoute == '/holidays',
-                  colors: colors,
+                ),
+
+                const SizedBox(height: 16),
+                _sectionHeader(context, "Account"),
+                _menuItem(
+                  context: context,
+                  title: "Settings",
+                  icon: AppIcons.settings,
+                  route: '/settings',
+                  isSelected: currentRoute == '/settings',
                 ),
               ],
             ),
           ),
 
-          Container(
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(
-                  color: colors.outlineVariant,
-                  width: 1,
-                ),
-              ),
-            ),
-            child:
-            SafeArea(
-              top: false,
-              child:
-              ListTile(
-                leading: Icon(AppIcons.logout, color: colors.primary),
-                title: Text(
-                  'Logout',
-                  style: AppTypography.actionL.copyWith(color: colors.onSurface),
-                ),
-                onTap: () async {
-                  await context.read<AuthService>().signOut();
-                  if (!context.mounted) return;
-                  Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
-                },
-              ),
-            ),
-          ),
+          const _LogoutTile(),
         ],
       ),
     );
   }
 
-  Widget _buildMenuItem({
+  Widget _sectionHeader(BuildContext context, String title) {
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Text(
+        title,
+        style: AppTypography.h4.copyWith(color: colors.onPrimary),
+      ),
+    );
+  }
+
+  Widget _menuItem({
     required BuildContext context,
     required String title,
     required IconData icon,
     required String? route,
     required bool isSelected,
-    required ColorScheme colors,
     bool isComingSoon = false,
   }) {
+    final colors = Theme.of(context).colorScheme;
+
     return ListTile(
       leading: Icon(
         icon,
-        size: 20,
-        color: isComingSoon ? colors.shadow : colors.primary,
+        color: isSelected ? colors.primary : colors.onSurfaceVariant,
       ),
-      title: Text(
-        title,
-        style: isComingSoon ? AppTypography.actionL.copyWith(color: colors.shadow) : AppTypography.actionL.copyWith(color: colors.onSurface),
-      ),
-      selected: isSelected,
-      selectedTileColor: colors.tertiary,
-      onTap: () {
-        Navigator.pop(context);
-
-        if (isComingSoon) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$title - Coming soon!'),
-              duration: const Duration(seconds: 1),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: AppTypography.actionL.copyWith(
+                color: isSelected ? colors.primary : colors.onSurface,
               ),
             ),
-          );
-        } else if (route != null && !isSelected) {
-          Navigator.pushReplacementNamed(context, route);
-        }
-      },
+          ),
+          if (isComingSoon)
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
+              decoration: BoxDecoration(
+                color: colors.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'soon',
+                style: AppTypography.bodyXS.copyWith(
+                  color: colors.secondary,
+                ),
+              ),
+            ),
+        ],
+      ),
+      onTap: route == null
+          ? null
+          : () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, route);
+            },
+    );
+  }
+}
+
+class _LogoutTile extends StatelessWidget {
+  const _LogoutTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final auth = context.read<AuthService>();
+
+    Future<void> _doLogout() async {
+      await auth.signOut();
+      if (!context.mounted) return;
+      Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: colors.outlineVariant, width: 1),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: ListTile(
+          leading: Icon(AppIcons.logout, color: colors.primary),
+          title: Text(
+            'Logout',
+            style: AppTypography.actionL.copyWith(
+              color: colors.onSurface,
+            ),
+          ),
+          onTap: _doLogout,
+        ),
+      ),
     );
   }
 }

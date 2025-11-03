@@ -46,6 +46,11 @@ dependencies:
   supabase_flutter: ^2.10.2
   package_info_plus: ^8.3.1
   firebase_analytics: ^12.0.3
+  image_picker: ^1.1.2        # para escoger foto de galería / cámara
+  path_provider: ^2.1.4       # para escribir archivos locales en el sandbox
+  image: ^4.2.0                # ya lo usas; solo asegúrate que esté
+  shared_preferences: ^2.2.3
+  crypto: ^3.0.0 # opcional para metadata rápida, pero igual mostramos alternativa con File
 
 dev_dependencies:
   flutter_test:
@@ -69,6 +74,10 @@ flutter:
   assets:
     - assets/app_icon/
     - assets/logos/
+    - assets/avatars/avatar_1.png
+    - assets/avatars/avatar_2.png
+    - assets/avatars/avatar_3.png
+    - assets/avatars/avatar_4.png
 
   fonts:
     - family: Inter

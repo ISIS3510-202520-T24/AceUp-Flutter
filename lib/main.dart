@@ -1,84 +1,101 @@
+// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // Firebase
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart' show User; //ignore: uri_does_not_exist
+import 'package:firebase_auth/firebase_auth.dart' show User;
 import 'firebase_options.dart';
-
-// Vistas
-import 'views/assignments/assignments_screen.dart';
-import 'views/auth/logout_screen.dart';
-import 'views/auth/login_screen.dart';
-import 'views/auth/signup_screen.dart';
-import 'views/auth/biometric_screen.dart';
-import 'views/holidays/holidays_screen.dart';
-import 'views/today/today_screen.dart';
-import 'views/shared/shared_screen.dart';
-
-import 'themes/app_theme.dart';
-
-import 'services/notif/notification_service.dart';
-import 'services/auth/auth_service.dart';
-import 'services/auth/biometric_service.dart';
-
-import 'viewmodels/holidays/holidays_viewmodel.dart';
-import 'viewmodels/auth/login_viewmodel.dart';
-import 'viewmodels/auth/signup_viewmodel.dart';
-
-import 'core/observer/vm_scope.dart';
-
-import 'services/startup_ttfp.dart';
 
 // Provider
 import 'package:provider/provider.dart';
 
+// Notificaciones / startup timing
+import 'services/notif/notification_service.dart';
+import 'services/startup_ttfp.dart';
+
+// Servicios
+import 'services/auth/auth_service.dart';
+import 'services/auth/biometric_service.dart';
+import 'services/profile/profile_notifier.dart';
+
+// ViewModels
+import 'viewmodels/auth/login_viewmodel.dart';
+import 'viewmodels/auth/signup_viewmodel.dart';
+import 'viewmodels/holidays/holidays_viewmodel.dart';
+
+// Vistas
+import 'views/auth/login_screen.dart';
+import 'views/auth/biometric_screen.dart';
+import 'views/auth/signup_screen.dart';
+import 'views/auth/logout_screen.dart';
+import 'views/today/today_screen.dart';
+import 'views/holidays/holidays_screen.dart';
+import 'views/assignments/assignments_screen.dart';
+import 'views/shared/shared_screen.dart';
+import 'views/settings/settings_screen.dart';
+
+// Tema
+import 'themes/app_theme.dart';
+
+// Nuestro contenedor tipo locator
+import 'core/observer/vm_scope.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1) Arranca TTFP lo antes posible
+  // 1) Marcador de tiempo de arranque (para métricas de TTFP en consola)
   StartupTTFP.start();
 
-  // 2) Firebase
+  // 2) Inicializar Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 3) Notificaciones
+  // 3) Inicializar notificaciones locales
   await NotificationService().initNotifications();
 
-  // 4) Servicios y VMs (para nuestro Observer)
+  // 4) Instanciar servicios singleton-ish
   final authService = AuthService();
   final bioService = BiometricService();
 
+  // 5) Instanciar VMs que viven "global" (login puede vivir global;
+  //    signup lo vamos a recrear en la ruta para no mezclar estado viejo del form,
+  //    pero igual podemos tener uno base en el registry si quieres).
   final loginVM = LoginViewModel(authService, bioService);
-  final signUpVM = SignUpViewModel(authService);
+  final signUpVM = SignUpViewModel(); // <- sin argumentos
 
-  // 5) Registrar en VmRegistry (nuestro contenedor simple)
+  // 6) Registrar todo en VmRegistry para que podamos pedirlos con VmScope.of(context)
   final registry = VmRegistry()
     ..put<AuthService>(authService)
     ..put<BiometricService>(bioService)
     ..put<LoginViewModel>(loginVM)
     ..put<SignUpViewModel>(signUpVM);
 
-  // Opcional: ver claves registradas en consola
+  // (debug opcional)
   registry.debugPrintKeys();
 
+  // 7) runApp con VmScope y luego MultiProvider
   runApp(
-    // Importante: VmScope por ENCIMA de MaterialApp
     VmScope(
       registry: registry,
-      // Debajo usamos Provider para Holidays y el stream de Auth
       child: MultiProvider(
         providers: [
-          // Holidays usa ChangeNotifier
-          ChangeNotifierProvider(create: (_) => HolidaysViewModel()),
+          // Estado global del perfil (nickname/avatar) usado por Settings y BurgerMenu
+          ChangeNotifierProvider<ProfileNotifier>(
+            create: (_) => ProfileNotifier(),
+          ),
 
-          // Exponer servicios si en alguna vista lees context.read<AuthService>()
+          // HolidaysViewModel (ChangeNotifier con lógica de festivos)
+          ChangeNotifierProvider<HolidaysViewModel>(
+            create: (_) => HolidaysViewModel(),
+          ),
+
+          // Exponer servicios para pantallas que hacen context.read<AuthService>()
           Provider<AuthService>.value(value: authService),
           Provider<BiometricService>.value(value: bioService),
 
-          // Stream del estado de autenticación (si lo usas en otras pantallas)
+          // Stream de auth (FirebaseAuth) para saber si hay usuario logeado
           StreamProvider<User?>(
             create: (_) => authService.authStateChanges,
             initialData: null,
@@ -99,12 +116,12 @@ class AceUpApp extends StatelessWidget {
       title: 'AceUp',
       debugShowCheckedModeBanner: false,
 
-      // Tus temas como estaban
+      // Tema claro/oscuro actual
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
 
-      // Ajustes de status/nav bar según brillo actual del tema
+      // Ajuste de System UI overlays segun brillo actual
       builder: (context, child) {
         final brightness = Theme.of(context).brightness;
         SystemChrome.setSystemUIOverlayStyle(
@@ -121,25 +138,48 @@ class AceUpApp extends StatelessWidget {
         return child!;
       },
 
-      // Rutas — inyectamos los VM desde VmScope SOLO donde se necesitan
       initialRoute: '/',
+
       routes: {
+        // LOGIN: usa el LoginViewModel que ya está registrado en VmScope
         '/': (context) => LoginScreen(
               vm: VmScope.of(context).get<LoginViewModel>(),
             ),
-        '/signup': (context) => SignUpScreen(
-              vm: VmScope.of(context).get<SignUpViewModel>(),
-            ),
+
+        // BIOMETRIC QUICK LOGIN: también usa el mismo LoginViewModel global
         '/biometric': (context) => BiometricScreen(
               vm: VmScope.of(context).get<LoginViewModel>(),
             ),
+
+        // HOME (pantalla Today)
         '/today': (context) => const TodayScreen(),
+
+        // FESTIVOS
         '/holidays': (context) => const HolidaysScreen(),
+
+        // SHARED
+        '/shared': (context) => const SharedScreenWrapper(),
+
+        // ASSIGNMENTS
+        '/assignments': (context) => const AssignmentsScreen(),
+
+        // SETTINGS (perfil / seguridad / logout)
+        '/settings': (context) => const SettingsScreen(),
+
+        // ACCOUNT (pantalla de salir que ya tenías)
         '/account': (context) => LogoutScreen(
               vm: VmScope.of(context).get<LoginViewModel>(),
             ),
-        '/shared': (context) => const SharedScreenWrapper(),
-        '/assignments': (context) => const AssignmentsScreen(),
+
+        // SIGNUP:
+        // Aquí creamos un SignUpViewModel NUEVO cada vez que navegamos a /signup,
+        // para que el formulario empiece limpio.
+        '/signup': (context) {
+          return ChangeNotifierProvider<SignUpViewModel>(
+            create: (_) => SignUpViewModel(), // <- SIN argumentos
+            child: const SignUpScreen(),
+          );
+        },
       },
     );
   }
