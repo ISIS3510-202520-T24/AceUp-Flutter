@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../viewmodels/auth/login_viewmodel.dart';
+import '../../services/auth/offline_auth_service.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/auth/login_viewmodel.dart';
 
 class LogoutScreen extends StatelessWidget {
   final LoginViewModel vm;
@@ -16,10 +19,12 @@ class LogoutScreen extends StatelessWidget {
           children: [
             FilledButton.tonal(
               onPressed: () async {
-                await vm.signOut();
+                final vm = context.read<LoginViewModel>();     // obtenemos el VM
+                await vm.signOutAll();                         // MVVM: logout total
                 if (!context.mounted) return;
-                Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
-              },
+                Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+              }
+              ,
               child: const Text('Cerrar sesión'),
             ),
           ],

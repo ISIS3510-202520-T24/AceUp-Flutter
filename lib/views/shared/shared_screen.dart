@@ -9,14 +9,24 @@ import 'group_detail_screen.dart';
 import '../../widgets/top_bar.dart';
 import '../../services/auth/auth_service.dart';
 import '../../widgets/floating_action_button.dart';
+import '../../data/repositories/shared_repository.dart';
+import '../../core/connectivity/connectivity_manager.dart';
+import '../../widgets/connectivity_indicator.dart';
 
 class SharedScreenWrapper extends StatelessWidget {
   const SharedScreenWrapper({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Obtener las dependencias del Provider
+    final repository = context.read<SharedRepository>();
+    final connectivity = context.read<ConnectivityManager>();
+    
     return ChangeNotifierProvider(
-      create: (_) => SharedViewModel(),
+      create: (_) => SharedViewModel(
+        repository: repository,
+        connectivity: connectivity,
+      ),
       child: const SharedScreen(),
     );
   }
@@ -61,6 +71,12 @@ class _SharedScreenState extends State<SharedScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Offline banner
+          const OfflineBanner(),
+          
+          // Connectivity indicator
+          const ConnectivityIndicator(),
+          
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: _buildTotalGroupsCard(colors, viewModel.groups.length),

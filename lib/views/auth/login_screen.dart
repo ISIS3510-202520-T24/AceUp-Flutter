@@ -1,3 +1,4 @@
+// lib/views/auth/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -6,6 +7,8 @@ import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/auth/login_viewmodel.dart';
 
+/// Pantalla de Login
+/// Requiere que le inyectes un LoginViewModel (por Provider, VmScope, etc.)
 class LoginScreen extends StatefulWidget {
   final LoginViewModel vm;
   const LoginScreen({
@@ -30,6 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    // Escuchar cambios del VM para redibujar
     widget.vm.addListener(_onVmChanged);
   }
 
@@ -45,7 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (mounted) setState(() {});
   }
 
-  // === Estilo de los TextFormField (igual que en tu guía vieja) ===
+  // === InputDecoration consistente con tu estilo ===
   InputDecoration _decorStandard(
     BuildContext ctx, {
     String? hint,
@@ -97,6 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
   }
 
+  /// Diálogo para preguntar si reemplazar credenciales biométricas guardadas.
   Future<bool> _askReplaceDialog({
     required String title,
     required String message,
@@ -123,6 +128,44 @@ class _LoginScreenState extends State<LoginScreen> {
     return result ?? false;
   }
 
+  /// Diálogo cuando el usuario todavía no verificó el correo
+  Future<void> _showVerifyDialog() async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text('Email not verified'),
+          content: const Text(
+            'Your email is not verified yet. Would you like us to resend a verification email?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await widget.vm.resendVerificationEmail();
+                if (!mounted) return;
+                _showSnack('Verification email sent.');
+              },
+              child: const Text('Resend'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Acción principal de Login (botón "Login").
+  ///
+  /// Flujo:
+  /// - valida form
+  /// - vm.login()
+  /// - si necesita verificación, mostramos diálogo
+  /// - si OK, preguntamos por biometría / guardamos credenciales
+  /// - navegamos a /today
   Future<void> _submit() async {
     setState(() {
       _showErrors = true;
@@ -133,18 +176,24 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailCtrl.text.trim();
     final password = _passCtrl.text;
 
-    // Pasar credenciales al VM
+    // pasar credenciales al VM
     widget.vm.setEmail(email);
     widget.vm.setPassword(password);
 
-    // login normal
-    final loginRes = await widget.vm.login();
-    if (!loginRes.ok) {
-      _showSnack(loginRes.message ?? 'Login failed.');
+    final res = await widget.vm.login();
+    if (!mounted) return;
+
+    if (!res.ok) {
+      // login falló
+      if (res.needsEmailVerification) {
+        // correo sin verificar -> pop up para reenviar
+        await _showVerifyDialog();
+      }
+      _showSnack(res.message ?? 'Login failed');
       return;
     }
 
-    // Biometría -> guardar credenciales rápidas
+    // Login OK (online o offline). Ahora biometría como UX opcional:
     final canStore = await widget.vm.canStoreBiometric();
     if (canStore) {
       final check = await widget.vm.checkBiometricCredentials();
@@ -152,11 +201,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (storedEmail.isEmpty ||
           storedEmail.toLowerCase() == email.toLowerCase()) {
+        // o no había nada, o ya coincide este usuario
         await widget.vm.saveBiometricCredentials(
           email: email,
           password: password,
         );
       } else {
+        // había otra cuenta guardada → preguntar si reemplazar
         final replace = await _askReplaceDialog(
           title: 'Replace quick-login account?',
           message:
@@ -178,6 +229,7 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.pushReplacementNamed(context, '/today');
   }
 
+  /// "Forgot password?" link
   Future<void> _forgotPassword() async {
     final email = _emailCtrl.text.trim();
     if (email.isEmpty || !email.contains('@')) {
@@ -193,6 +245,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Botón "Sign in with biometrics"
   Future<void> _loginWithBiometric() async {
     if (_checkingBio) return;
     setState(() {
@@ -202,6 +255,9 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final res = await widget.vm.loginWithBiometrics();
       if (!res.ok) {
+        if (res.needsEmailVerification) {
+          await _showVerifyDialog();
+        }
         _showSnack(res.message ?? 'Biometric login failed.');
         return;
       }
@@ -226,15 +282,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final isLight = theme.brightness == Brightness.light;
 
-    // MODELO VISUAL: SIN AppBar arriba fijo.
-    // Pantalla dividida en TOP (logo grandote) y BOTTOM (form).
     return Scaffold(
       backgroundColor: colors.surfaceDim,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Column(
           children: [
-            // ---------- TOP (logo AceUp como antes) ----------
+            // ---------- TOP: Logo AceUp grande ----------
             Expanded(
               flex: 3,
               child: Column(
@@ -266,7 +320,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
 
-            // ---------- BOTTOM (formulario) ----------
+            // ---------- BOTTOM: Formulario ----------
             Expanded(
               flex: 4,
               child: SingleChildScrollView(
@@ -292,7 +346,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 12),
 
                       // EMAIL
-                      // EMAIL
                       TextFormField(
                         controller: _emailCtrl,
                         maxLength: 40,
@@ -315,7 +368,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 12),
 
                       // PASSWORD
-                      // PASSWORD
                       TextFormField(
                         controller: _passCtrl,
                         maxLength: 40,
@@ -330,16 +382,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           context,
                           hint: 'Password',
                           suffix: IconButton(
-                            onPressed: () => setState(() => _obscure = !_obscure),
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
                             icon: Icon(
-                              _obscure ? AppIcons.visibilityOff : AppIcons.visibilityOn,
+                              _obscure
+                                  ? AppIcons.visibilityOff
+                                  : AppIcons.visibilityOn,
                               size: 18,
                             ),
                             color: colors.outline,
                           ),
                         ),
                       ),
-
 
                       Align(
                         alignment: Alignment.centerLeft,
@@ -428,6 +482,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
 
+                      // Mostrar error global del VM si existe
                       if (vm.error != null && vm.error!.isNotEmpty) ...[
                         const SizedBox(height: 16),
                         Text(

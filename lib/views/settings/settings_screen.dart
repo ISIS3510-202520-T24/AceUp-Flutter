@@ -1,3 +1,5 @@
+// lib/views/settings/settings_screen.dart
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -31,7 +33,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // Perfil guardado actualmente
   String? _avatarLocalPath;
 
-  // Cambios temporales que el usuario selecciona pero aún no guarda
+  // Cambios temporales que el usuario selecciona pero aún no confirma
   String? _pendingAssetAvatar;
   String? _pendingGalleryPath;
 
@@ -65,18 +67,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final nickname = prof?.nickname ?? (email.isNotEmpty ? email : 'Student');
     final avatarPath = prof?.avatarLocalPath;
 
-    // Estado local pantalla
     setState(() {
-      _email = email;
-      _resetEmailCtrl.text = email;
-      _nickname = nickname;
-      _avatarLocalPath = avatarPath;
-      _initializing = false;
+        _email = email;
+        _resetEmailCtrl.text = email;
+        _nickname = nickname;
+        _avatarLocalPath = avatarPath;
+        _initializing = false;
     });
 
-    // Estado global (BurgerMenu etc.)
-    final profileNotifier = context.read<ProfileNotifier>();
-    profileNotifier.setAll(
+    final notifier = context.read<ProfileNotifier>();
+    notifier.setAll(
       nickname: nickname,
       avatarLocalPath: avatarPath,
     );
@@ -101,7 +101,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
 
-    // nada -> null (va a mostrar letra inicial)
+    // fallback -> null => mostramos letra inicial
     return null;
   }
 
@@ -198,16 +198,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String? finalPath;
 
     try {
-      // 1. construir finalPath según el origen
+      // 1. Resolver path final del avatar
       if (_pendingGalleryPath != null) {
-        // foto nueva del usuario -> la comprimimos y guardamos estable
+        // Foto desde galería -> comprimimos y guardamos estable
         finalPath = await cache.saveCompressedAvatarForEmail(
           email: _email,
           originalPath: _pendingGalleryPath!,
         );
       } else if (_pendingAssetAvatar != null) {
-        // avatar predefinido -> lo guardamos como referencia "asset:..."
+        // Avatar predefinido -> guardamos referencia tipo asset:
         finalPath = 'asset:${_pendingAssetAvatar!}';
+      } else {
+        finalPath = _avatarLocalPath;
       }
 
       if (finalPath == null) {
@@ -215,7 +217,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return;
       }
 
-      // 2. guardar perfil completo en cache
+      // 2. Guardar perfil completo en caché persistente
       final updatedProfile = UserProfile(
         email: _email,
         nickname: _nickname,
@@ -223,15 +225,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
       await cache.saveProfile(updatedProfile);
 
-      // 3. actualizar estado local en Settings
+      // 3. Actualizar estado local en Settings
       setState(() {
         _avatarLocalPath = finalPath;
         _pendingGalleryPath = null;
         _pendingAssetAvatar = null;
       });
 
-      // 4. notificar globalmente para BurgerMenu / headers
-      context.read<ProfileNotifier>().updateAvatar(finalPath);
+      // 4. Notificar globalmente -> BurgerMenu / headers refrescan YA
+      context.read<ProfileNotifier>().setAll(
+            nickname: _nickname,
+            avatarLocalPath: finalPath,
+          );
 
       _snack('Profile picture updated');
     } catch (e) {

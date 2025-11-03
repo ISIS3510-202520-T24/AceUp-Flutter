@@ -1,3 +1,5 @@
+// lib/widgets/burger_menu.dart
+
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -21,11 +23,11 @@ class BurgerMenu extends StatelessWidget {
     final email = auth.currentUser?.email ?? '';
     final fallbackNick = auth.currentUser?.displayName ?? 'Student';
 
-    // 👇 escuchar nickname/foto globales
+    // Escuchar nickname/foto globales en vivo
     final profile = context.watch<ProfileNotifier>();
 
     final shownNick = (profile.nickname.trim().isNotEmpty)
-        ? profile.nickname
+        ? profile.nickname.trim()
         : (fallbackNick.isNotEmpty ? fallbackNick : email);
 
     // resolver imagen del avatar
@@ -39,7 +41,7 @@ class BurgerMenu extends StatelessWidget {
     } else if (avatarPath != null && avatarPath.isNotEmpty) {
       avatarImage = FileImage(File(avatarPath));
     } else {
-      // fallback inicial si nunca se guardó nada:
+      // fallback inicial si nunca se guardó nada
       avatarImage = const AssetImage('assets/avatars/avatar_1.png');
     }
 
@@ -224,8 +226,7 @@ class BurgerMenu extends StatelessWidget {
           ),
           if (isComingSoon)
             Container(
-              padding:
-                  const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
+              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
               decoration: BoxDecoration(
                 color: colors.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(4),

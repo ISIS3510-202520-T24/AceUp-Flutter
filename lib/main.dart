@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 
 // Firebase
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart' show User; //ignore: uri_does_not_exist
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' show User;
 import 'firebase_options.dart';
 
@@ -38,8 +40,26 @@ import 'views/settings/settings_screen.dart';
 // Tema
 import 'themes/app_theme.dart';
 
+import 'services/notif/notification_service.dart';
+import 'services/auth/auth_service.dart';
+import 'services/auth/biometric_service.dart';
+import 'services/shared/sync_service.dart';
+
+import 'viewmodels/holidays/holidays_viewmodel.dart';
+import 'viewmodels/auth/login_viewmodel.dart';
+import 'viewmodels/auth/signup_viewmodel.dart';
+
 // Nuestro contenedor tipo locator
 import 'core/observer/vm_scope.dart';
+import 'core/connectivity/connectivity_manager.dart';
+
+import 'data/local/database/app_database.dart';
+import 'data/repositories/shared_repository.dart';
+
+import 'services/startup_ttfp.dart';
+
+// Provider
+import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,9 +72,35 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // 3) Initialize local database
+  final database = AppDatabase();
+  
+  // 4) Initialize connectivity manager
+  final connectivity = ConnectivityManager();
+  await connectivity.initialize();
+  
+  // 5) Initialize SharedRepository
+  final sharedRepository = SharedRepository(
+    database: database,
+    firestore: FirebaseFirestore.instance,
+    connectivity: connectivity,
+  );
+  
+  // 6) Start background sync service
+  final syncService = SyncService(
+    database: database,
+    firestore: FirebaseFirestore.instance,
+    connectivity: connectivity,
+  );
+  syncService.startPeriodicSync();
+  
+  print('✅ Eventual connectivity initialized');
+
+  // 7) Notificaciones
   // 3) Inicializar notificaciones locales
   await NotificationService().initNotifications();
 
+  // 8) Servicios y VMs (para nuestro Observer)
   // 4) Instanciar servicios singleton-ish
   final authService = AuthService();
   final bioService = BiometricService();
@@ -65,10 +111,14 @@ Future<void> main() async {
   final loginVM = LoginViewModel(authService, bioService);
   final signUpVM = SignUpViewModel(); // <- sin argumentos
 
+  // 9) Registrar en VmRegistry (nuestro contenedor simple)
   // 6) Registrar todo en VmRegistry para que podamos pedirlos con VmScope.of(context)
   final registry = VmRegistry()
     ..put<AuthService>(authService)
     ..put<BiometricService>(bioService)
+    ..put<SharedRepository>(sharedRepository)
+    ..put<ConnectivityManager>(connectivity)
+    ..put<SyncService>(syncService)
     ..put<LoginViewModel>(loginVM)
     ..put<SignUpViewModel>(signUpVM);
 
@@ -94,6 +144,11 @@ Future<void> main() async {
           // Exponer servicios para pantallas que hacen context.read<AuthService>()
           Provider<AuthService>.value(value: authService),
           Provider<BiometricService>.value(value: bioService),
+          Provider<SharedRepository>.value(value: sharedRepository),
+          Provider<ConnectivityManager>.value(value: connectivity),
+          
+          // SyncService es ChangeNotifier, debe usar ChangeNotifierProvider
+          ChangeNotifierProvider<SyncService>.value(value: syncService),
 
           // Stream de auth (FirebaseAuth) para saber si hay usuario logeado
           StreamProvider<User?>(
