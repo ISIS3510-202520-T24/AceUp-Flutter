@@ -26,23 +26,44 @@ class SyncService extends ChangeNotifier {
   })  : _db = database,
         _firestore = firestore,
         _connectivity = connectivity {
-    // Initialize pending count
-    _updatePendingCount().then((_) {
-      // If we have pending items and we're online, sync immediately
-      if (_pendingOperationsCount > 0 && _connectivity.isOnline) {
-        print('📦 Found $_pendingOperationsCount pending items on startup, syncing...');
-        syncPendingOperations();
-      }
-    });
+    // Initialize and check for pending operations
+    _initializeSync();
     
     // Listen for connectivity changes and sync when coming back online
     _connectivity.onConnectivityChanged.listen((isOnline) {
       print('📡 Connectivity changed: ${isOnline ? "ONLINE" : "OFFLINE"}');
-      if (isOnline && !_isSyncing && _pendingOperationsCount > 0) {
-        print('📡 Connection restored with pending items, triggering sync...');
-        syncPendingOperations();
+      if (isOnline) {
+        // When connection is restored, wait a bit and then sync
+        Future.delayed(const Duration(seconds: 2), () {
+          if (_connectivity.isOnline && !_isSyncing) {
+            _updatePendingCount().then((_) {
+              if (_pendingOperationsCount > 0) {
+                print('� Connection restored with $_pendingOperationsCount pending items, triggering sync...');
+                syncPendingOperations();
+              }
+            });
+          }
+        });
       }
     });
+  }
+
+  /// Initialize sync service and check for pending operations
+  Future<void> _initializeSync() async {
+    await _updatePendingCount();
+    
+    // Check connectivity status
+    await _connectivity.checkConnectivity();
+    
+    // If we have pending items and we're online, sync immediately
+    if (_pendingOperationsCount > 0 && _connectivity.isOnline) {
+      print('📦 Found $_pendingOperationsCount pending items on startup, syncing in 2 seconds...');
+      // Wait a bit for the app to fully initialize
+      await Future.delayed(const Duration(seconds: 2));
+      if (_connectivity.isOnline && !_isSyncing) {
+        syncPendingOperations();
+      }
+    }
   }
 
   /// Start periodic sync (every 30 seconds when online)
@@ -74,7 +95,11 @@ class SyncService extends ChangeNotifier {
 
   /// Manually trigger sync of pending operations
   Future<void> syncPendingOperations() async {
-    if (_isSyncing) return;
+    if (_isSyncing) {
+      print('⚠️  Sync already in progress, skipping...');
+      return;
+    }
+    
     if (!_connectivity.isOnline) {
       print('⚠️  Cannot sync: Device is offline');
       return;
@@ -82,7 +107,8 @@ class SyncService extends ChangeNotifier {
 
     _isSyncing = true;
     notifyListeners();
-    print('🔄 Starting sync...');
+    print('🔄 ========== STARTING SYNC ==========');
+    print('🔄 Online: ${_connectivity.isOnline}');
 
     try {
       final pendingItems = await _db.syncDao.getPendingSyncItems();
@@ -93,15 +119,22 @@ class SyncService extends ChangeNotifier {
       }
 
       print('📤 Syncing ${pendingItems.length} pending items...');
+      for (var i = 0; i < pendingItems.length; i++) {
+        final item = pendingItems[i];
+        print('📤 [$i/${pendingItems.length}] ${item.operation} ${item.entityType} (${item.entityId})');
+      }
+      
       int successCount = 0;
       int failCount = 0;
 
       for (final item in pendingItems) {
         try {
+          print('🔄 Syncing ${item.operation} ${item.entityType} ${item.entityId}...');
           await _syncItem(item);
           await _db.syncDao.removeFromSyncQueue(item.id);
           successCount++;
           _pendingOperationsCount--;
+          print('✅ Synced ${item.operation} ${item.entityType} ${item.entityId}');
           notifyListeners();
         } catch (e) {
           print('❌ Sync failed for ${item.entityType} ${item.entityId}: $e');
@@ -110,7 +143,8 @@ class SyncService extends ChangeNotifier {
         }
       }
 
-      print('✅ Sync complete: $successCount succeeded, $failCount failed');
+      print('✅ ========== SYNC COMPLETE ==========');
+      print('✅ Success: $successCount | Failed: $failCount');
 
       // Clean up items with too many failures
       await _db.syncDao.clearFailedSyncItems();

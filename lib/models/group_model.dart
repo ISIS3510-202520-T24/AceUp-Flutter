@@ -18,7 +18,8 @@ class Group {
     List<String> members = [];
     final membersData = data['members'];
     if (membersData is List) {
-      members = List<String>.from(membersData);
+      // Convert each element to String explicitly
+      members = membersData.map((e) => e.toString()).toList();
     } else if (membersData is String) {
       // Handle comma-separated string format
       members = membersData.split(',').where((s) => s.isNotEmpty).toList();
