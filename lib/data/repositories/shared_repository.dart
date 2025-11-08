@@ -29,59 +29,70 @@ class SharedRepository {
 
   // ==================== GROUPS ====================
 
-  /// Get groups for user (offline-first)
+  /// Get groups for user (network-first with cache fallback)
   Future<List<models.Group>> getGroupsForUser(String userId) async {
-    // 1. Try local cache first
-    final localGroups = await _db.groupDao.getGroupsForUser(userId);
-    
-    if (localGroups.isNotEmpty) {
-      print('📦 Loaded ${localGroups.length} groups from cache');
-      return localGroups.map(_groupFromDb).toList();
-    }
-
-    // 2. If empty and online, fetch from Firestore
+    // 1. If online, fetch from Firestore (ALWAYS get fresh data)
     if (_connectivity.isOnline) {
-      print('☁️  Fetching groups from Firestore...');
+      print('☁️  Fetching fresh groups from Firestore...');
       try {
         final groups = await _fetchGroupsFromFirestore(userId);
         
-        // Cache locally
+        // Cache locally for offline access
         for (final group in groups) {
           await _cacheGroup(group);
         }
         
+        print('✅ Loaded ${groups.length} groups from Firestore (cached for offline)');
         return groups;
       } catch (e) {
-        print('❌ Failed to fetch groups: $e');
-        return [];
+        print('⚠️  Failed to fetch from Firestore: $e');
+        print('📦 Falling back to cache...');
+        // Fall through to cache
       }
+    } else {
+      print('📵 Offline - using cache');
     }
 
-    // 3. Offline and no cache
-    print('📵 Offline - no cached groups');
+    // 2. Fallback to local cache (offline or network error)
+    final localGroups = await _db.groupDao.getGroupsForUser(userId);
+    
+    if (localGroups.isNotEmpty) {
+      print('� Loaded ${localGroups.length} groups from cache');
+      return localGroups.map(_groupFromDb).toList();
+    }
+
+    // 3. No cache and no network
+    print('❌ No cached groups and offline');
     return [];
   }
 
-  /// Get single group by ID (offline-first)
+  /// Get single group by ID (network-first with cache fallback)
   Future<models.Group?> getGroupById(String groupId) async {
-    // Try local first
-    final localGroup = await _db.groupDao.getGroupById(groupId);
-    if (localGroup != null) {
-      return _groupFromDb(localGroup);
-    }
-
-    // Fetch from Firestore if online
+    // If online, fetch from Firestore first (ALWAYS get fresh data)
     if (_connectivity.isOnline) {
       try {
+        print('☁️  Fetching group $groupId from Firestore...');
         final doc = await _firestore.collection('groups').doc(groupId).get();
         if (doc.exists) {
           final group = models.Group.fromFirestore(doc);
           await _cacheGroup(group);
+          print('✅ Loaded group from Firestore (cached for offline)');
           return group;
         }
       } catch (e) {
-        print('❌ Failed to fetch group: $e');
+        print('⚠️  Failed to fetch from Firestore: $e');
+        print('📦 Falling back to cache...');
+        // Fall through to cache
       }
+    } else {
+      print('📵 Offline - using cache for group $groupId');
+    }
+
+    // Fallback to local cache (offline or network error)
+    final localGroup = await _db.groupDao.getGroupById(groupId);
+    if (localGroup != null) {
+      print('📦 Loaded group from cache');
+      return _groupFromDb(localGroup);
     }
 
     return null;
@@ -557,24 +568,37 @@ class SharedRepository {
       'startMinute': block.startMinute,
       'endHour': block.endHour,
       'endMinute': block.endMinute,
-      'freeMembers': block.freeMembers.split(','),
+      // freeMembers is already a String in DB (comma-separated), split it to List
+      'freeMembers': block.freeMembers.split(',').where((s) => s.isNotEmpty).toList(),
       'calculatedAt': block.calculatedAt,
     }).toList();
   }
 
   /// Cache free blocks for group
   Future<void> cacheFreeBlocks(String groupId, List<Map<String, dynamic>> blocks) async {
-    final companions = blocks.map((block) => db.FreeBlocksCompanion.insert(
-      id: block['id'] ?? '${groupId}_${DateTime.now().millisecondsSinceEpoch}',
-      groupId: groupId,
-      weekday: block['weekday'],
-      startHour: block['startHour'],
-      startMinute: block['startMinute'],
-      endHour: block['endHour'],
-      endMinute: block['endMinute'],
-      freeMembers: (block['freeMembers'] as List).join(','),
-      calculatedAt: DateTime.now(),
-    )).toList();
+    int index = 0;
+    final companions = blocks.map((block) {
+      // Handle both List and String formats for freeMembers
+      final freeMembersData = block['freeMembers'];
+      final String freeMembersStr = freeMembersData is List
+          ? freeMembersData.map((e) => e.toString()).join(',')
+          : freeMembersData.toString();
+      
+      // Generate unique ID for each block using index to avoid duplicates
+      final uniqueId = block['id'] ?? '${groupId}_${block['weekday']}_${block['startHour']}_${block['startMinute']}_${index++}';
+      
+      return db.FreeBlocksCompanion.insert(
+        id: uniqueId,
+        groupId: groupId,
+        weekday: block['weekday'],
+        startHour: block['startHour'],
+        startMinute: block['startMinute'],
+        endHour: block['endHour'],
+        endMinute: block['endMinute'],
+        freeMembers: freeMembersStr,
+        calculatedAt: DateTime.now(),
+      );
+    }).toList();
 
     await _db.groupDao.cacheFreeBlocks(groupId, companions);
   }

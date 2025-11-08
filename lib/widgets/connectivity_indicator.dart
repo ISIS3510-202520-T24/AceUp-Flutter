@@ -58,12 +58,35 @@ class ConnectivityIndicator extends StatelessWidget {
             ),
           ),
           
+          // Botón de sincronización manual
+          if (connectivity.isOnline && syncService.pendingOperationsCount > 0 && !syncService.isSyncing)
+            IconButton(
+              icon: const Icon(Icons.sync, size: 18),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              color: colors.primary,
+              onPressed: () {
+                syncService.syncPendingOperations();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Syncing ${syncService.pendingOperationsCount} pending changes...'),
+                    duration: const Duration(seconds: 2),
+                    backgroundColor: colors.primary,
+                  ),
+                );
+              },
+              tooltip: 'Sync now',
+            ),
+          
           // Animación de sincronización
           if (syncService.isSyncing)
-            const SizedBox(
-              width: 12,
-              height: 12,
-              child: CircularProgressIndicator(strokeWidth: 2),
+            const Padding(
+              padding: EdgeInsets.only(left: 8),
+              child: SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
             ),
         ],
       ),

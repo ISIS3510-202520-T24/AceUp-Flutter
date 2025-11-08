@@ -150,11 +150,50 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                           color: colors.onTertiary,
                           onPressed: () => Navigator.of(context).pop(),
                         ),
-                        Text(
-                          widget.groupName,
-                          style: AppTypography.h4.copyWith(
-                            color: colors.onPrimary,
+                        Expanded(
+                          child: Text(
+                            widget.groupName,
+                            style: AppTypography.h4.copyWith(
+                              color: colors.onPrimary,
+                            ),
                           ),
+                        ),
+                        // Data source indicator
+                        Consumer<GroupDetailViewModel>(
+                          builder: (context, vm, child) {
+                            if (!vm.isOnline) {
+                              return Tooltip(
+                                message: 'Showing cached data',
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: colors.primaryContainer.withValues(alpha: 0.7),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.cloud_off,
+                                        size: 12,
+                                        color: colors.primary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Offline',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: colors.primary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
                         ),
                       ],
                     ),
@@ -178,6 +217,122 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   
   // Grilla semanal tipo timeline (Lun-Vie). Días en columnas y tiempo en el eje Y.
   Widget _buildGroupAvailabilityGrid(GroupDetailViewModel vm) {
+    // Handle loading and error states
+    if (vm.state == ViewState.loading) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              vm.isOnline 
+                ? 'Loading schedules from cloud...'
+                : 'Loading cached schedules...',
+              style: const TextStyle(fontSize: 14),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (vm.state == ViewState.error) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
+            const SizedBox(height: 16),
+            Text(
+              vm.errorMessage ?? 'Failed to load group data',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              vm.isOnline
+                  ? 'Check your connection and try again'
+                  : 'No cached data available for this group',
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () => vm.refreshData(),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (vm.groupFreeBlocks.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.event_busy,
+                size: 64,
+                color: Colors.grey.shade400,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No free time blocks found',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This means group members have no overlapping free time during weekdays (6am-9pm)',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              if (!vm.isOnline) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.orange.shade200),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.info_outline, 
+                        size: 16, 
+                        color: Colors.orange.shade700
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          'Showing cached data - Connect to update',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.orange.shade700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+    }
+
         // Configuración visual y de tiempo
     const int startHour = 6; // 6 AM
     const int endHour = 21;  // 9 PM

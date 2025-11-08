@@ -111,10 +111,56 @@ class _SharedScreenState extends State<SharedScreen> {
 
   Widget _buildGroupList(BuildContext context, ColorScheme colors, SharedViewModel viewModel) {
     if (viewModel.state == ViewState.loading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              viewModel.isOnline 
+                ? 'Loading groups from cloud...'
+                : 'Loading cached groups...',
+              style: AppTypography.bodyM.copyWith(color: colors.onSurface),
+            ),
+          ],
+        ),
+      );
     }
+    
     if (viewModel.state == ViewState.error) {
-      return const Center(child: Text('Failed to load groups.'));
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: colors.error),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load groups',
+              style: AppTypography.h5.copyWith(color: colors.error),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              viewModel.isOnline
+                ? 'Check your connection and try again'
+                : 'No cached data available',
+              style: AppTypography.bodyS.copyWith(color: colors.onSurface),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                final authService = context.read<AuthService>();
+                final userId = authService.currentUser?.uid;
+                if (userId != null) {
+                  viewModel.fetchGroups(userId);
+                }
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
     }
 
     if (viewModel.groups.isEmpty) {
@@ -129,11 +175,40 @@ class _SharedScreenState extends State<SharedScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'No groups found. Tap + to add one!',
+              'No groups found',
               style: AppTypography.h5.copyWith(
                 color: colors.onSurface.withValues(alpha: 0.7),
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              'Tap the + button to create your first group!',
+              style: AppTypography.bodyS.copyWith(
+                color: colors.onSurface.withValues(alpha: 0.6),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (!viewModel.isOnline) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.info_outline, size: 16, color: colors.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Groups created offline will sync later',
+                      style: AppTypography.bodyS.copyWith(color: colors.primary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       );
@@ -146,11 +221,64 @@ class _SharedScreenState extends State<SharedScreen> {
         return Dismissible(
           key: Key(group.id),
           direction: DismissDirection.endToStart,
+          confirmDismiss: (direction) async {
+            // Show confirmation dialog
+            return await showDialog<bool>(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text('Delete Group'),
+                  content: Text(
+                    'Are you sure you want to delete "${group.name}"?${!viewModel.isOnline ? '\n\nThis will be synced when you\'re back online.' : ''}',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                );
+              },
+            ) ?? false;
+          },
           onDismissed: (_) {
+            final deletedName = group.name;
             viewModel.deleteGroup(group.id);
             ScaffoldMessenger.of(context)
               ..removeCurrentSnackBar()
-              ..showSnackBar(SnackBar(content: Text('${group.name} deleted')));
+              ..showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      Icon(
+                        viewModel.isOnline ? Icons.delete : Icons.delete_outline,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          viewModel.isOnline
+                              ? '"$deletedName" deleted and syncing...'
+                              : '"$deletedName" deleted locally - will sync when online',
+                        ),
+                      ),
+                    ],
+                  ),
+                  backgroundColor: viewModel.isOnline 
+                      ? Colors.red.shade600 
+                      : Colors.orange.shade600,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
           },
           background: Container(
             color: Colors.red.shade400,
@@ -180,19 +308,63 @@ class _SharedScreenState extends State<SharedScreen> {
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Row(
           children: [
-            Container(width: 20, height: 20, decoration: BoxDecoration(color: colors.onPrimary, shape: BoxShape.circle)),
+            Container(
+              width: 20, 
+              height: 20, 
+              decoration: BoxDecoration(
+                color: colors.onPrimary, 
+                shape: BoxShape.circle
+              )
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(group.name, style: AppTypography.bodyM.copyWith(color: colors.onSurface)),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          group.name, 
+                          style: AppTypography.bodyM.copyWith(color: colors.onSurface)
+                        ),
+                      ),
+                      // Sync status indicator
+                      if (!viewModel.isOnline)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: colors.primaryContainer.withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.cloud_off,
+                                size: 10,
+                                color: colors.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Cached',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: colors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                   const SizedBox(height: 4),
                   Text(
-                  group.members.map((user) => user.nick).join(', '), // Mapea la lista de AppUser a una lista de nicks y los une
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.bodyS.copyWith(color: colors.onPrimaryContainer)
-                ),
+                    group.members.map((user) => user.nick).join(', '),
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodyS.copyWith(color: colors.onPrimaryContainer)
+                  ),
                 ],
               ),
             ),
@@ -346,10 +518,63 @@ class _SharedScreenState extends State<SharedScreen> {
                     if (name.isNotEmpty && emails.isNotEmpty) {
                       if (isUpdating) {
                         viewModel.updateGroup(group.id, name, emails);
+                        Navigator.of(dialogContext).pop();
+                        // Show feedback based on connectivity
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                Icon(
+                                  viewModel.isOnline ? Icons.check_circle : Icons.save,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    viewModel.isOnline
+                                        ? 'Group "$name" updated and syncing...'
+                                        : 'Group "$name" saved locally - will sync when online',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: viewModel.isOnline 
+                                ? Colors.green.shade600 
+                                : Colors.orange.shade600,
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
                       } else {
                         viewModel.addGroup(name, emails);
+                        Navigator.of(dialogContext).pop();
+                        // Show feedback based on connectivity
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                Icon(
+                                  viewModel.isOnline ? Icons.check_circle : Icons.save,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    viewModel.isOnline
+                                        ? 'Group "$name" created and syncing...'
+                                        : 'Group "$name" saved locally - will sync when online',
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: viewModel.isOnline 
+                                ? Colors.green.shade600 
+                                : Colors.orange.shade600,
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
                       }
-                      Navigator.of(dialogContext).pop();
                     } else {
                       setDialogState(() {
                         emailError = 'Por favor ingresa un nombre de grupo y al menos un correo válido.';

@@ -4,22 +4,20 @@ import 'package:flutter/services.dart';
 
 // Firebase
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart' show User; //ignore: uri_does_not_exist
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' show User;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 
 // Provider
 import 'package:provider/provider.dart';
 
-// Notificaciones / startup timing
+// Servicios
 import 'services/notif/notification_service.dart';
 import 'services/startup_ttfp.dart';
-
-// Servicios
 import 'services/auth/auth_service.dart';
 import 'services/auth/biometric_service.dart';
 import 'services/profile/profile_notifier.dart';
+import 'services/shared/sync_service.dart';
 
 // ViewModels
 import 'viewmodels/auth/login_viewmodel.dart';
@@ -37,29 +35,16 @@ import 'views/assignments/assignments_screen.dart';
 import 'views/shared/shared_screen.dart';
 import 'views/settings/settings_screen.dart';
 
-// Tema
-import 'themes/app_theme.dart';
-
-import 'services/notif/notification_service.dart';
-import 'services/auth/auth_service.dart';
-import 'services/auth/biometric_service.dart';
-import 'services/shared/sync_service.dart';
-
-import 'viewmodels/holidays/holidays_viewmodel.dart';
-import 'viewmodels/auth/login_viewmodel.dart';
-import 'viewmodels/auth/signup_viewmodel.dart';
-
-// Nuestro contenedor tipo locator
+// Core
 import 'core/observer/vm_scope.dart';
 import 'core/connectivity/connectivity_manager.dart';
 
+// Data
 import 'data/local/database/app_database.dart';
 import 'data/repositories/shared_repository.dart';
 
-import 'services/startup_ttfp.dart';
-
-// Provider
-import 'package:provider/provider.dart';
+// Tema
+import 'themes/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -97,35 +82,29 @@ Future<void> main() async {
   print('✅ Eventual connectivity initialized');
 
   // 7) Notificaciones
-  // 3) Inicializar notificaciones locales
   await NotificationService().initNotifications();
 
   // 8) Servicios y VMs (para nuestro Observer)
-  // 4) Instanciar servicios singleton-ish
   final authService = AuthService();
   final bioService = BiometricService();
 
-  // 5) Instanciar VMs que viven "global" (login puede vivir global;
-  //    signup lo vamos a recrear en la ruta para no mezclar estado viejo del form,
-  //    pero igual podemos tener uno base en el registry si quieres).
+  // 9) Instanciar VMs que viven "global"
   final loginVM = LoginViewModel(authService, bioService);
-  final signUpVM = SignUpViewModel(); // <- sin argumentos
+  // SignUpViewModel se crea en la ruta, no lo registramos globalmente
 
-  // 9) Registrar en VmRegistry (nuestro contenedor simple)
-  // 6) Registrar todo en VmRegistry para que podamos pedirlos con VmScope.of(context)
+  // 10) Registrar en VmRegistry (nuestro contenedor simple)
   final registry = VmRegistry()
     ..put<AuthService>(authService)
     ..put<BiometricService>(bioService)
     ..put<SharedRepository>(sharedRepository)
     ..put<ConnectivityManager>(connectivity)
     ..put<SyncService>(syncService)
-    ..put<LoginViewModel>(loginVM)
-    ..put<SignUpViewModel>(signUpVM);
+    ..put<LoginViewModel>(loginVM);
 
   // (debug opcional)
   registry.debugPrintKeys();
 
-  // 7) runApp con VmScope y luego MultiProvider
+  // 11) runApp con VmScope y luego MultiProvider
   runApp(
     VmScope(
       registry: registry,
@@ -227,11 +206,11 @@ class AceUpApp extends StatelessWidget {
             ),
 
         // SIGNUP:
-        // Aquí creamos un SignUpViewModel NUEVO cada vez que navegamos a /signup,
+        // Creamos un SignUpViewModel NUEVO cada vez que navegamos a /signup,
         // para que el formulario empiece limpio.
         '/signup': (context) {
-          return ChangeNotifierProvider<SignUpViewModel>(
-            create: (_) => SignUpViewModel(), // <- SIN argumentos
+          return ChangeNotifierProvider(
+            create: (_) => SignUpViewModel(),
             child: const SignUpScreen(),
           );
         },

@@ -80,8 +80,9 @@ class GroupDetailViewModel extends ChangeNotifier {
       
       // Calcular bloques de disponibilidad grupal
       await _calculateGroupFreeBlocks();
-    } catch (e) {
-      print('Error loading events: $e');
+    } catch (e, stackTrace) {
+      print('❌ Error loading events: $e');
+      print('❌ Stack trace: $stackTrace');
       throw e;
     }
   }
@@ -106,6 +107,12 @@ class GroupDetailViewModel extends ChangeNotifier {
     
     // Convertir de Map a FreeBlock
     _groupFreeBlocks = blocksRaw.map((block) {
+      // Handle both List and String formats for freeMembers
+      final freeMembersData = block['freeMembers'];
+      final List<String> freeMembers = freeMembersData is List
+          ? freeMembersData.map((e) => e.toString()).toList()
+          : (freeMembersData as String).split(',').where((s) => s.isNotEmpty).toList();
+      
       return FreeBlock(
         weekday: block['weekday'] as int,
         start: TimeOfDay(
@@ -116,7 +123,7 @@ class GroupDetailViewModel extends ChangeNotifier {
           hour: block['endHour'] as int,
           minute: block['endMinute'] as int,
         ),
-        freeMembers: (block['freeMembers'] as String).split(','),
+        freeMembers: freeMembers,
       );
     }).toList();
     
