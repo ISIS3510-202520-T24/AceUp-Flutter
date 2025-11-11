@@ -87,6 +87,35 @@ class GroupDetailViewModel extends ChangeNotifier {
     }
   }
 
+  /// Forzar refresh desde Firebase (ignorar cache local)
+  /// Útil cuando sabes que los datos cambiaron en Firebase
+  Future<void> forceRefreshFromFirebase() async {
+    if (!_isOnline) {
+      _errorMessage = 'No hay conexión a internet';
+      _setState(ViewState.error);
+      return;
+    }
+
+    _setState(ViewState.loading);
+    try {
+      print('🔄 Forzando refresh desde Firebase...');
+      
+      // 1. Invalidar cache de eventos
+      await _repository.invalidateEventsCache(groupId);
+      
+      // 2. Invalidar cache de FreeBlocks
+      await _repository.invalidateFreeBlocksCache(groupId);
+      
+      // 3. Recargar todo desde Firebase
+      await _loadGroupData();
+      
+      print('✅ Datos actualizados desde Firebase');
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setState(ViewState.error);
+    }
+  }
+
   Future<void> _calculateGroupFreeBlocks() async {
     // Agrupar eventos por miembro
     final memberEvents = <String, List<CalendarEvent>>{};

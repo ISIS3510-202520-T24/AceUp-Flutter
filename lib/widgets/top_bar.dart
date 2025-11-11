@@ -3,7 +3,7 @@ import '../themes/app_typography.dart';
 import '../themes/app_icons.dart';
 
 enum LeftControlType { back, menu, cancel }
-enum RightControlType { edit, none, save }
+enum RightControlType { edit, none, save, refresh }
 
 class TopBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -84,6 +84,11 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
         return TextButton(
           onPressed: onRightPressed,
           child: Text("Save", style: AppTypography.actionM.copyWith(color: colors.onSecondary)),
+        );
+      case RightControlType.refresh:
+        return IconButton(
+          icon: Icon(Icons.refresh),
+          onPressed: onRightPressed,
         );
       case RightControlType.none:
         return null;

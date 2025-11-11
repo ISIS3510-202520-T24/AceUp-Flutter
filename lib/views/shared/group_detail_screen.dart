@@ -103,14 +103,27 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
+    final vm = context.watch<GroupDetailViewModel>();
 
     return Scaffold(
       drawer: const BurgerMenu(),
       appBar: TopBar(
         title: "Shared",
         leftControlType: LeftControlType.menu,
-        rightControlType: RightControlType.none,
-        onRightPressed: () {},
+        rightControlType: RightControlType.refresh,
+        onRightPressed: () async {
+          // Forzar refresh desde Firebase (limpiar cache y recargar)
+          await vm.forceRefreshFromFirebase();
+          // Mostrar snackbar de confirmación
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('🔄 Datos actualizados desde Firebase'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+        },
       ),
       body: Column(
         children: [
