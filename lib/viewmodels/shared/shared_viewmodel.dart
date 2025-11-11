@@ -9,6 +9,7 @@ import '../../services/auth/auth_service.dart';
 import '../../data/repositories/shared_repository.dart';
 import '../../core/connectivity/connectivity_manager.dart';
 import '../../models/user_model.dart';
+import '../../services/shared/sync_service.dart';
 
 // El enum de estado que usan ambos ViewModels
 enum ViewState { idle, loading, error }
@@ -16,6 +17,7 @@ enum ViewState { idle, loading, error }
 class SharedViewModel extends ChangeNotifier {
   final SharedRepository _repository;
   final ConnectivityManager _connectivity;
+  final SyncService? _syncService;
   
   List<AppUser> availableUsers = []; // Nueva lista para el selector
   List<Group> groups = [];
@@ -31,8 +33,10 @@ class SharedViewModel extends ChangeNotifier {
   SharedViewModel({
     required SharedRepository repository,
     required ConnectivityManager connectivity,
+    SyncService? syncService,
   })  : _repository = repository,
-        _connectivity = connectivity {
+        _connectivity = connectivity,
+        _syncService = syncService {
     // Listen to connectivity changes
     _connectivity.onConnectivityChanged.listen((isOnline) {
       _isOnline = isOnline;
@@ -53,13 +57,16 @@ class SharedViewModel extends ChangeNotifier {
 
   // --- MÉTODOS EXISTENTES (ACTUALIZADOS PARA OFFLINE-FIRST) ---
 
-  Future<void> fetchGroups(String userId) async {
-    _currentUserId = userId; 
+  Future<void> fetchGroups(String userId, {bool skipFirestore = false}) async {
+    _currentUserId = userId;
+    
+    print('🔵 [FETCH] fetchGroups called with skipFirestore=$skipFirestore');
 
     _setState(ViewState.loading);
     try {
       // Usa el repositorio offline-first: intenta cache local primero
-      groups = await _repository.getGroupsForUser(userId);
+      groups = await _repository.getGroupsForUser(userId, skipFirestore: skipFirestore);
+      print('📦 [FETCH] Loaded ${groups.length} groups');
 
       // Cargar miembros de cada grupo
       for (var group in groups) {
@@ -77,7 +84,7 @@ class SharedViewModel extends ChangeNotifier {
   // --- NUEVOS MÉTODOS CRUD (ACTUALIZADOS PARA OFFLINE-FIRST) ---
 
   /// Añade un nuevo grupo - se guarda localmente y se sincroniza en background
-  Future<void> addGroup(String name, List<String> memberEmails) async {
+  Future<void> addGroup(String name, List<String> memberEmails, {String? imageUrl}) async {
     try {
       final authService = AuthService();
       final currentUserEmail = authService.currentUser?.email;
@@ -97,21 +104,40 @@ class SharedViewModel extends ChangeNotifier {
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: name,
         memberUids: memberUids,
+        imageUrl: imageUrl,
       );
 
       await _repository.createGroup(newGroup);
       
-      // Refresh groups
+      // Trigger immediate sync if online
+      if (_syncService != null && _connectivity.isOnline) {
+        print('🚀 [CREATE] Triggering immediate sync after group creation');
+        _syncService!.syncPendingOperations();
+      }
+      
+      // Refresh groups - Force refresh with current user
       if (_currentUserId != null) {
         await fetchGroups(_currentUserId!);
+      } else {
+        // Si no hay currentUserId, obtenerlo del AuthService
+        final authService = AuthService();
+        final userId = authService.currentUser?.uid;
+        if (userId != null) {
+          await fetchGroups(userId);
+        } else {
+          console.log('⚠️ Cannot refresh groups: no user ID available');
+        }
       }
+      
+      // Force UI update even if state didn't change
+      notifyListeners();
     } catch (e) {
       console.log('Error adding group: $e');
     }
   }
 
   /// Actualiza un grupo existente - se guarda localmente y se sincroniza en background
-  Future<void> updateGroup(String id, String name, List<String> memberEmails) async {
+  Future<void> updateGroup(String id, String name, List<String> memberEmails, {String? imageUrl}) async {
     try {
       // Ensure users are loaded
       if (availableUsers.isEmpty) {
@@ -125,13 +151,39 @@ class SharedViewModel extends ChangeNotifier {
         id: id,
         name: name,
         memberUids: memberUids,
+        imageUrl: imageUrl,
       );
 
       await _repository.updateGroup(updatedGroup);
       
+      // Refresh groups - Skip Firestore and use local data immediately after update
+      // This ensures UI shows the latest changes instantly
+      print('⚡ [UPDATE] Refreshing with local data only (skipFirestore=true)');
       if (_currentUserId != null) {
-        await fetchGroups(_currentUserId!);
+        await fetchGroups(_currentUserId!, skipFirestore: true);
+      } else {
+        // Si no hay currentUserId, obtenerlo del AuthService
+        final authService = AuthService();
+        final userId = authService.currentUser?.uid;
+        if (userId != null) {
+          await fetchGroups(userId, skipFirestore: true);
+        } else {
+          console.log('⚠️ Cannot refresh groups: no user ID available');
+        }
       }
+      
+      // Force UI update even if state didn't change
+      notifyListeners();
+      
+      // Schedule a background refresh from Firestore after 5 seconds (increased delay)
+      // This ensures we get synced data without blocking the UI
+      // Using Future.delayed without await so it doesn't block
+      Future.delayed(const Duration(seconds: 5), () {
+        print('⏰ [DELAYED] Background Firestore refresh starting...');
+        if (_currentUserId != null) {
+          fetchGroups(_currentUserId!, skipFirestore: false);
+        }
+      });
     } catch (e) {
       console.log('Error updating group: $e');
     }

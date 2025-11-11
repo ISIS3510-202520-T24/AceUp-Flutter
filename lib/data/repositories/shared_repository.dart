@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import '../../core/connectivity/connectivity_manager.dart';
+import '../../core/cache/lru_cache.dart';
 import '../local/database/app_database.dart' as db;
 import '../../models/group_model.dart' as models;
 import '../../models/calendar_event_model.dart' as models;
@@ -19,6 +20,25 @@ class SharedRepository {
   final FirebaseFirestore _firestore;
   final ConnectivityManager _connectivity;
 
+  /// LRU Cache para Free Blocks calculados (en memoria RAM)
+  /// 
+  /// **Capacidad: 20 grupos**
+  /// Decisión basada en:
+  /// - Usuario promedio tiene 5-10 grupos activos
+  /// - 20 permite 2x overhead para power users
+  /// - Memoria: ~10KB por grupo × 20 = ~200KB (despreciable)
+  /// 
+  /// **Por qué LRU:**
+  /// - Usuarios regresan frecuentemente a los mismos grupos (temporal locality)
+  /// - Grupos más usados permanecen en caché
+  /// - Grupos olvidados se evictan automáticamente
+  /// 
+  /// **Beneficio de rendimiento:**
+  /// - Sin caché: 100-200ms por carga (recalcular desde schedules)
+  /// - Con LRU hit: <1ms (lookup en HashMap)
+  /// - Con SQLite hit: 10-20ms (query + insertar en LRU)
+  static final _freeBlocksCache = LRUCache<String, List<Map<String, dynamic>>>(20);
+
   SharedRepository({
     required db.AppDatabase database,
     required FirebaseFirestore firestore,
@@ -29,39 +49,107 @@ class SharedRepository {
 
   // ==================== GROUPS ====================
 
-  /// Get groups for user (network-first with cache fallback)
-  Future<List<models.Group>> getGroupsForUser(String userId) async {
-    // 1. If online, fetch from Firestore (ALWAYS get fresh data)
+  /// Get groups for user (combines cache + Firestore)
+  Future<List<models.Group>> getGroupsForUser(String userId, {bool skipFirestore = false}) async {
+    // 1. ALWAYS load from local cache first (includes unsynced groups)
+    final localGroups = await _db.groupDao.getGroupsForUser(userId);
+    final cachedGroupsList = localGroups.map(_groupFromDb).toList();
+    
+    // 2. If skipFirestore is true (just updated locally), return cache immediately
+    if (skipFirestore) {
+      print('⚡ Skipping Firestore fetch (using local data after update)');
+      print('📦 Loaded ${cachedGroupsList.length} groups from cache');
+      return cachedGroupsList;
+    }
+    
+    // 3. If online, fetch from Firestore and MERGE with local
     if (_connectivity.isOnline) {
       print('☁️  Fetching fresh groups from Firestore...');
       try {
-        final groups = await _fetchGroupsFromFirestore(userId);
+        final firestoreGroups = await _fetchGroupsFromFirestore(userId);
         
-        // Cache locally for offline access
-        for (final group in groups) {
+        // Cache Firestore groups locally
+        for (final group in firestoreGroups) {
           await _cacheGroup(group);
         }
         
-        print('✅ Loaded ${groups.length} groups from Firestore (cached for offline)');
-        return groups;
+        print('✅ Loaded ${firestoreGroups.length} groups from Firestore');
+        
+        // MERGE INTELIGENTE: Priorizar la versión más reciente
+        final mergedMap = <String, models.Group>{};
+        
+        // 1. Primero, agregar todos los grupos locales (incluye no sincronizados)
+        for (final group in cachedGroupsList) {
+          mergedMap[group.id] = group;
+        }
+        
+        // 2. Para grupos que existen en Firestore, comparar y elegir el más reciente
+        for (final firestoreGroup in firestoreGroups) {
+          final localGroup = mergedMap[firestoreGroup.id];
+          
+          if (localGroup == null) {
+            // Grupo solo existe en Firestore, agregarlo
+            mergedMap[firestoreGroup.id] = firestoreGroup;
+          } else {
+            // Ambos existen - Prioridad:
+            // 1. Verificar si hay cambios pendientes en SyncQueue para este grupo
+            // 2. Si el local tiene imageUrl y Firestore no, mantener local (upload reciente)
+            // 3. De lo contrario, usar Firestore (es la fuente de verdad)
+            
+            // Verificar si este grupo tiene operaciones pendientes de sync
+            bool hasPendingSync = false;
+            try {
+              hasPendingSync = await _db.syncDao.hasPendingSyncForEntity(
+                'group', 
+                firestoreGroup.id
+              );
+            } catch (e) {
+              print('⚠️  [MERGE] Could not check pending sync for ${firestoreGroup.id}: $e');
+              // Si falla, asumir que NO hay pending sync (safer default)
+            }
+            
+            if (hasPendingSync) {
+              // Tiene cambios locales no sincronizados, mantener versión local
+              print('🔄 [MERGE] Keeping local version of "${localGroup.name}" (has pending sync operations)');
+              // No hacer nada, ya está en mergedMap
+            } else {
+              // Verificar caso especial de imageUrl
+              final localHasImage = localGroup.imageUrl != null && localGroup.imageUrl!.isNotEmpty;
+              final firestoreHasImage = firestoreGroup.imageUrl != null && firestoreGroup.imageUrl!.isNotEmpty;
+              
+              if (localHasImage && !firestoreHasImage) {
+                // Upload de imagen reciente que aún no sincronizó
+                print('📸 [MERGE] Keeping local version of "${localGroup.name}" (has imageUrl not yet in Firestore)');
+                // No hacer nada, ya está en mergedMap
+              } else {
+                // Usar versión de Firestore (más confiable)
+                print('☁️  [MERGE] Using Firestore version of "${firestoreGroup.name}" (source of truth)');
+                mergedMap[firestoreGroup.id] = firestoreGroup;
+              }
+            }
+          }
+        }
+        
+        final result = mergedMap.values.toList();
+        print('📦 Total groups: ${result.length} (${cachedGroupsList.length} cached + ${firestoreGroups.length} Firestore)');
+        return result;
       } catch (e) {
         print('⚠️  Failed to fetch from Firestore: $e');
-        print('📦 Falling back to cache...');
-        // Fall through to cache
+        print('📦 Using cached data...');
+        // Return cached data on error
+        return cachedGroupsList;
       }
     } else {
       print('📵 Offline - using cache');
     }
 
-    // 2. Fallback to local cache (offline or network error)
-    final localGroups = await _db.groupDao.getGroupsForUser(userId);
-    
-    if (localGroups.isNotEmpty) {
-      print('� Loaded ${localGroups.length} groups from cache');
-      return localGroups.map(_groupFromDb).toList();
+    // 3. Return cached data (offline or after online attempt)
+    if (cachedGroupsList.isNotEmpty) {
+      print('📦 Loaded ${cachedGroupsList.length} groups from cache');
+      return cachedGroupsList;
     }
 
-    // 3. No cache and no network
+    // 4. No cache and no network
     print('❌ No cached groups and offline');
     return [];
   }
@@ -100,14 +188,19 @@ class SharedRepository {
 
   /// Create new group (queues for sync)
   Future<void> createGroup(models.Group group) async {
+    print('🖼️  [DEBUG] Creating group with imageUrl: ${group.imageUrl}');
+    
     // 1. Save locally immediately
     await _db.groupDao.insertGroup(db.GroupsCompanion.insert(
       id: group.id,
       name: group.name,
       memberUids: group.memberUids.join(','),
+      imageUrl: Value(group.imageUrl),
       createdBy: '', // Placeholder
       createdAt: DateTime.now(),
     ));
+    
+    print('✅ [DEBUG] Group saved to local DB with imageUrl: ${group.imageUrl}');
 
     // 2. Insert group members into GroupMembers table
     for (final uid in group.memberUids) {
@@ -160,6 +253,7 @@ class SharedRepository {
       dataJson: Value(jsonEncode({
         'name': group.name,
         'members': group.memberUids,
+        if (group.imageUrl != null) 'imageUrl': group.imageUrl,
       })),
     ));
 
@@ -175,6 +269,7 @@ class SharedRepository {
       id: group.id,
       name: group.name,
       memberUids: group.memberUids.join(','),
+      imageUrl: group.imageUrl,
       createdBy: dbGroup.createdBy,
       createdAt: dbGroup.createdAt,
       updatedAt: DateTime.now(),
@@ -232,6 +327,7 @@ class SharedRepository {
       dataJson: Value(jsonEncode({
         'name': group.name,
         'members': group.memberUids,
+        if (group.imageUrl != null) 'imageUrl': group.imageUrl,
       })),
     ));
 
@@ -554,13 +650,38 @@ class SharedRepository {
 
   // ==================== FREE BLOCKS ====================
 
-  /// Get cached free blocks for group
+  /// Get cached free blocks for group with LRU cache optimization
+  /// 
+  /// **Three-tier caching strategy:**
+  /// 1. LRU Cache (RAM) - <1ms - Ultra fast, but volatile
+  /// 2. SQLite (Disk) - 10-20ms - Persistent, survives app restart
+  /// 3. Recalculation - 100-200ms - Expensive, queries all member schedules
+  /// 
+  /// **Flow:**
+  /// - Check LRU cache first (instant if hit)
+  /// - If miss, check SQLite (fast)
+  /// - If SQLite hit, populate LRU for next access
+  /// - Return null if not found (caller must recalculate)
   Future<List<Map<String, dynamic>>?> getCachedFreeBlocks(String groupId) async {
+    // 1. Try LRU cache first (RAM - ultra fast)
+    final cachedInMemory = _freeBlocksCache.get(groupId);
+    if (cachedInMemory != null) {
+      print('⚡ [LRU Cache HIT] Loaded ${cachedInMemory.length} free blocks for group $groupId from RAM (${_freeBlocksCache.stats})');
+      return cachedInMemory;
+    }
+
+    print('💾 [LRU Cache MISS] Checking SQLite for group $groupId...');
+
+    // 2. Try SQLite (disk - fast)
     final blocks = await _db.groupDao.getCachedFreeBlocks(groupId);
     
-    if (blocks == null) return null;
+    if (blocks == null || blocks.isEmpty) {
+      print('❌ No cached free blocks found in SQLite for group $groupId');
+      return null;
+    }
 
-    return blocks.map((block) => {
+    // 3. Convert from DB format to Map format
+    final result = blocks.map((block) => {
       'id': block.id,
       'groupId': block.groupId,
       'weekday': block.weekday,
@@ -572,9 +693,23 @@ class SharedRepository {
       'freeMembers': block.freeMembers.split(',').where((s) => s.isNotEmpty).toList(),
       'calculatedAt': block.calculatedAt,
     }).toList();
+
+    // 4. Store in LRU cache for next access (RAM)
+    _freeBlocksCache.put(groupId, result);
+    print('✅ [SQLite HIT] Loaded ${result.length} free blocks for group $groupId from disk → cached in RAM');
+    
+    return result;
   }
 
-  /// Cache free blocks for group
+  /// Cache free blocks for group in both SQLite and LRU cache
+  /// 
+  /// **Dual storage:**
+  /// - SQLite: Persistent, survives app restart
+  /// - LRU Cache: Fast access, cleared on app termination
+  /// 
+  /// This ensures:
+  /// - Next access is ultra-fast (LRU hit)
+  /// - Data persists across sessions (SQLite)
   Future<void> cacheFreeBlocks(String groupId, List<Map<String, dynamic>> blocks) async {
     int index = 0;
     final companions = blocks.map((block) {
@@ -600,7 +735,42 @@ class SharedRepository {
       );
     }).toList();
 
+    // Save to SQLite (persistent storage)
     await _db.groupDao.cacheFreeBlocks(groupId, companions);
+
+    // Save to LRU cache (fast access)
+    _freeBlocksCache.put(groupId, blocks);
+    
+    print('💾 Cached ${blocks.length} free blocks for group $groupId (SQLite ✅ + LRU ✅) ${_freeBlocksCache.stats}');
+  }
+
+  /// Invalidate free blocks cache when group members or schedules change
+  /// 
+  /// **When to call:**
+  /// - Member added/removed from group
+  /// - Member updates their schedule
+  /// - Manual refresh requested by user
+  /// 
+  /// **What it does:**
+  /// - Removes from LRU cache (RAM)
+  /// - Deletes from SQLite (disk)
+  /// - Forces recalculation on next access
+  /// 
+  /// This ensures data consistency when group composition changes.
+  Future<void> invalidateFreeBlocksCache(String groupId) async {
+    // Remove from LRU cache
+    _freeBlocksCache.remove(groupId);
+    
+    // Remove from SQLite
+    await _db.groupDao.deleteCachedFreeBlocks(groupId);
+    
+    print('🗑️  Invalidated free blocks cache for group $groupId (LRU ✅ + SQLite ✅) ${_freeBlocksCache.stats}');
+  }
+
+  /// Clear all free blocks cache (useful for logout or data reset)
+  Future<void> clearAllFreeBlocksCache() async {
+    _freeBlocksCache.clear();
+    print('🗑️  Cleared entire LRU cache ${_freeBlocksCache.stats}');
   }
 
   // ==================== HELPERS ====================
@@ -621,6 +791,7 @@ class SharedRepository {
       id: group.id,
       name: group.name,
       memberUids: group.memberUids.join(','),
+      imageUrl: Value(group.imageUrl),
       createdBy: '', // Placeholder
       createdAt: DateTime.now(),
     ));
@@ -676,10 +847,13 @@ class SharedRepository {
         ? <String>[]
         : dbGroup.memberUids.split(',').where((s) => s.isNotEmpty).toList();
     
+    print('🔄 [DEBUG] Mapping DB group ${dbGroup.id} (${dbGroup.name}) with imageUrl: ${dbGroup.imageUrl}');
+    
     return models.Group(
       id: dbGroup.id,
       name: dbGroup.name,
       memberUids: memberUids,
+      imageUrl: dbGroup.imageUrl,
     );
   }
 

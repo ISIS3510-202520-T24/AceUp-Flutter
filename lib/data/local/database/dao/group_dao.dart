@@ -141,11 +141,17 @@ class GroupDao extends DatabaseAccessor<AppDatabase> with _$GroupDaoMixin {
     final age = DateTime.now().difference(firstBlock.calculatedAt);
     if (age.inMinutes > 30) {
       // Expirado, eliminar caché
-      await (delete(freeBlocks)..where((fb) => fb.groupId.equals(groupId))).go();
+      await deleteCachedFreeBlocks(groupId);
       return null;
     }
     
     return blocks;
+  }
+
+  /// Eliminar free blocks cacheados para un grupo
+  /// Usado para invalidar caché cuando cambian los miembros o schedules
+  Future<void> deleteCachedFreeBlocks(String groupId) async {
+    await (delete(freeBlocks)..where((fb) => fb.groupId.equals(groupId))).go();
   }
 
   /// Limpiar free blocks expirados (todos los grupos)
