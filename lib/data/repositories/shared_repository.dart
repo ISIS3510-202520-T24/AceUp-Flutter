@@ -767,6 +767,33 @@ class SharedRepository {
     print('🗑️  Invalidated free blocks cache for group $groupId (LRU ✅ + SQLite ✅) ${_freeBlocksCache.stats}');
   }
 
+  /// Invalidate events cache for a group (force refresh from Firebase)
+  /// 
+  /// **When to call:**
+  /// - Testing schedule changes from Firebase Console
+  /// - Member updates their schedule in Firebase
+  /// - Manual refresh requested by user
+  /// 
+  /// **What it does:**
+  /// - Deletes all cached ClassTemplate, Subjects, and Terms for group members
+  /// - Forces fresh fetch from Firebase on next getEventsForGroup()
+  /// 
+  /// This ensures you see the latest schedule data from Firebase.
+  Future<void> invalidateEventsCache(String groupId) async {
+    print('🗑️  Invalidating events cache for group $groupId...');
+    
+    // Get all group members
+    final members = await getGroupMembers(groupId);
+    
+    // Delete cached schedules for each member
+    for (final member in members) {
+      await _db.memberScheduleDao.clearUserSchedule(member.uid);
+      print('   ✅ Cleared cache for ${member.nick} (${member.uid})');
+    }
+    
+    print('🗑️  Events cache invalidated for group $groupId - ${members.length} members cleared');
+  }
+
   /// Clear all free blocks cache (useful for logout or data reset)
   Future<void> clearAllFreeBlocksCache() async {
     _freeBlocksCache.clear();
