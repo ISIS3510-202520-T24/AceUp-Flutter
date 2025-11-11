@@ -24,6 +24,12 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
   late final GeneratedColumn<String> memberUids = GeneratedColumn<String>(
       'member_uids', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _imageUrlMeta =
+      const VerificationMeta('imageUrl');
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+      'image_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _createdByMeta =
       const VerificationMeta('createdBy');
   @override
@@ -44,7 +50,7 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, name, memberUids, createdBy, createdAt, updatedAt];
+      [id, name, memberUids, imageUrl, createdBy, createdAt, updatedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -73,6 +79,10 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
               data['member_uids']!, _memberUidsMeta));
     } else if (isInserting) {
       context.missing(_memberUidsMeta);
+    }
+    if (data.containsKey('image_url')) {
+      context.handle(_imageUrlMeta,
+          imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta));
     }
     if (data.containsKey('created_by')) {
       context.handle(_createdByMeta,
@@ -105,6 +115,8 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
           .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       memberUids: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}member_uids'])!,
+      imageUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}image_url']),
       createdBy: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}created_by'])!,
       createdAt: attachedDatabase.typeMapping
@@ -124,6 +136,7 @@ class Group extends DataClass implements Insertable<Group> {
   final String id;
   final String name;
   final String memberUids;
+  final String? imageUrl;
   final String createdBy;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -131,6 +144,7 @@ class Group extends DataClass implements Insertable<Group> {
       {required this.id,
       required this.name,
       required this.memberUids,
+      this.imageUrl,
       required this.createdBy,
       required this.createdAt,
       this.updatedAt});
@@ -140,6 +154,9 @@ class Group extends DataClass implements Insertable<Group> {
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['member_uids'] = Variable<String>(memberUids);
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
     map['created_by'] = Variable<String>(createdBy);
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || updatedAt != null) {
@@ -153,6 +170,9 @@ class Group extends DataClass implements Insertable<Group> {
       id: Value(id),
       name: Value(name),
       memberUids: Value(memberUids),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
       createdBy: Value(createdBy),
       createdAt: Value(createdAt),
       updatedAt: updatedAt == null && nullToAbsent
@@ -168,6 +188,7 @@ class Group extends DataClass implements Insertable<Group> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       memberUids: serializer.fromJson<String>(json['memberUids']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
       createdBy: serializer.fromJson<String>(json['createdBy']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
@@ -180,6 +201,7 @@ class Group extends DataClass implements Insertable<Group> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'memberUids': serializer.toJson<String>(memberUids),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
       'createdBy': serializer.toJson<String>(createdBy),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
@@ -190,6 +212,7 @@ class Group extends DataClass implements Insertable<Group> {
           {String? id,
           String? name,
           String? memberUids,
+          Value<String?> imageUrl = const Value.absent(),
           String? createdBy,
           DateTime? createdAt,
           Value<DateTime?> updatedAt = const Value.absent()}) =>
@@ -197,6 +220,7 @@ class Group extends DataClass implements Insertable<Group> {
         id: id ?? this.id,
         name: name ?? this.name,
         memberUids: memberUids ?? this.memberUids,
+        imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
         createdBy: createdBy ?? this.createdBy,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
@@ -207,6 +231,7 @@ class Group extends DataClass implements Insertable<Group> {
       name: data.name.present ? data.name.value : this.name,
       memberUids:
           data.memberUids.present ? data.memberUids.value : this.memberUids,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
       createdBy: data.createdBy.present ? data.createdBy.value : this.createdBy,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -219,6 +244,7 @@ class Group extends DataClass implements Insertable<Group> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('memberUids: $memberUids, ')
+          ..write('imageUrl: $imageUrl, ')
           ..write('createdBy: $createdBy, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -227,8 +253,8 @@ class Group extends DataClass implements Insertable<Group> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, memberUids, createdBy, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+      id, name, memberUids, imageUrl, createdBy, createdAt, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -236,6 +262,7 @@ class Group extends DataClass implements Insertable<Group> {
           other.id == this.id &&
           other.name == this.name &&
           other.memberUids == this.memberUids &&
+          other.imageUrl == this.imageUrl &&
           other.createdBy == this.createdBy &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -245,6 +272,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
   final Value<String> id;
   final Value<String> name;
   final Value<String> memberUids;
+  final Value<String?> imageUrl;
   final Value<String> createdBy;
   final Value<DateTime> createdAt;
   final Value<DateTime?> updatedAt;
@@ -253,6 +281,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.memberUids = const Value.absent(),
+    this.imageUrl = const Value.absent(),
     this.createdBy = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -262,6 +291,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     required String id,
     required String name,
     required String memberUids,
+    this.imageUrl = const Value.absent(),
     required String createdBy,
     required DateTime createdAt,
     this.updatedAt = const Value.absent(),
@@ -275,6 +305,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? memberUids,
+    Expression<String>? imageUrl,
     Expression<String>? createdBy,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -284,6 +315,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (memberUids != null) 'member_uids': memberUids,
+      if (imageUrl != null) 'image_url': imageUrl,
       if (createdBy != null) 'created_by': createdBy,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -295,6 +327,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       {Value<String>? id,
       Value<String>? name,
       Value<String>? memberUids,
+      Value<String?>? imageUrl,
       Value<String>? createdBy,
       Value<DateTime>? createdAt,
       Value<DateTime?>? updatedAt,
@@ -303,6 +336,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       id: id ?? this.id,
       name: name ?? this.name,
       memberUids: memberUids ?? this.memberUids,
+      imageUrl: imageUrl ?? this.imageUrl,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -321,6 +355,9 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     }
     if (memberUids.present) {
       map['member_uids'] = Variable<String>(memberUids.value);
+    }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
     }
     if (createdBy.present) {
       map['created_by'] = Variable<String>(createdBy.value);
@@ -343,6 +380,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('memberUids: $memberUids, ')
+          ..write('imageUrl: $imageUrl, ')
           ..write('createdBy: $createdBy, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -3894,6 +3932,7 @@ typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
   required String id,
   required String name,
   required String memberUids,
+  Value<String?> imageUrl,
   required String createdBy,
   required DateTime createdAt,
   Value<DateTime?> updatedAt,
@@ -3903,6 +3942,7 @@ typedef $$GroupsTableUpdateCompanionBuilder = GroupsCompanion Function({
   Value<String> id,
   Value<String> name,
   Value<String> memberUids,
+  Value<String?> imageUrl,
   Value<String> createdBy,
   Value<DateTime> createdAt,
   Value<DateTime?> updatedAt,
@@ -3960,6 +4000,9 @@ class $$GroupsTableFilterComposer
 
   ColumnFilters<String> get memberUids => $composableBuilder(
       column: $table.memberUids, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+      column: $table.imageUrl, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get createdBy => $composableBuilder(
       column: $table.createdBy, builder: (column) => ColumnFilters(column));
@@ -4031,6 +4074,9 @@ class $$GroupsTableOrderingComposer
   ColumnOrderings<String> get memberUids => $composableBuilder(
       column: $table.memberUids, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+      column: $table.imageUrl, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get createdBy => $composableBuilder(
       column: $table.createdBy, builder: (column) => ColumnOrderings(column));
 
@@ -4058,6 +4104,9 @@ class $$GroupsTableAnnotationComposer
 
   GeneratedColumn<String> get memberUids => $composableBuilder(
       column: $table.memberUids, builder: (column) => column);
+
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
 
   GeneratedColumn<String> get createdBy =>
       $composableBuilder(column: $table.createdBy, builder: (column) => column);
@@ -4137,6 +4186,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             Value<String> id = const Value.absent(),
             Value<String> name = const Value.absent(),
             Value<String> memberUids = const Value.absent(),
+            Value<String?> imageUrl = const Value.absent(),
             Value<String> createdBy = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime?> updatedAt = const Value.absent(),
@@ -4146,6 +4196,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             id: id,
             name: name,
             memberUids: memberUids,
+            imageUrl: imageUrl,
             createdBy: createdBy,
             createdAt: createdAt,
             updatedAt: updatedAt,
@@ -4155,6 +4206,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             required String id,
             required String name,
             required String memberUids,
+            Value<String?> imageUrl = const Value.absent(),
             required String createdBy,
             required DateTime createdAt,
             Value<DateTime?> updatedAt = const Value.absent(),
@@ -4164,6 +4216,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             id: id,
             name: name,
             memberUids: memberUids,
+            imageUrl: imageUrl,
             createdBy: createdBy,
             createdAt: createdAt,
             updatedAt: updatedAt,

@@ -42,6 +42,7 @@ dependencies:
   font_awesome_flutter: ^10.9.1
   http: ^1.1.0
   firebase_auth: ^6.1.0
+  firebase_storage: ^13.0.3
   flutter_secure_storage: ^9.2.2
   supabase_flutter: ^2.10.2
   package_info_plus: ^8.3.1
@@ -103,6 +104,10 @@ flutter:
     - assets/avatars/avatar_2.png
     - assets/avatars/avatar_3.png
     - assets/avatars/avatar_4.png
+    - assets/group_avatars/group_1.png
+    - assets/group_avatars/group_2.png
+    - assets/group_avatars/group_3.png
+    - assets/group_avatars/group_4.png
 
   fonts:
     - family: Inter

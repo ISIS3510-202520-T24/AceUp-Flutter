@@ -7,6 +7,9 @@ class Groups extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get memberUids => text()(); // CSV: "uid1,uid2,uid3"
+  // URL de la imagen del grupo (opcional). Guardamos localmente para mostrarla
+  // inmediatamente aunque la sincronización con Firestore esté pendiente.
+  TextColumn get imageUrl => text().nullable()();
   TextColumn get createdBy => text()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime().nullable()();

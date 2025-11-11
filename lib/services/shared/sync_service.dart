@@ -1,6 +1,7 @@
 // lib/services/shared/sync_service.dart
 
 import 'dart:async';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../../core/connectivity/connectivity_manager.dart';
@@ -163,6 +164,12 @@ class SyncService extends ChangeNotifier {
   Future<void> _updatePendingCount() async {
     final items = await _db.syncDao.getPendingSyncItems();
     _pendingOperationsCount = items.length;
+    print('📊 [SYNC] Pending operations count: $_pendingOperationsCount');
+    if (_pendingOperationsCount > 0) {
+      for (final item in items) {
+        print('   - ${item.entityType} ${item.entityId} (${item.operation})');
+      }
+    }
     notifyListeners();
   }
 
@@ -258,9 +265,20 @@ class SyncService extends ChangeNotifier {
   // ==================== HELPERS ====================
 
   Map<String, dynamic> _parseJson(String jsonStr) {
-    // TODO: Implement proper JSON parsing
-    // For now, return empty map
-    return {};
+    try {
+      final decoded = jsonDecode(jsonStr);
+      if (decoded is Map<String, dynamic>) {
+        print('📋 [PARSE] Parsed JSON: $decoded');
+        return decoded;
+      } else {
+        print('⚠️  [PARSE] Decoded JSON is not a Map: $decoded');
+        return {};
+      }
+    } catch (e) {
+      print('❌ [PARSE] Error parsing JSON: $e');
+      print('   Raw JSON: $jsonStr');
+      return {};
+    }
   }
 
   /// Get sync statistics

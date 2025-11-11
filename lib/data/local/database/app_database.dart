@@ -60,7 +60,7 @@ class AppDatabase extends _$AppDatabase {
   static AppDatabase get instance => AppDatabase();
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2; // Incrementado por la adición de Groups.imageUrl
 
   @override
   MigrationStrategy get migration {
@@ -69,7 +69,16 @@ class AppDatabase extends _$AppDatabase {
         await m.createAll();
       },
       onUpgrade: (Migrator m, int from, int to) async {
-        // Migraciones futuras aquí
+        // Migraciones incrementales
+        if (from < 2) {
+          // Agregar columna imageUrl a la tabla groups (nullable)
+          try {
+            await m.addColumn(groups, groups.imageUrl);
+            print('✅ Migration: added groups.imageUrl column');
+          } catch (e) {
+            print('⚠️ Migration warning: could not add imageUrl column: $e');
+          }
+        }
       },
     );
   }
@@ -87,6 +96,12 @@ class AppDatabase extends _$AppDatabase {
   static void resetInstance() {
     _instance?.close();
     _instance = null;
+  }
+  
+  /// Obtener la ruta completa del archivo de base de datos
+  Future<String> getDbPath() async {
+    final dbFolder = await getApplicationDocumentsDirectory();
+    return p.join(dbFolder.path, 'aceup_local.db');
   }
 }
 

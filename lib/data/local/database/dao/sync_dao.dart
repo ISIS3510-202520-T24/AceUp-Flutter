@@ -68,6 +68,16 @@ class SyncDao extends DatabaseAccessor<AppDatabase> with _$SyncDaoMixin {
     return result.read(syncQueue.id.count())!;
   }
 
+  /// Verificar si una entidad específica tiene operaciones pendientes
+  Future<bool> hasPendingSyncForEntity(String entityType, String entityId) async {
+    final result = await (select(syncQueue)
+      ..where((sq) => sq.entityType.equals(entityType) & sq.entityId.equals(entityId))
+      ..limit(1))
+      .get();
+    
+    return result.isNotEmpty;
+  }
+
   /// Contar items por tipo
   Future<Map<String, int>> countItemsByType() async {
     final items = await select(syncQueue).get();
