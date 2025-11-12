@@ -1,4 +1,4 @@
-// lib/main.dart
+// lib/main.dart 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -45,6 +45,9 @@ import 'data/repositories/shared_repository.dart';
 
 // Tema
 import 'themes/app_theme.dart';
+
+// 🔹 NUEVO: AuthGate para sesión persistente
+import 'widgets/auth_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -147,74 +150,61 @@ class AceUpApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'AceUp',
-      debugShowCheckedModeBanner: false,
+  title: 'AceUp',
+  debugShowCheckedModeBanner: false,
 
-      // Tema claro/oscuro actual
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+  // Tema claro/oscuro actual
+  theme: AppTheme.lightTheme,
+  darkTheme: AppTheme.darkTheme,
+  themeMode: ThemeMode.system,
 
-      // Ajuste de System UI overlays segun brillo actual
-      builder: (context, child) {
-        final brightness = Theme.of(context).brightness;
-        SystemChrome.setSystemUIOverlayStyle(
-          SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent,
-            statusBarIconBrightness:
-                brightness == Brightness.dark ? Brightness.light : Brightness.dark,
-            systemNavigationBarColor: Colors.transparent,
-            systemNavigationBarIconBrightness:
-                brightness == Brightness.dark ? Brightness.light : Brightness.dark,
-            systemNavigationBarContrastEnforced: false,
-          ),
-        );
-        return child!;
-      },
-
-      initialRoute: '/',
-
-      routes: {
-        // LOGIN: usa el LoginViewModel que ya está registrado en VmScope
-        '/': (context) => LoginScreen(
-              vm: VmScope.of(context).get<LoginViewModel>(),
-            ),
-
-        // BIOMETRIC QUICK LOGIN: también usa el mismo LoginViewModel global
-        '/biometric': (context) => BiometricScreen(
-              vm: VmScope.of(context).get<LoginViewModel>(),
-            ),
-
-        // HOME (pantalla Today)
-        '/today': (context) => const TodayScreen(),
-
-        // FESTIVOS
-        '/holidays': (context) => const HolidaysScreen(),
-
-        // SHARED
-        '/shared': (context) => const SharedScreenWrapper(),
-
-        // ASSIGNMENTS
-        '/assignments': (context) => const AssignmentsScreen(),
-
-        // SETTINGS (perfil / seguridad / logout)
-        '/settings': (context) => const SettingsScreen(),
-
-        // ACCOUNT (pantalla de salir que ya tenías)
-        '/account': (context) => LogoutScreen(
-              vm: VmScope.of(context).get<LoginViewModel>(),
-            ),
-
-        // SIGNUP:
-        // Creamos un SignUpViewModel NUEVO cada vez que navegamos a /signup,
-        // para que el formulario empiece limpio.
-        '/signup': (context) {
-          return ChangeNotifierProvider(
-            create: (_) => SignUpViewModel(),
-            child: const SignUpScreen(),
-          );
-        },
-      },
+  // Ajuste de System UI overlays segun brillo actual
+  builder: (context, child) {
+    final brightness = Theme.of(context).brightness;
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness:
+            brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness:
+            brightness == Brightness.dark ? Brightness.light : Brightness.dark,
+        systemNavigationBarContrastEnforced: false,
+      ),
     );
+    return child!;
+  },
+
+  // 🔸 Arrancamos por '/', y '/' es AuthGate. NO uses 'home:' en ningún lado.
+  initialRoute: '/',
+
+  routes: {
+    // '/' -> AuthGate decide: si hay sesión => Today; si no => Login
+    '/': (context) => AuthGate(
+          home: const TodayScreen(),
+          login: LoginScreen(
+            vm: VmScope.of(context).get<LoginViewModel>(),
+          ),
+        ),
+
+    '/biometric': (context) => BiometricScreen(
+          vm: VmScope.of(context).get<LoginViewModel>(),
+        ),
+    '/today': (context) => const TodayScreen(),
+    '/holidays': (context) => const HolidaysScreen(),
+    '/shared': (context) => const SharedScreenWrapper(),
+    '/assignments': (context) => const AssignmentsScreen(),
+    '/settings': (context) => const SettingsScreen(),
+    '/account': (context) => LogoutScreen(
+          vm: VmScope.of(context).get<LoginViewModel>(),
+        ),
+    '/signup': (context) {
+      return ChangeNotifierProvider(
+        create: (_) => SignUpViewModel(),
+        child: const SignUpScreen(),
+      );
+    },
+  },
+);
   }
 }

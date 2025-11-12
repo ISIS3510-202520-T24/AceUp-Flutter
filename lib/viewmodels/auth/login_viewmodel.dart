@@ -1,10 +1,10 @@
-// lib/viewmodels/auth/login_viewmodel.dart
 import 'package:flutter/foundation.dart';
 
 import '../../services/auth/auth_service.dart';
 import '../../services/auth/biometric_service.dart';
 import '../../services/auth/secure_store.dart';
 import '../../services/auth/offline_auth_service.dart';
+import '../../services/auth/session_prefs.dart';
 
 /// Resultado genérico de acciones de autenticación (login normal, biométrico,
 /// forgot password, etc.). Incluye bandera para "verifique su correo".
@@ -235,6 +235,15 @@ class LoginViewModel extends ChangeNotifier {
       _quickLoginEmail = _form.email.trim();
       _quickLoginPass = _form.password;
 
+      // ======= NUEVO: persistimos credenciales para auto-login silencioso =======
+      await SecureStore.setSessionCredentials(
+        email: _form.email.trim(),
+        password: _form.password,
+      );
+
+      // (opcional) flag offline para fallback sin red
+      await SessionPrefs.setWasLoggedIn(true);
+
       _setLoading(false);
       _setError(null);
       return AuthResult.success('Logged in');
@@ -253,6 +262,13 @@ class LoginViewModel extends ChangeNotifier {
           // también guardamos en RAM para biometría rápida
           _quickLoginEmail = _form.email.trim();
           _quickLoginPass = _form.password;
+
+          // ======= NUEVO: persistimos también en login offline =======
+          await SecureStore.setSessionCredentials(
+            email: _form.email.trim(),
+            password: _form.password,
+          );
+          await SessionPrefs.setWasLoggedIn(true);
 
           _setLoading(false);
           _setError(null);
@@ -365,6 +381,10 @@ class LoginViewModel extends ChangeNotifier {
       _quickLoginEmail = email;
       _quickLoginPass = pass;
 
+      // ======= NUEVO: persistimos credenciales sesión =======
+      await SecureStore.setSessionCredentials(email: email, password: pass);
+      await SessionPrefs.setWasLoggedIn(true);
+
       _setLoading(false);
       _setError(null);
       return AuthResult.success('Logged in with biometrics');
@@ -378,6 +398,10 @@ class LoginViewModel extends ChangeNotifier {
 
           _quickLoginEmail = email;
           _quickLoginPass = pass;
+
+          // ======= NUEVO: persistimos también en offline biométrico =======
+          await SecureStore.setSessionCredentials(email: email!, password: pass!);
+          await SessionPrefs.setWasLoggedIn(true);
 
           _setLoading(false);
           _setError(null);
