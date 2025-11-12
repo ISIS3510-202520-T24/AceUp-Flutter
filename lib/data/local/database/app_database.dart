@@ -1,13 +1,13 @@
-// lib/data/local/database/app_database.dart
-
 import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
-// Importar tablas de Shared (solo las que usamos en la app)
+// Importar tablas de Shared
 import 'tables/shared_tables.dart';
+// Importar tablas académicas
+import 'tables/academic_tables.dart';
 
 // Importar DAOs de Shared
 import 'dao/group_dao.dart';
@@ -15,7 +15,14 @@ import 'dao/event_dao.dart';
 import 'dao/user_dao.dart';
 import 'dao/sync_dao.dart';
 import 'dao/settings_dao.dart';
-import 'dao/member_schedule_dao.dart'; // Para cachear horarios de miembros
+import 'dao/member_schedule_dao.dart';
+
+// Importar DAOs académicos
+import 'dao/assignment_dao.dart';
+import 'dao/exam_dao.dart';
+import 'dao/holiday_dao.dart';
+import 'dao/teacher_dao.dart';
+import 'dao/academic_dao.dart';
 
 // Esta parte se generará automáticamente
 part 'app_database.g.dart';
@@ -31,10 +38,16 @@ part 'app_database.g.dart';
     // Tablas de infraestructura
     SyncQueue,
     AppSettings,
-    // Tablas adicionales para calcular free blocks (clases de miembros)
+    // Tablas para calcular free blocks (clases de miembros)
     Terms,
     Subjects,
     ClassTemplates,
+    // Tablas académicas del usuario
+    Assignments,
+    Exams,
+    Holidays,
+    Teachers,
+    SubjectDetails,
   ],
   daos: [
     // DAOs para funcionalidad de Shared
@@ -44,23 +57,27 @@ part 'app_database.g.dart';
     SyncDao,
     SettingsDao,
     MemberScheduleDao, // Para cachear/recuperar horarios de miembros
+    // DAOs para funcionalidad académica
+    AssignmentDao,
+    ExamDao,
+    HolidayDao,
+    TeacherDao,
+    AcademicDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
   // Singleton pattern
   static AppDatabase? _instance;
-  
+
   AppDatabase._internal() : super(_openConnection());
-  
+
   factory AppDatabase() {
     _instance ??= AppDatabase._internal();
     return _instance!;
   }
-  
-  static AppDatabase get instance => AppDatabase();
 
   @override
-  int get schemaVersion => 2; // Incrementado por la adición de Groups.imageUrl
+  int get schemaVersion => 2; // Incrementar versión por nuevas tablas
 
   @override
   MigrationStrategy get migration {
@@ -69,51 +86,70 @@ class AppDatabase extends _$AppDatabase {
         await m.createAll();
       },
       onUpgrade: (Migrator m, int from, int to) async {
-        // Migraciones incrementales
         if (from < 2) {
-          // Agregar columna imageUrl a la tabla groups (nullable)
-          try {
-            await m.addColumn(groups, groups.imageUrl);
-            print('✅ Migration: added groups.imageUrl column');
-          } catch (e) {
-            print('⚠️ Migration warning: could not add imageUrl column: $e');
-          }
+          // Migración de versión 1 a 2: agregar nuevas tablas académicas
+          await m.createTable(assignments);
+          await m.createTable(exams);
+          await m.createTable(holidays);
+          await m.createTable(teachers);
+          await m.createTable(subjectDetails);
         }
       },
     );
   }
 
-  /// Limpiar todos los datos (útil para desarrollo)
-  Future<void> clearAllData() async {
-    await transaction(() async {
-      for (final table in allTables) {
-        await delete(table).go();
-      }
-    });
+  // Método para limpiar cache antiguo (llamar periódicamente)
+  Future<void> cleanOldCache() async {
+    const maxAge = Duration(days: 30);
+
+    // Limpiar assignments antiguos
+    await assignmentDao.deleteOldCache(maxAge);
+
+    // Limpiar exams antiguos
+    await examDao.deleteOldCache(maxAge);
+
+    // Limpiar holidays antiguos
+    await holidayDao.deleteOldCache(maxAge);
+
+    // Limpiar teachers antiguos
+    await teacherDao.deleteOldCache(maxAge);
+
+    // Limpiar subjects antiguos
+    await academicDao.deleteOldSubjectCache(maxAge);
+
+    // Limpiar member schedules antiguos
+    await memberScheduleDao.clearOldCache(maxAge);
+
+    print('🧹 Old cache cleaned successfully');
   }
 
-  /// Resetear instancia (útil para testing)
-  static void resetInstance() {
-    _instance?.close();
-    _instance = null;
-  }
-  
-  /// Obtener la ruta completa del archivo de base de datos
-  Future<String> getDbPath() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    return p.join(dbFolder.path, 'aceup_local.db');
+  // Método para sincronizar todos los datos pendientes
+  Future<List<Map<String, dynamic>>> getAllPendingSync() async {
+    final pendingAssignments = await assignmentDao.getAssignmentsNeedingSync();
+    final pendingExams = await examDao.getExamsNeedingSync();
+    final pendingHolidays = await holidayDao.getHolidaysNeedingSync();
+    final pendingTeachers = await teacherDao.getTeachersNeedingSync();
+    final pendingSubjects = await academicDao.getSubjectsNeedingSync();
+    final pendingSyncQueue = await syncDao.getAllPendingOperations();
+
+    return [
+      ...pendingAssignments.map((a) => {'type': 'assignment', 'data': a}),
+      ...pendingExams.map((e) => {'type': 'exam', 'data': e}),
+      ...pendingHolidays.map((h) => {'type': 'holiday', 'data': h}),
+      ...pendingTeachers.map((t) => {'type': 'teacher', 'data': t}),
+      ...pendingSubjects.map((s) => {'type': 'subject', 'data': s}),
+      ...pendingSyncQueue.map((sq) => {'type': 'sync_queue', 'data': sq}),
+    ];
   }
 }
 
-/// Conexión a la base de datos
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'aceup_local.db'));
-    
-    return NativeDatabase.createInBackground(
-      file,
-      logStatements: true, // Debug: muestra queries en consola
-    );
+    final file = File(p.join(dbFolder.path, 'aceup.db'));
+
+    print('📂 Database path: ${file.path}');
+
+    return NativeDatabase.createInBackground(file);
   });
 }

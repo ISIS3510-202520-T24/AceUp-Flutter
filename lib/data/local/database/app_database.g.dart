@@ -3857,6 +3857,3973 @@ class ClassTemplatesCompanion extends UpdateCompanion<ClassTemplate> {
   }
 }
 
+class $AssignmentsTable extends Assignments
+    with TableInfo<$AssignmentsTable, Assignment> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AssignmentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _termIdMeta = const VerificationMeta('termId');
+  @override
+  late final GeneratedColumn<String> termId = GeneratedColumn<String>(
+      'term_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _subjectIdMeta =
+      const VerificationMeta('subjectId');
+  @override
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+      'subject_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _dueDateMeta =
+      const VerificationMeta('dueDate');
+  @override
+  late final GeneratedColumn<DateTime> dueDate = GeneratedColumn<DateTime>(
+      'due_date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _priorityMeta =
+      const VerificationMeta('priority');
+  @override
+  late final GeneratedColumn<String> priority = GeneratedColumn<String>(
+      'priority', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('medium'));
+  static const VerificationMeta _weightMeta = const VerificationMeta('weight');
+  @override
+  late final GeneratedColumn<int> weight = GeneratedColumn<int>(
+      'weight', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(10));
+  static const VerificationMeta _gradeMeta = const VerificationMeta('grade');
+  @override
+  late final GeneratedColumn<int> grade = GeneratedColumn<int>(
+      'grade', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('Pending'));
+  static const VerificationMeta _isGradedMeta =
+      const VerificationMeta('isGraded');
+  @override
+  late final GeneratedColumn<bool> isGraded = GeneratedColumn<bool>(
+      'is_graded', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_graded" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _completedAtMeta =
+      const VerificationMeta('completedAt');
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+      'completed_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _cachedAtMeta =
+      const VerificationMeta('cachedAt');
+  @override
+  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
+      'cached_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _needsSyncMeta =
+      const VerificationMeta('needsSync');
+  @override
+  late final GeneratedColumn<bool> needsSync = GeneratedColumn<bool>(
+      'needs_sync', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("needs_sync" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        userId,
+        termId,
+        subjectId,
+        title,
+        description,
+        dueDate,
+        priority,
+        weight,
+        grade,
+        status,
+        isGraded,
+        completedAt,
+        createdAt,
+        updatedAt,
+        cachedAt,
+        needsSync,
+        isDeleted
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'assignments';
+  @override
+  VerificationContext validateIntegrity(Insertable<Assignment> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('term_id')) {
+      context.handle(_termIdMeta,
+          termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta));
+    } else if (isInserting) {
+      context.missing(_termIdMeta);
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(_subjectIdMeta,
+          subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta));
+    } else if (isInserting) {
+      context.missing(_subjectIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('due_date')) {
+      context.handle(_dueDateMeta,
+          dueDate.isAcceptableOrUnknown(data['due_date']!, _dueDateMeta));
+    } else if (isInserting) {
+      context.missing(_dueDateMeta);
+    }
+    if (data.containsKey('priority')) {
+      context.handle(_priorityMeta,
+          priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta));
+    }
+    if (data.containsKey('weight')) {
+      context.handle(_weightMeta,
+          weight.isAcceptableOrUnknown(data['weight']!, _weightMeta));
+    }
+    if (data.containsKey('grade')) {
+      context.handle(
+          _gradeMeta, grade.isAcceptableOrUnknown(data['grade']!, _gradeMeta));
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    }
+    if (data.containsKey('is_graded')) {
+      context.handle(_isGradedMeta,
+          isGraded.isAcceptableOrUnknown(data['is_graded']!, _isGradedMeta));
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+          _completedAtMeta,
+          completedAt.isAcceptableOrUnknown(
+              data['completed_at']!, _completedAtMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(_cachedAtMeta,
+          cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta));
+    }
+    if (data.containsKey('needs_sync')) {
+      context.handle(_needsSyncMeta,
+          needsSync.isAcceptableOrUnknown(data['needs_sync']!, _needsSyncMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Assignment map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Assignment(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      termId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}term_id'])!,
+      subjectId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}subject_id'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      dueDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}due_date'])!,
+      priority: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}priority'])!,
+      weight: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}weight'])!,
+      grade: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}grade'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      isGraded: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_graded'])!,
+      completedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}completed_at']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      cachedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}cached_at'])!,
+      needsSync: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}needs_sync'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+    );
+  }
+
+  @override
+  $AssignmentsTable createAlias(String alias) {
+    return $AssignmentsTable(attachedDatabase, alias);
+  }
+}
+
+class Assignment extends DataClass implements Insertable<Assignment> {
+  final String id;
+  final String userId;
+  final String termId;
+  final String subjectId;
+  final String title;
+  final String description;
+  final DateTime dueDate;
+  final String priority;
+  final int weight;
+  final int grade;
+  final String status;
+  final bool isGraded;
+  final DateTime? completedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime cachedAt;
+  final bool needsSync;
+  final bool isDeleted;
+  const Assignment(
+      {required this.id,
+      required this.userId,
+      required this.termId,
+      required this.subjectId,
+      required this.title,
+      required this.description,
+      required this.dueDate,
+      required this.priority,
+      required this.weight,
+      required this.grade,
+      required this.status,
+      required this.isGraded,
+      this.completedAt,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.cachedAt,
+      required this.needsSync,
+      required this.isDeleted});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['term_id'] = Variable<String>(termId);
+    map['subject_id'] = Variable<String>(subjectId);
+    map['title'] = Variable<String>(title);
+    map['description'] = Variable<String>(description);
+    map['due_date'] = Variable<DateTime>(dueDate);
+    map['priority'] = Variable<String>(priority);
+    map['weight'] = Variable<int>(weight);
+    map['grade'] = Variable<int>(grade);
+    map['status'] = Variable<String>(status);
+    map['is_graded'] = Variable<bool>(isGraded);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['cached_at'] = Variable<DateTime>(cachedAt);
+    map['needs_sync'] = Variable<bool>(needsSync);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    return map;
+  }
+
+  AssignmentsCompanion toCompanion(bool nullToAbsent) {
+    return AssignmentsCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      termId: Value(termId),
+      subjectId: Value(subjectId),
+      title: Value(title),
+      description: Value(description),
+      dueDate: Value(dueDate),
+      priority: Value(priority),
+      weight: Value(weight),
+      grade: Value(grade),
+      status: Value(status),
+      isGraded: Value(isGraded),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      cachedAt: Value(cachedAt),
+      needsSync: Value(needsSync),
+      isDeleted: Value(isDeleted),
+    );
+  }
+
+  factory Assignment.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Assignment(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      termId: serializer.fromJson<String>(json['termId']),
+      subjectId: serializer.fromJson<String>(json['subjectId']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String>(json['description']),
+      dueDate: serializer.fromJson<DateTime>(json['dueDate']),
+      priority: serializer.fromJson<String>(json['priority']),
+      weight: serializer.fromJson<int>(json['weight']),
+      grade: serializer.fromJson<int>(json['grade']),
+      status: serializer.fromJson<String>(json['status']),
+      isGraded: serializer.fromJson<bool>(json['isGraded']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
+      needsSync: serializer.fromJson<bool>(json['needsSync']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'termId': serializer.toJson<String>(termId),
+      'subjectId': serializer.toJson<String>(subjectId),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String>(description),
+      'dueDate': serializer.toJson<DateTime>(dueDate),
+      'priority': serializer.toJson<String>(priority),
+      'weight': serializer.toJson<int>(weight),
+      'grade': serializer.toJson<int>(grade),
+      'status': serializer.toJson<String>(status),
+      'isGraded': serializer.toJson<bool>(isGraded),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'cachedAt': serializer.toJson<DateTime>(cachedAt),
+      'needsSync': serializer.toJson<bool>(needsSync),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+    };
+  }
+
+  Assignment copyWith(
+          {String? id,
+          String? userId,
+          String? termId,
+          String? subjectId,
+          String? title,
+          String? description,
+          DateTime? dueDate,
+          String? priority,
+          int? weight,
+          int? grade,
+          String? status,
+          bool? isGraded,
+          Value<DateTime?> completedAt = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          DateTime? cachedAt,
+          bool? needsSync,
+          bool? isDeleted}) =>
+      Assignment(
+        id: id ?? this.id,
+        userId: userId ?? this.userId,
+        termId: termId ?? this.termId,
+        subjectId: subjectId ?? this.subjectId,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        dueDate: dueDate ?? this.dueDate,
+        priority: priority ?? this.priority,
+        weight: weight ?? this.weight,
+        grade: grade ?? this.grade,
+        status: status ?? this.status,
+        isGraded: isGraded ?? this.isGraded,
+        completedAt: completedAt.present ? completedAt.value : this.completedAt,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        cachedAt: cachedAt ?? this.cachedAt,
+        needsSync: needsSync ?? this.needsSync,
+        isDeleted: isDeleted ?? this.isDeleted,
+      );
+  Assignment copyWithCompanion(AssignmentsCompanion data) {
+    return Assignment(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      termId: data.termId.present ? data.termId.value : this.termId,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      title: data.title.present ? data.title.value : this.title,
+      description:
+          data.description.present ? data.description.value : this.description,
+      dueDate: data.dueDate.present ? data.dueDate.value : this.dueDate,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      weight: data.weight.present ? data.weight.value : this.weight,
+      grade: data.grade.present ? data.grade.value : this.grade,
+      status: data.status.present ? data.status.value : this.status,
+      isGraded: data.isGraded.present ? data.isGraded.value : this.isGraded,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+      needsSync: data.needsSync.present ? data.needsSync.value : this.needsSync,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Assignment(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('termId: $termId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('dueDate: $dueDate, ')
+          ..write('priority: $priority, ')
+          ..write('weight: $weight, ')
+          ..write('grade: $grade, ')
+          ..write('status: $status, ')
+          ..write('isGraded: $isGraded, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('needsSync: $needsSync, ')
+          ..write('isDeleted: $isDeleted')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      userId,
+      termId,
+      subjectId,
+      title,
+      description,
+      dueDate,
+      priority,
+      weight,
+      grade,
+      status,
+      isGraded,
+      completedAt,
+      createdAt,
+      updatedAt,
+      cachedAt,
+      needsSync,
+      isDeleted);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Assignment &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.termId == this.termId &&
+          other.subjectId == this.subjectId &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.dueDate == this.dueDate &&
+          other.priority == this.priority &&
+          other.weight == this.weight &&
+          other.grade == this.grade &&
+          other.status == this.status &&
+          other.isGraded == this.isGraded &&
+          other.completedAt == this.completedAt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.cachedAt == this.cachedAt &&
+          other.needsSync == this.needsSync &&
+          other.isDeleted == this.isDeleted);
+}
+
+class AssignmentsCompanion extends UpdateCompanion<Assignment> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> termId;
+  final Value<String> subjectId;
+  final Value<String> title;
+  final Value<String> description;
+  final Value<DateTime> dueDate;
+  final Value<String> priority;
+  final Value<int> weight;
+  final Value<int> grade;
+  final Value<String> status;
+  final Value<bool> isGraded;
+  final Value<DateTime?> completedAt;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime> cachedAt;
+  final Value<bool> needsSync;
+  final Value<bool> isDeleted;
+  final Value<int> rowid;
+  const AssignmentsCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.termId = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.dueDate = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.weight = const Value.absent(),
+    this.grade = const Value.absent(),
+    this.status = const Value.absent(),
+    this.isGraded = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.needsSync = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AssignmentsCompanion.insert({
+    required String id,
+    required String userId,
+    required String termId,
+    required String subjectId,
+    required String title,
+    this.description = const Value.absent(),
+    required DateTime dueDate,
+    this.priority = const Value.absent(),
+    this.weight = const Value.absent(),
+    this.grade = const Value.absent(),
+    this.status = const Value.absent(),
+    this.isGraded = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.needsSync = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        userId = Value(userId),
+        termId = Value(termId),
+        subjectId = Value(subjectId),
+        title = Value(title),
+        dueDate = Value(dueDate);
+  static Insertable<Assignment> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? termId,
+    Expression<String>? subjectId,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<DateTime>? dueDate,
+    Expression<String>? priority,
+    Expression<int>? weight,
+    Expression<int>? grade,
+    Expression<String>? status,
+    Expression<bool>? isGraded,
+    Expression<DateTime>? completedAt,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? cachedAt,
+    Expression<bool>? needsSync,
+    Expression<bool>? isDeleted,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (termId != null) 'term_id': termId,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (dueDate != null) 'due_date': dueDate,
+      if (priority != null) 'priority': priority,
+      if (weight != null) 'weight': weight,
+      if (grade != null) 'grade': grade,
+      if (status != null) 'status': status,
+      if (isGraded != null) 'is_graded': isGraded,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (needsSync != null) 'needs_sync': needsSync,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AssignmentsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? userId,
+      Value<String>? termId,
+      Value<String>? subjectId,
+      Value<String>? title,
+      Value<String>? description,
+      Value<DateTime>? dueDate,
+      Value<String>? priority,
+      Value<int>? weight,
+      Value<int>? grade,
+      Value<String>? status,
+      Value<bool>? isGraded,
+      Value<DateTime?>? completedAt,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<DateTime>? cachedAt,
+      Value<bool>? needsSync,
+      Value<bool>? isDeleted,
+      Value<int>? rowid}) {
+    return AssignmentsCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      termId: termId ?? this.termId,
+      subjectId: subjectId ?? this.subjectId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      dueDate: dueDate ?? this.dueDate,
+      priority: priority ?? this.priority,
+      weight: weight ?? this.weight,
+      grade: grade ?? this.grade,
+      status: status ?? this.status,
+      isGraded: isGraded ?? this.isGraded,
+      completedAt: completedAt ?? this.completedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      cachedAt: cachedAt ?? this.cachedAt,
+      needsSync: needsSync ?? this.needsSync,
+      isDeleted: isDeleted ?? this.isDeleted,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (termId.present) {
+      map['term_id'] = Variable<String>(termId.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (dueDate.present) {
+      map['due_date'] = Variable<DateTime>(dueDate.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<String>(priority.value);
+    }
+    if (weight.present) {
+      map['weight'] = Variable<int>(weight.value);
+    }
+    if (grade.present) {
+      map['grade'] = Variable<int>(grade.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (isGraded.present) {
+      map['is_graded'] = Variable<bool>(isGraded.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<DateTime>(cachedAt.value);
+    }
+    if (needsSync.present) {
+      map['needs_sync'] = Variable<bool>(needsSync.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AssignmentsCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('termId: $termId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('dueDate: $dueDate, ')
+          ..write('priority: $priority, ')
+          ..write('weight: $weight, ')
+          ..write('grade: $grade, ')
+          ..write('status: $status, ')
+          ..write('isGraded: $isGraded, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('needsSync: $needsSync, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ExamsTable extends Exams with TableInfo<$ExamsTable, Exam> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ExamsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _termIdMeta = const VerificationMeta('termId');
+  @override
+  late final GeneratedColumn<String> termId = GeneratedColumn<String>(
+      'term_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _subjectIdMeta =
+      const VerificationMeta('subjectId');
+  @override
+  late final GeneratedColumn<String> subjectId = GeneratedColumn<String>(
+      'subject_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
+      'date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _startTimeMeta =
+      const VerificationMeta('startTime');
+  @override
+  late final GeneratedColumn<String> startTime = GeneratedColumn<String>(
+      'start_time', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _endTimeMeta =
+      const VerificationMeta('endTime');
+  @override
+  late final GeneratedColumn<String> endTime = GeneratedColumn<String>(
+      'end_time', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _locationMeta =
+      const VerificationMeta('location');
+  @override
+  late final GeneratedColumn<String> location = GeneratedColumn<String>(
+      'location', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _teacherIdMeta =
+      const VerificationMeta('teacherId');
+  @override
+  late final GeneratedColumn<String> teacherId = GeneratedColumn<String>(
+      'teacher_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _weightMeta = const VerificationMeta('weight');
+  @override
+  late final GeneratedColumn<int> weight = GeneratedColumn<int>(
+      'weight', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(10));
+  static const VerificationMeta _gradeMeta = const VerificationMeta('grade');
+  @override
+  late final GeneratedColumn<int> grade = GeneratedColumn<int>(
+      'grade', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _isCompletedMeta =
+      const VerificationMeta('isCompleted');
+  @override
+  late final GeneratedColumn<bool> isCompleted = GeneratedColumn<bool>(
+      'is_completed', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_completed" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isGradedMeta =
+      const VerificationMeta('isGraded');
+  @override
+  late final GeneratedColumn<bool> isGraded = GeneratedColumn<bool>(
+      'is_graded', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_graded" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _completedAtMeta =
+      const VerificationMeta('completedAt');
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+      'completed_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _cachedAtMeta =
+      const VerificationMeta('cachedAt');
+  @override
+  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
+      'cached_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _needsSyncMeta =
+      const VerificationMeta('needsSync');
+  @override
+  late final GeneratedColumn<bool> needsSync = GeneratedColumn<bool>(
+      'needs_sync', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("needs_sync" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        userId,
+        termId,
+        subjectId,
+        title,
+        description,
+        date,
+        startTime,
+        endTime,
+        location,
+        teacherId,
+        weight,
+        grade,
+        isCompleted,
+        isGraded,
+        completedAt,
+        createdAt,
+        updatedAt,
+        cachedAt,
+        needsSync,
+        isDeleted
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'exams';
+  @override
+  VerificationContext validateIntegrity(Insertable<Exam> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('term_id')) {
+      context.handle(_termIdMeta,
+          termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta));
+    } else if (isInserting) {
+      context.missing(_termIdMeta);
+    }
+    if (data.containsKey('subject_id')) {
+      context.handle(_subjectIdMeta,
+          subjectId.isAcceptableOrUnknown(data['subject_id']!, _subjectIdMeta));
+    } else if (isInserting) {
+      context.missing(_subjectIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('start_time')) {
+      context.handle(_startTimeMeta,
+          startTime.isAcceptableOrUnknown(data['start_time']!, _startTimeMeta));
+    }
+    if (data.containsKey('end_time')) {
+      context.handle(_endTimeMeta,
+          endTime.isAcceptableOrUnknown(data['end_time']!, _endTimeMeta));
+    }
+    if (data.containsKey('location')) {
+      context.handle(_locationMeta,
+          location.isAcceptableOrUnknown(data['location']!, _locationMeta));
+    }
+    if (data.containsKey('teacher_id')) {
+      context.handle(_teacherIdMeta,
+          teacherId.isAcceptableOrUnknown(data['teacher_id']!, _teacherIdMeta));
+    }
+    if (data.containsKey('weight')) {
+      context.handle(_weightMeta,
+          weight.isAcceptableOrUnknown(data['weight']!, _weightMeta));
+    }
+    if (data.containsKey('grade')) {
+      context.handle(
+          _gradeMeta, grade.isAcceptableOrUnknown(data['grade']!, _gradeMeta));
+    }
+    if (data.containsKey('is_completed')) {
+      context.handle(
+          _isCompletedMeta,
+          isCompleted.isAcceptableOrUnknown(
+              data['is_completed']!, _isCompletedMeta));
+    }
+    if (data.containsKey('is_graded')) {
+      context.handle(_isGradedMeta,
+          isGraded.isAcceptableOrUnknown(data['is_graded']!, _isGradedMeta));
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+          _completedAtMeta,
+          completedAt.isAcceptableOrUnknown(
+              data['completed_at']!, _completedAtMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(_cachedAtMeta,
+          cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta));
+    }
+    if (data.containsKey('needs_sync')) {
+      context.handle(_needsSyncMeta,
+          needsSync.isAcceptableOrUnknown(data['needs_sync']!, _needsSyncMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Exam map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Exam(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      termId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}term_id'])!,
+      subjectId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}subject_id'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
+      startTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}start_time']),
+      endTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}end_time']),
+      location: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}location']),
+      teacherId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}teacher_id']),
+      weight: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}weight'])!,
+      grade: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}grade'])!,
+      isCompleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_completed'])!,
+      isGraded: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_graded'])!,
+      completedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}completed_at']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      cachedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}cached_at'])!,
+      needsSync: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}needs_sync'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+    );
+  }
+
+  @override
+  $ExamsTable createAlias(String alias) {
+    return $ExamsTable(attachedDatabase, alias);
+  }
+}
+
+class Exam extends DataClass implements Insertable<Exam> {
+  final String id;
+  final String userId;
+  final String termId;
+  final String subjectId;
+  final String title;
+  final String description;
+  final DateTime date;
+  final String? startTime;
+  final String? endTime;
+  final String? location;
+  final String? teacherId;
+  final int weight;
+  final int grade;
+  final bool isCompleted;
+  final bool isGraded;
+  final DateTime? completedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime cachedAt;
+  final bool needsSync;
+  final bool isDeleted;
+  const Exam(
+      {required this.id,
+      required this.userId,
+      required this.termId,
+      required this.subjectId,
+      required this.title,
+      required this.description,
+      required this.date,
+      this.startTime,
+      this.endTime,
+      this.location,
+      this.teacherId,
+      required this.weight,
+      required this.grade,
+      required this.isCompleted,
+      required this.isGraded,
+      this.completedAt,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.cachedAt,
+      required this.needsSync,
+      required this.isDeleted});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['term_id'] = Variable<String>(termId);
+    map['subject_id'] = Variable<String>(subjectId);
+    map['title'] = Variable<String>(title);
+    map['description'] = Variable<String>(description);
+    map['date'] = Variable<DateTime>(date);
+    if (!nullToAbsent || startTime != null) {
+      map['start_time'] = Variable<String>(startTime);
+    }
+    if (!nullToAbsent || endTime != null) {
+      map['end_time'] = Variable<String>(endTime);
+    }
+    if (!nullToAbsent || location != null) {
+      map['location'] = Variable<String>(location);
+    }
+    if (!nullToAbsent || teacherId != null) {
+      map['teacher_id'] = Variable<String>(teacherId);
+    }
+    map['weight'] = Variable<int>(weight);
+    map['grade'] = Variable<int>(grade);
+    map['is_completed'] = Variable<bool>(isCompleted);
+    map['is_graded'] = Variable<bool>(isGraded);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['cached_at'] = Variable<DateTime>(cachedAt);
+    map['needs_sync'] = Variable<bool>(needsSync);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    return map;
+  }
+
+  ExamsCompanion toCompanion(bool nullToAbsent) {
+    return ExamsCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      termId: Value(termId),
+      subjectId: Value(subjectId),
+      title: Value(title),
+      description: Value(description),
+      date: Value(date),
+      startTime: startTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(startTime),
+      endTime: endTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endTime),
+      location: location == null && nullToAbsent
+          ? const Value.absent()
+          : Value(location),
+      teacherId: teacherId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(teacherId),
+      weight: Value(weight),
+      grade: Value(grade),
+      isCompleted: Value(isCompleted),
+      isGraded: Value(isGraded),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      cachedAt: Value(cachedAt),
+      needsSync: Value(needsSync),
+      isDeleted: Value(isDeleted),
+    );
+  }
+
+  factory Exam.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Exam(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      termId: serializer.fromJson<String>(json['termId']),
+      subjectId: serializer.fromJson<String>(json['subjectId']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String>(json['description']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      startTime: serializer.fromJson<String?>(json['startTime']),
+      endTime: serializer.fromJson<String?>(json['endTime']),
+      location: serializer.fromJson<String?>(json['location']),
+      teacherId: serializer.fromJson<String?>(json['teacherId']),
+      weight: serializer.fromJson<int>(json['weight']),
+      grade: serializer.fromJson<int>(json['grade']),
+      isCompleted: serializer.fromJson<bool>(json['isCompleted']),
+      isGraded: serializer.fromJson<bool>(json['isGraded']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
+      needsSync: serializer.fromJson<bool>(json['needsSync']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'termId': serializer.toJson<String>(termId),
+      'subjectId': serializer.toJson<String>(subjectId),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String>(description),
+      'date': serializer.toJson<DateTime>(date),
+      'startTime': serializer.toJson<String?>(startTime),
+      'endTime': serializer.toJson<String?>(endTime),
+      'location': serializer.toJson<String?>(location),
+      'teacherId': serializer.toJson<String?>(teacherId),
+      'weight': serializer.toJson<int>(weight),
+      'grade': serializer.toJson<int>(grade),
+      'isCompleted': serializer.toJson<bool>(isCompleted),
+      'isGraded': serializer.toJson<bool>(isGraded),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'cachedAt': serializer.toJson<DateTime>(cachedAt),
+      'needsSync': serializer.toJson<bool>(needsSync),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+    };
+  }
+
+  Exam copyWith(
+          {String? id,
+          String? userId,
+          String? termId,
+          String? subjectId,
+          String? title,
+          String? description,
+          DateTime? date,
+          Value<String?> startTime = const Value.absent(),
+          Value<String?> endTime = const Value.absent(),
+          Value<String?> location = const Value.absent(),
+          Value<String?> teacherId = const Value.absent(),
+          int? weight,
+          int? grade,
+          bool? isCompleted,
+          bool? isGraded,
+          Value<DateTime?> completedAt = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          DateTime? cachedAt,
+          bool? needsSync,
+          bool? isDeleted}) =>
+      Exam(
+        id: id ?? this.id,
+        userId: userId ?? this.userId,
+        termId: termId ?? this.termId,
+        subjectId: subjectId ?? this.subjectId,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        date: date ?? this.date,
+        startTime: startTime.present ? startTime.value : this.startTime,
+        endTime: endTime.present ? endTime.value : this.endTime,
+        location: location.present ? location.value : this.location,
+        teacherId: teacherId.present ? teacherId.value : this.teacherId,
+        weight: weight ?? this.weight,
+        grade: grade ?? this.grade,
+        isCompleted: isCompleted ?? this.isCompleted,
+        isGraded: isGraded ?? this.isGraded,
+        completedAt: completedAt.present ? completedAt.value : this.completedAt,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        cachedAt: cachedAt ?? this.cachedAt,
+        needsSync: needsSync ?? this.needsSync,
+        isDeleted: isDeleted ?? this.isDeleted,
+      );
+  Exam copyWithCompanion(ExamsCompanion data) {
+    return Exam(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      termId: data.termId.present ? data.termId.value : this.termId,
+      subjectId: data.subjectId.present ? data.subjectId.value : this.subjectId,
+      title: data.title.present ? data.title.value : this.title,
+      description:
+          data.description.present ? data.description.value : this.description,
+      date: data.date.present ? data.date.value : this.date,
+      startTime: data.startTime.present ? data.startTime.value : this.startTime,
+      endTime: data.endTime.present ? data.endTime.value : this.endTime,
+      location: data.location.present ? data.location.value : this.location,
+      teacherId: data.teacherId.present ? data.teacherId.value : this.teacherId,
+      weight: data.weight.present ? data.weight.value : this.weight,
+      grade: data.grade.present ? data.grade.value : this.grade,
+      isCompleted:
+          data.isCompleted.present ? data.isCompleted.value : this.isCompleted,
+      isGraded: data.isGraded.present ? data.isGraded.value : this.isGraded,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+      needsSync: data.needsSync.present ? data.needsSync.value : this.needsSync,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Exam(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('termId: $termId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('date: $date, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('location: $location, ')
+          ..write('teacherId: $teacherId, ')
+          ..write('weight: $weight, ')
+          ..write('grade: $grade, ')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('isGraded: $isGraded, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('needsSync: $needsSync, ')
+          ..write('isDeleted: $isDeleted')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+        id,
+        userId,
+        termId,
+        subjectId,
+        title,
+        description,
+        date,
+        startTime,
+        endTime,
+        location,
+        teacherId,
+        weight,
+        grade,
+        isCompleted,
+        isGraded,
+        completedAt,
+        createdAt,
+        updatedAt,
+        cachedAt,
+        needsSync,
+        isDeleted
+      ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Exam &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.termId == this.termId &&
+          other.subjectId == this.subjectId &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.date == this.date &&
+          other.startTime == this.startTime &&
+          other.endTime == this.endTime &&
+          other.location == this.location &&
+          other.teacherId == this.teacherId &&
+          other.weight == this.weight &&
+          other.grade == this.grade &&
+          other.isCompleted == this.isCompleted &&
+          other.isGraded == this.isGraded &&
+          other.completedAt == this.completedAt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.cachedAt == this.cachedAt &&
+          other.needsSync == this.needsSync &&
+          other.isDeleted == this.isDeleted);
+}
+
+class ExamsCompanion extends UpdateCompanion<Exam> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> termId;
+  final Value<String> subjectId;
+  final Value<String> title;
+  final Value<String> description;
+  final Value<DateTime> date;
+  final Value<String?> startTime;
+  final Value<String?> endTime;
+  final Value<String?> location;
+  final Value<String?> teacherId;
+  final Value<int> weight;
+  final Value<int> grade;
+  final Value<bool> isCompleted;
+  final Value<bool> isGraded;
+  final Value<DateTime?> completedAt;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime> cachedAt;
+  final Value<bool> needsSync;
+  final Value<bool> isDeleted;
+  final Value<int> rowid;
+  const ExamsCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.termId = const Value.absent(),
+    this.subjectId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.date = const Value.absent(),
+    this.startTime = const Value.absent(),
+    this.endTime = const Value.absent(),
+    this.location = const Value.absent(),
+    this.teacherId = const Value.absent(),
+    this.weight = const Value.absent(),
+    this.grade = const Value.absent(),
+    this.isCompleted = const Value.absent(),
+    this.isGraded = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.needsSync = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ExamsCompanion.insert({
+    required String id,
+    required String userId,
+    required String termId,
+    required String subjectId,
+    required String title,
+    this.description = const Value.absent(),
+    required DateTime date,
+    this.startTime = const Value.absent(),
+    this.endTime = const Value.absent(),
+    this.location = const Value.absent(),
+    this.teacherId = const Value.absent(),
+    this.weight = const Value.absent(),
+    this.grade = const Value.absent(),
+    this.isCompleted = const Value.absent(),
+    this.isGraded = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.needsSync = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        userId = Value(userId),
+        termId = Value(termId),
+        subjectId = Value(subjectId),
+        title = Value(title),
+        date = Value(date);
+  static Insertable<Exam> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? termId,
+    Expression<String>? subjectId,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<DateTime>? date,
+    Expression<String>? startTime,
+    Expression<String>? endTime,
+    Expression<String>? location,
+    Expression<String>? teacherId,
+    Expression<int>? weight,
+    Expression<int>? grade,
+    Expression<bool>? isCompleted,
+    Expression<bool>? isGraded,
+    Expression<DateTime>? completedAt,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? cachedAt,
+    Expression<bool>? needsSync,
+    Expression<bool>? isDeleted,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (termId != null) 'term_id': termId,
+      if (subjectId != null) 'subject_id': subjectId,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (date != null) 'date': date,
+      if (startTime != null) 'start_time': startTime,
+      if (endTime != null) 'end_time': endTime,
+      if (location != null) 'location': location,
+      if (teacherId != null) 'teacher_id': teacherId,
+      if (weight != null) 'weight': weight,
+      if (grade != null) 'grade': grade,
+      if (isCompleted != null) 'is_completed': isCompleted,
+      if (isGraded != null) 'is_graded': isGraded,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (needsSync != null) 'needs_sync': needsSync,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ExamsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? userId,
+      Value<String>? termId,
+      Value<String>? subjectId,
+      Value<String>? title,
+      Value<String>? description,
+      Value<DateTime>? date,
+      Value<String?>? startTime,
+      Value<String?>? endTime,
+      Value<String?>? location,
+      Value<String?>? teacherId,
+      Value<int>? weight,
+      Value<int>? grade,
+      Value<bool>? isCompleted,
+      Value<bool>? isGraded,
+      Value<DateTime?>? completedAt,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<DateTime>? cachedAt,
+      Value<bool>? needsSync,
+      Value<bool>? isDeleted,
+      Value<int>? rowid}) {
+    return ExamsCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      termId: termId ?? this.termId,
+      subjectId: subjectId ?? this.subjectId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      date: date ?? this.date,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      location: location ?? this.location,
+      teacherId: teacherId ?? this.teacherId,
+      weight: weight ?? this.weight,
+      grade: grade ?? this.grade,
+      isCompleted: isCompleted ?? this.isCompleted,
+      isGraded: isGraded ?? this.isGraded,
+      completedAt: completedAt ?? this.completedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      cachedAt: cachedAt ?? this.cachedAt,
+      needsSync: needsSync ?? this.needsSync,
+      isDeleted: isDeleted ?? this.isDeleted,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (termId.present) {
+      map['term_id'] = Variable<String>(termId.value);
+    }
+    if (subjectId.present) {
+      map['subject_id'] = Variable<String>(subjectId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(date.value);
+    }
+    if (startTime.present) {
+      map['start_time'] = Variable<String>(startTime.value);
+    }
+    if (endTime.present) {
+      map['end_time'] = Variable<String>(endTime.value);
+    }
+    if (location.present) {
+      map['location'] = Variable<String>(location.value);
+    }
+    if (teacherId.present) {
+      map['teacher_id'] = Variable<String>(teacherId.value);
+    }
+    if (weight.present) {
+      map['weight'] = Variable<int>(weight.value);
+    }
+    if (grade.present) {
+      map['grade'] = Variable<int>(grade.value);
+    }
+    if (isCompleted.present) {
+      map['is_completed'] = Variable<bool>(isCompleted.value);
+    }
+    if (isGraded.present) {
+      map['is_graded'] = Variable<bool>(isGraded.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<DateTime>(cachedAt.value);
+    }
+    if (needsSync.present) {
+      map['needs_sync'] = Variable<bool>(needsSync.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ExamsCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('termId: $termId, ')
+          ..write('subjectId: $subjectId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('date: $date, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('location: $location, ')
+          ..write('teacherId: $teacherId, ')
+          ..write('weight: $weight, ')
+          ..write('grade: $grade, ')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('isGraded: $isGraded, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('needsSync: $needsSync, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $HolidaysTable extends Holidays with TableInfo<$HolidaysTable, Holiday> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HolidaysTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _startDateMeta =
+      const VerificationMeta('startDate');
+  @override
+  late final GeneratedColumn<DateTime> startDate = GeneratedColumn<DateTime>(
+      'start_date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _endDateMeta =
+      const VerificationMeta('endDate');
+  @override
+  late final GeneratedColumn<DateTime> endDate = GeneratedColumn<DateTime>(
+      'end_date', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+      'source', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('user'));
+  static const VerificationMeta _countryCodeMeta =
+      const VerificationMeta('countryCode');
+  @override
+  late final GeneratedColumn<String> countryCode = GeneratedColumn<String>(
+      'country_code', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _cachedAtMeta =
+      const VerificationMeta('cachedAt');
+  @override
+  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
+      'cached_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _needsSyncMeta =
+      const VerificationMeta('needsSync');
+  @override
+  late final GeneratedColumn<bool> needsSync = GeneratedColumn<bool>(
+      'needs_sync', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("needs_sync" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        userId,
+        name,
+        startDate,
+        endDate,
+        source,
+        countryCode,
+        createdAt,
+        cachedAt,
+        needsSync,
+        isDeleted
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'holidays';
+  @override
+  VerificationContext validateIntegrity(Insertable<Holiday> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(_startDateMeta,
+          startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta));
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(_endDateMeta,
+          endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta));
+    } else if (isInserting) {
+      context.missing(_endDateMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(_sourceMeta,
+          source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
+    }
+    if (data.containsKey('country_code')) {
+      context.handle(
+          _countryCodeMeta,
+          countryCode.isAcceptableOrUnknown(
+              data['country_code']!, _countryCodeMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(_cachedAtMeta,
+          cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta));
+    }
+    if (data.containsKey('needs_sync')) {
+      context.handle(_needsSyncMeta,
+          needsSync.isAcceptableOrUnknown(data['needs_sync']!, _needsSyncMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Holiday map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Holiday(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      startDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}start_date'])!,
+      endDate: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}end_date'])!,
+      source: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}source'])!,
+      countryCode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}country_code']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      cachedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}cached_at'])!,
+      needsSync: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}needs_sync'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+    );
+  }
+
+  @override
+  $HolidaysTable createAlias(String alias) {
+    return $HolidaysTable(attachedDatabase, alias);
+  }
+}
+
+class Holiday extends DataClass implements Insertable<Holiday> {
+  final String id;
+  final String userId;
+  final String name;
+  final DateTime startDate;
+  final DateTime endDate;
+  final String source;
+  final String? countryCode;
+  final DateTime createdAt;
+  final DateTime cachedAt;
+  final bool needsSync;
+  final bool isDeleted;
+  const Holiday(
+      {required this.id,
+      required this.userId,
+      required this.name,
+      required this.startDate,
+      required this.endDate,
+      required this.source,
+      this.countryCode,
+      required this.createdAt,
+      required this.cachedAt,
+      required this.needsSync,
+      required this.isDeleted});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['name'] = Variable<String>(name);
+    map['start_date'] = Variable<DateTime>(startDate);
+    map['end_date'] = Variable<DateTime>(endDate);
+    map['source'] = Variable<String>(source);
+    if (!nullToAbsent || countryCode != null) {
+      map['country_code'] = Variable<String>(countryCode);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['cached_at'] = Variable<DateTime>(cachedAt);
+    map['needs_sync'] = Variable<bool>(needsSync);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    return map;
+  }
+
+  HolidaysCompanion toCompanion(bool nullToAbsent) {
+    return HolidaysCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      name: Value(name),
+      startDate: Value(startDate),
+      endDate: Value(endDate),
+      source: Value(source),
+      countryCode: countryCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(countryCode),
+      createdAt: Value(createdAt),
+      cachedAt: Value(cachedAt),
+      needsSync: Value(needsSync),
+      isDeleted: Value(isDeleted),
+    );
+  }
+
+  factory Holiday.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Holiday(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      name: serializer.fromJson<String>(json['name']),
+      startDate: serializer.fromJson<DateTime>(json['startDate']),
+      endDate: serializer.fromJson<DateTime>(json['endDate']),
+      source: serializer.fromJson<String>(json['source']),
+      countryCode: serializer.fromJson<String?>(json['countryCode']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
+      needsSync: serializer.fromJson<bool>(json['needsSync']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'name': serializer.toJson<String>(name),
+      'startDate': serializer.toJson<DateTime>(startDate),
+      'endDate': serializer.toJson<DateTime>(endDate),
+      'source': serializer.toJson<String>(source),
+      'countryCode': serializer.toJson<String?>(countryCode),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'cachedAt': serializer.toJson<DateTime>(cachedAt),
+      'needsSync': serializer.toJson<bool>(needsSync),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+    };
+  }
+
+  Holiday copyWith(
+          {String? id,
+          String? userId,
+          String? name,
+          DateTime? startDate,
+          DateTime? endDate,
+          String? source,
+          Value<String?> countryCode = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? cachedAt,
+          bool? needsSync,
+          bool? isDeleted}) =>
+      Holiday(
+        id: id ?? this.id,
+        userId: userId ?? this.userId,
+        name: name ?? this.name,
+        startDate: startDate ?? this.startDate,
+        endDate: endDate ?? this.endDate,
+        source: source ?? this.source,
+        countryCode: countryCode.present ? countryCode.value : this.countryCode,
+        createdAt: createdAt ?? this.createdAt,
+        cachedAt: cachedAt ?? this.cachedAt,
+        needsSync: needsSync ?? this.needsSync,
+        isDeleted: isDeleted ?? this.isDeleted,
+      );
+  Holiday copyWithCompanion(HolidaysCompanion data) {
+    return Holiday(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      name: data.name.present ? data.name.value : this.name,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      source: data.source.present ? data.source.value : this.source,
+      countryCode:
+          data.countryCode.present ? data.countryCode.value : this.countryCode,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+      needsSync: data.needsSync.present ? data.needsSync.value : this.needsSync,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Holiday(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('name: $name, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('source: $source, ')
+          ..write('countryCode: $countryCode, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('needsSync: $needsSync, ')
+          ..write('isDeleted: $isDeleted')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, userId, name, startDate, endDate, source,
+      countryCode, createdAt, cachedAt, needsSync, isDeleted);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Holiday &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.name == this.name &&
+          other.startDate == this.startDate &&
+          other.endDate == this.endDate &&
+          other.source == this.source &&
+          other.countryCode == this.countryCode &&
+          other.createdAt == this.createdAt &&
+          other.cachedAt == this.cachedAt &&
+          other.needsSync == this.needsSync &&
+          other.isDeleted == this.isDeleted);
+}
+
+class HolidaysCompanion extends UpdateCompanion<Holiday> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> name;
+  final Value<DateTime> startDate;
+  final Value<DateTime> endDate;
+  final Value<String> source;
+  final Value<String?> countryCode;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> cachedAt;
+  final Value<bool> needsSync;
+  final Value<bool> isDeleted;
+  final Value<int> rowid;
+  const HolidaysCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.source = const Value.absent(),
+    this.countryCode = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.needsSync = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HolidaysCompanion.insert({
+    required String id,
+    required String userId,
+    required String name,
+    required DateTime startDate,
+    required DateTime endDate,
+    this.source = const Value.absent(),
+    this.countryCode = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.needsSync = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        userId = Value(userId),
+        name = Value(name),
+        startDate = Value(startDate),
+        endDate = Value(endDate);
+  static Insertable<Holiday> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? name,
+    Expression<DateTime>? startDate,
+    Expression<DateTime>? endDate,
+    Expression<String>? source,
+    Expression<String>? countryCode,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? cachedAt,
+    Expression<bool>? needsSync,
+    Expression<bool>? isDeleted,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (name != null) 'name': name,
+      if (startDate != null) 'start_date': startDate,
+      if (endDate != null) 'end_date': endDate,
+      if (source != null) 'source': source,
+      if (countryCode != null) 'country_code': countryCode,
+      if (createdAt != null) 'created_at': createdAt,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (needsSync != null) 'needs_sync': needsSync,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HolidaysCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? userId,
+      Value<String>? name,
+      Value<DateTime>? startDate,
+      Value<DateTime>? endDate,
+      Value<String>? source,
+      Value<String?>? countryCode,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? cachedAt,
+      Value<bool>? needsSync,
+      Value<bool>? isDeleted,
+      Value<int>? rowid}) {
+    return HolidaysCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      source: source ?? this.source,
+      countryCode: countryCode ?? this.countryCode,
+      createdAt: createdAt ?? this.createdAt,
+      cachedAt: cachedAt ?? this.cachedAt,
+      needsSync: needsSync ?? this.needsSync,
+      isDeleted: isDeleted ?? this.isDeleted,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<DateTime>(startDate.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<DateTime>(endDate.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (countryCode.present) {
+      map['country_code'] = Variable<String>(countryCode.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<DateTime>(cachedAt.value);
+    }
+    if (needsSync.present) {
+      map['needs_sync'] = Variable<bool>(needsSync.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HolidaysCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('name: $name, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('source: $source, ')
+          ..write('countryCode: $countryCode, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('needsSync: $needsSync, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TeachersTable extends Teachers with TableInfo<$TeachersTable, Teacher> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TeachersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _positionMeta =
+      const VerificationMeta('position');
+  @override
+  late final GeneratedColumn<String> position = GeneratedColumn<String>(
+      'position', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _departmentMeta =
+      const VerificationMeta('department');
+  @override
+  late final GeneratedColumn<String> department = GeneratedColumn<String>(
+      'department', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _affiliationMeta =
+      const VerificationMeta('affiliation');
+  @override
+  late final GeneratedColumn<String> affiliation = GeneratedColumn<String>(
+      'affiliation', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  @override
+  late final GeneratedColumn<String> email = GeneratedColumn<String>(
+      'email', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _phoneMeta = const VerificationMeta('phone');
+  @override
+  late final GeneratedColumn<String> phone = GeneratedColumn<String>(
+      'phone', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _officeLocationMeta =
+      const VerificationMeta('officeLocation');
+  @override
+  late final GeneratedColumn<String> officeLocation = GeneratedColumn<String>(
+      'office_location', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _officeHoursMeta =
+      const VerificationMeta('officeHours');
+  @override
+  late final GeneratedColumn<String> officeHours = GeneratedColumn<String>(
+      'office_hours', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _cachedAtMeta =
+      const VerificationMeta('cachedAt');
+  @override
+  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
+      'cached_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _needsSyncMeta =
+      const VerificationMeta('needsSync');
+  @override
+  late final GeneratedColumn<bool> needsSync = GeneratedColumn<bool>(
+      'needs_sync', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("needs_sync" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        userId,
+        name,
+        position,
+        department,
+        affiliation,
+        email,
+        phone,
+        officeLocation,
+        officeHours,
+        createdAt,
+        updatedAt,
+        cachedAt,
+        needsSync,
+        isDeleted
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'teachers';
+  @override
+  VerificationContext validateIntegrity(Insertable<Teacher> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(_positionMeta,
+          position.isAcceptableOrUnknown(data['position']!, _positionMeta));
+    }
+    if (data.containsKey('department')) {
+      context.handle(
+          _departmentMeta,
+          department.isAcceptableOrUnknown(
+              data['department']!, _departmentMeta));
+    }
+    if (data.containsKey('affiliation')) {
+      context.handle(
+          _affiliationMeta,
+          affiliation.isAcceptableOrUnknown(
+              data['affiliation']!, _affiliationMeta));
+    }
+    if (data.containsKey('email')) {
+      context.handle(
+          _emailMeta, email.isAcceptableOrUnknown(data['email']!, _emailMeta));
+    }
+    if (data.containsKey('phone')) {
+      context.handle(
+          _phoneMeta, phone.isAcceptableOrUnknown(data['phone']!, _phoneMeta));
+    }
+    if (data.containsKey('office_location')) {
+      context.handle(
+          _officeLocationMeta,
+          officeLocation.isAcceptableOrUnknown(
+              data['office_location']!, _officeLocationMeta));
+    }
+    if (data.containsKey('office_hours')) {
+      context.handle(
+          _officeHoursMeta,
+          officeHours.isAcceptableOrUnknown(
+              data['office_hours']!, _officeHoursMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(_cachedAtMeta,
+          cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta));
+    }
+    if (data.containsKey('needs_sync')) {
+      context.handle(_needsSyncMeta,
+          needsSync.isAcceptableOrUnknown(data['needs_sync']!, _needsSyncMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Teacher map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Teacher(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      position: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}position']),
+      department: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}department']),
+      affiliation: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}affiliation']),
+      email: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}email']),
+      phone: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}phone']),
+      officeLocation: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}office_location']),
+      officeHours: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}office_hours']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      cachedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}cached_at'])!,
+      needsSync: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}needs_sync'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+    );
+  }
+
+  @override
+  $TeachersTable createAlias(String alias) {
+    return $TeachersTable(attachedDatabase, alias);
+  }
+}
+
+class Teacher extends DataClass implements Insertable<Teacher> {
+  final String id;
+  final String userId;
+  final String name;
+  final String? position;
+  final String? department;
+  final String? affiliation;
+  final String? email;
+  final String? phone;
+  final String? officeLocation;
+  final String? officeHours;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime cachedAt;
+  final bool needsSync;
+  final bool isDeleted;
+  const Teacher(
+      {required this.id,
+      required this.userId,
+      required this.name,
+      this.position,
+      this.department,
+      this.affiliation,
+      this.email,
+      this.phone,
+      this.officeLocation,
+      this.officeHours,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.cachedAt,
+      required this.needsSync,
+      required this.isDeleted});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || position != null) {
+      map['position'] = Variable<String>(position);
+    }
+    if (!nullToAbsent || department != null) {
+      map['department'] = Variable<String>(department);
+    }
+    if (!nullToAbsent || affiliation != null) {
+      map['affiliation'] = Variable<String>(affiliation);
+    }
+    if (!nullToAbsent || email != null) {
+      map['email'] = Variable<String>(email);
+    }
+    if (!nullToAbsent || phone != null) {
+      map['phone'] = Variable<String>(phone);
+    }
+    if (!nullToAbsent || officeLocation != null) {
+      map['office_location'] = Variable<String>(officeLocation);
+    }
+    if (!nullToAbsent || officeHours != null) {
+      map['office_hours'] = Variable<String>(officeHours);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['cached_at'] = Variable<DateTime>(cachedAt);
+    map['needs_sync'] = Variable<bool>(needsSync);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    return map;
+  }
+
+  TeachersCompanion toCompanion(bool nullToAbsent) {
+    return TeachersCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      name: Value(name),
+      position: position == null && nullToAbsent
+          ? const Value.absent()
+          : Value(position),
+      department: department == null && nullToAbsent
+          ? const Value.absent()
+          : Value(department),
+      affiliation: affiliation == null && nullToAbsent
+          ? const Value.absent()
+          : Value(affiliation),
+      email:
+          email == null && nullToAbsent ? const Value.absent() : Value(email),
+      phone:
+          phone == null && nullToAbsent ? const Value.absent() : Value(phone),
+      officeLocation: officeLocation == null && nullToAbsent
+          ? const Value.absent()
+          : Value(officeLocation),
+      officeHours: officeHours == null && nullToAbsent
+          ? const Value.absent()
+          : Value(officeHours),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      cachedAt: Value(cachedAt),
+      needsSync: Value(needsSync),
+      isDeleted: Value(isDeleted),
+    );
+  }
+
+  factory Teacher.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Teacher(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      name: serializer.fromJson<String>(json['name']),
+      position: serializer.fromJson<String?>(json['position']),
+      department: serializer.fromJson<String?>(json['department']),
+      affiliation: serializer.fromJson<String?>(json['affiliation']),
+      email: serializer.fromJson<String?>(json['email']),
+      phone: serializer.fromJson<String?>(json['phone']),
+      officeLocation: serializer.fromJson<String?>(json['officeLocation']),
+      officeHours: serializer.fromJson<String?>(json['officeHours']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
+      needsSync: serializer.fromJson<bool>(json['needsSync']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'name': serializer.toJson<String>(name),
+      'position': serializer.toJson<String?>(position),
+      'department': serializer.toJson<String?>(department),
+      'affiliation': serializer.toJson<String?>(affiliation),
+      'email': serializer.toJson<String?>(email),
+      'phone': serializer.toJson<String?>(phone),
+      'officeLocation': serializer.toJson<String?>(officeLocation),
+      'officeHours': serializer.toJson<String?>(officeHours),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'cachedAt': serializer.toJson<DateTime>(cachedAt),
+      'needsSync': serializer.toJson<bool>(needsSync),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+    };
+  }
+
+  Teacher copyWith(
+          {String? id,
+          String? userId,
+          String? name,
+          Value<String?> position = const Value.absent(),
+          Value<String?> department = const Value.absent(),
+          Value<String?> affiliation = const Value.absent(),
+          Value<String?> email = const Value.absent(),
+          Value<String?> phone = const Value.absent(),
+          Value<String?> officeLocation = const Value.absent(),
+          Value<String?> officeHours = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          DateTime? cachedAt,
+          bool? needsSync,
+          bool? isDeleted}) =>
+      Teacher(
+        id: id ?? this.id,
+        userId: userId ?? this.userId,
+        name: name ?? this.name,
+        position: position.present ? position.value : this.position,
+        department: department.present ? department.value : this.department,
+        affiliation: affiliation.present ? affiliation.value : this.affiliation,
+        email: email.present ? email.value : this.email,
+        phone: phone.present ? phone.value : this.phone,
+        officeLocation:
+            officeLocation.present ? officeLocation.value : this.officeLocation,
+        officeHours: officeHours.present ? officeHours.value : this.officeHours,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        cachedAt: cachedAt ?? this.cachedAt,
+        needsSync: needsSync ?? this.needsSync,
+        isDeleted: isDeleted ?? this.isDeleted,
+      );
+  Teacher copyWithCompanion(TeachersCompanion data) {
+    return Teacher(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      name: data.name.present ? data.name.value : this.name,
+      position: data.position.present ? data.position.value : this.position,
+      department:
+          data.department.present ? data.department.value : this.department,
+      affiliation:
+          data.affiliation.present ? data.affiliation.value : this.affiliation,
+      email: data.email.present ? data.email.value : this.email,
+      phone: data.phone.present ? data.phone.value : this.phone,
+      officeLocation: data.officeLocation.present
+          ? data.officeLocation.value
+          : this.officeLocation,
+      officeHours:
+          data.officeHours.present ? data.officeHours.value : this.officeHours,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+      needsSync: data.needsSync.present ? data.needsSync.value : this.needsSync,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Teacher(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('name: $name, ')
+          ..write('position: $position, ')
+          ..write('department: $department, ')
+          ..write('affiliation: $affiliation, ')
+          ..write('email: $email, ')
+          ..write('phone: $phone, ')
+          ..write('officeLocation: $officeLocation, ')
+          ..write('officeHours: $officeHours, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('needsSync: $needsSync, ')
+          ..write('isDeleted: $isDeleted')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      userId,
+      name,
+      position,
+      department,
+      affiliation,
+      email,
+      phone,
+      officeLocation,
+      officeHours,
+      createdAt,
+      updatedAt,
+      cachedAt,
+      needsSync,
+      isDeleted);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Teacher &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.name == this.name &&
+          other.position == this.position &&
+          other.department == this.department &&
+          other.affiliation == this.affiliation &&
+          other.email == this.email &&
+          other.phone == this.phone &&
+          other.officeLocation == this.officeLocation &&
+          other.officeHours == this.officeHours &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.cachedAt == this.cachedAt &&
+          other.needsSync == this.needsSync &&
+          other.isDeleted == this.isDeleted);
+}
+
+class TeachersCompanion extends UpdateCompanion<Teacher> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> name;
+  final Value<String?> position;
+  final Value<String?> department;
+  final Value<String?> affiliation;
+  final Value<String?> email;
+  final Value<String?> phone;
+  final Value<String?> officeLocation;
+  final Value<String?> officeHours;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime> cachedAt;
+  final Value<bool> needsSync;
+  final Value<bool> isDeleted;
+  final Value<int> rowid;
+  const TeachersCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.position = const Value.absent(),
+    this.department = const Value.absent(),
+    this.affiliation = const Value.absent(),
+    this.email = const Value.absent(),
+    this.phone = const Value.absent(),
+    this.officeLocation = const Value.absent(),
+    this.officeHours = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.needsSync = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TeachersCompanion.insert({
+    required String id,
+    required String userId,
+    required String name,
+    this.position = const Value.absent(),
+    this.department = const Value.absent(),
+    this.affiliation = const Value.absent(),
+    this.email = const Value.absent(),
+    this.phone = const Value.absent(),
+    this.officeLocation = const Value.absent(),
+    this.officeHours = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.needsSync = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        userId = Value(userId),
+        name = Value(name);
+  static Insertable<Teacher> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? name,
+    Expression<String>? position,
+    Expression<String>? department,
+    Expression<String>? affiliation,
+    Expression<String>? email,
+    Expression<String>? phone,
+    Expression<String>? officeLocation,
+    Expression<String>? officeHours,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? cachedAt,
+    Expression<bool>? needsSync,
+    Expression<bool>? isDeleted,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (name != null) 'name': name,
+      if (position != null) 'position': position,
+      if (department != null) 'department': department,
+      if (affiliation != null) 'affiliation': affiliation,
+      if (email != null) 'email': email,
+      if (phone != null) 'phone': phone,
+      if (officeLocation != null) 'office_location': officeLocation,
+      if (officeHours != null) 'office_hours': officeHours,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (needsSync != null) 'needs_sync': needsSync,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TeachersCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? userId,
+      Value<String>? name,
+      Value<String?>? position,
+      Value<String?>? department,
+      Value<String?>? affiliation,
+      Value<String?>? email,
+      Value<String?>? phone,
+      Value<String?>? officeLocation,
+      Value<String?>? officeHours,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<DateTime>? cachedAt,
+      Value<bool>? needsSync,
+      Value<bool>? isDeleted,
+      Value<int>? rowid}) {
+    return TeachersCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      name: name ?? this.name,
+      position: position ?? this.position,
+      department: department ?? this.department,
+      affiliation: affiliation ?? this.affiliation,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      officeLocation: officeLocation ?? this.officeLocation,
+      officeHours: officeHours ?? this.officeHours,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      cachedAt: cachedAt ?? this.cachedAt,
+      needsSync: needsSync ?? this.needsSync,
+      isDeleted: isDeleted ?? this.isDeleted,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<String>(position.value);
+    }
+    if (department.present) {
+      map['department'] = Variable<String>(department.value);
+    }
+    if (affiliation.present) {
+      map['affiliation'] = Variable<String>(affiliation.value);
+    }
+    if (email.present) {
+      map['email'] = Variable<String>(email.value);
+    }
+    if (phone.present) {
+      map['phone'] = Variable<String>(phone.value);
+    }
+    if (officeLocation.present) {
+      map['office_location'] = Variable<String>(officeLocation.value);
+    }
+    if (officeHours.present) {
+      map['office_hours'] = Variable<String>(officeHours.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<DateTime>(cachedAt.value);
+    }
+    if (needsSync.present) {
+      map['needs_sync'] = Variable<bool>(needsSync.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TeachersCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('name: $name, ')
+          ..write('position: $position, ')
+          ..write('department: $department, ')
+          ..write('affiliation: $affiliation, ')
+          ..write('email: $email, ')
+          ..write('phone: $phone, ')
+          ..write('officeLocation: $officeLocation, ')
+          ..write('officeHours: $officeHours, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('needsSync: $needsSync, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SubjectDetailsTable extends SubjectDetails
+    with TableInfo<$SubjectDetailsTable, SubjectDetail> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SubjectDetailsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _termIdMeta = const VerificationMeta('termId');
+  @override
+  late final GeneratedColumn<String> termId = GeneratedColumn<String>(
+      'term_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _codeMeta = const VerificationMeta('code');
+  @override
+  late final GeneratedColumn<String> code = GeneratedColumn<String>(
+      'code', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<String> color = GeneratedColumn<String>(
+      'color', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('#4CAF50'));
+  static const VerificationMeta _creditsMeta =
+      const VerificationMeta('credits');
+  @override
+  late final GeneratedColumn<int> credits = GeneratedColumn<int>(
+      'credits', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(3));
+  static const VerificationMeta _teacherIdMeta =
+      const VerificationMeta('teacherId');
+  @override
+  late final GeneratedColumn<String> teacherId = GeneratedColumn<String>(
+      'teacher_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _locationMeta =
+      const VerificationMeta('location');
+  @override
+  late final GeneratedColumn<String> location = GeneratedColumn<String>(
+      'location', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _syllabusMeta =
+      const VerificationMeta('syllabus');
+  @override
+  late final GeneratedColumn<String> syllabus = GeneratedColumn<String>(
+      'syllabus', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _useFinalGradeOverrideMeta =
+      const VerificationMeta('useFinalGradeOverride');
+  @override
+  late final GeneratedColumn<bool> useFinalGradeOverride =
+      GeneratedColumn<bool>('use_final_grade_override', aliasedName, false,
+          type: DriftSqlType.bool,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'CHECK ("use_final_grade_override" IN (0, 1))'),
+          defaultValue: const Constant(false));
+  static const VerificationMeta _finalGradeMeta =
+      const VerificationMeta('finalGrade');
+  @override
+  late final GeneratedColumn<double> finalGrade = GeneratedColumn<double>(
+      'final_grade', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _weightCategoriesJsonMeta =
+      const VerificationMeta('weightCategoriesJson');
+  @override
+  late final GeneratedColumn<String> weightCategoriesJson =
+      GeneratedColumn<String>('weight_categories_json', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _isCompletedMeta =
+      const VerificationMeta('isCompleted');
+  @override
+  late final GeneratedColumn<bool> isCompleted = GeneratedColumn<bool>(
+      'is_completed', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_completed" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _completedAtMeta =
+      const VerificationMeta('completedAt');
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+      'completed_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _cachedAtMeta =
+      const VerificationMeta('cachedAt');
+  @override
+  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
+      'cached_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _needsSyncMeta =
+      const VerificationMeta('needsSync');
+  @override
+  late final GeneratedColumn<bool> needsSync = GeneratedColumn<bool>(
+      'needs_sync', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("needs_sync" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        userId,
+        termId,
+        name,
+        code,
+        color,
+        credits,
+        teacherId,
+        location,
+        syllabus,
+        useFinalGradeOverride,
+        finalGrade,
+        weightCategoriesJson,
+        isCompleted,
+        completedAt,
+        createdAt,
+        updatedAt,
+        cachedAt,
+        needsSync,
+        isDeleted
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'subject_details';
+  @override
+  VerificationContext validateIntegrity(Insertable<SubjectDetail> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('term_id')) {
+      context.handle(_termIdMeta,
+          termId.isAcceptableOrUnknown(data['term_id']!, _termIdMeta));
+    } else if (isInserting) {
+      context.missing(_termIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('code')) {
+      context.handle(
+          _codeMeta, code.isAcceptableOrUnknown(data['code']!, _codeMeta));
+    }
+    if (data.containsKey('color')) {
+      context.handle(
+          _colorMeta, color.isAcceptableOrUnknown(data['color']!, _colorMeta));
+    }
+    if (data.containsKey('credits')) {
+      context.handle(_creditsMeta,
+          credits.isAcceptableOrUnknown(data['credits']!, _creditsMeta));
+    }
+    if (data.containsKey('teacher_id')) {
+      context.handle(_teacherIdMeta,
+          teacherId.isAcceptableOrUnknown(data['teacher_id']!, _teacherIdMeta));
+    }
+    if (data.containsKey('location')) {
+      context.handle(_locationMeta,
+          location.isAcceptableOrUnknown(data['location']!, _locationMeta));
+    }
+    if (data.containsKey('syllabus')) {
+      context.handle(_syllabusMeta,
+          syllabus.isAcceptableOrUnknown(data['syllabus']!, _syllabusMeta));
+    }
+    if (data.containsKey('use_final_grade_override')) {
+      context.handle(
+          _useFinalGradeOverrideMeta,
+          useFinalGradeOverride.isAcceptableOrUnknown(
+              data['use_final_grade_override']!, _useFinalGradeOverrideMeta));
+    }
+    if (data.containsKey('final_grade')) {
+      context.handle(
+          _finalGradeMeta,
+          finalGrade.isAcceptableOrUnknown(
+              data['final_grade']!, _finalGradeMeta));
+    }
+    if (data.containsKey('weight_categories_json')) {
+      context.handle(
+          _weightCategoriesJsonMeta,
+          weightCategoriesJson.isAcceptableOrUnknown(
+              data['weight_categories_json']!, _weightCategoriesJsonMeta));
+    }
+    if (data.containsKey('is_completed')) {
+      context.handle(
+          _isCompletedMeta,
+          isCompleted.isAcceptableOrUnknown(
+              data['is_completed']!, _isCompletedMeta));
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+          _completedAtMeta,
+          completedAt.isAcceptableOrUnknown(
+              data['completed_at']!, _completedAtMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(_cachedAtMeta,
+          cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta));
+    }
+    if (data.containsKey('needs_sync')) {
+      context.handle(_needsSyncMeta,
+          needsSync.isAcceptableOrUnknown(data['needs_sync']!, _needsSyncMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SubjectDetail map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SubjectDetail(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      termId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}term_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      code: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}code']),
+      color: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}color'])!,
+      credits: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}credits'])!,
+      teacherId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}teacher_id']),
+      location: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}location']),
+      syllabus: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}syllabus']),
+      useFinalGradeOverride: attachedDatabase.typeMapping.read(
+          DriftSqlType.bool,
+          data['${effectivePrefix}use_final_grade_override'])!,
+      finalGrade: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}final_grade']),
+      weightCategoriesJson: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}weight_categories_json']),
+      isCompleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_completed'])!,
+      completedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}completed_at']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      cachedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}cached_at'])!,
+      needsSync: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}needs_sync'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+    );
+  }
+
+  @override
+  $SubjectDetailsTable createAlias(String alias) {
+    return $SubjectDetailsTable(attachedDatabase, alias);
+  }
+}
+
+class SubjectDetail extends DataClass implements Insertable<SubjectDetail> {
+  final String id;
+  final String userId;
+  final String termId;
+  final String name;
+  final String? code;
+  final String color;
+  final int credits;
+  final String? teacherId;
+  final String? location;
+  final String? syllabus;
+  final bool useFinalGradeOverride;
+  final double? finalGrade;
+  final String? weightCategoriesJson;
+  final bool isCompleted;
+  final DateTime? completedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime cachedAt;
+  final bool needsSync;
+  final bool isDeleted;
+  const SubjectDetail(
+      {required this.id,
+      required this.userId,
+      required this.termId,
+      required this.name,
+      this.code,
+      required this.color,
+      required this.credits,
+      this.teacherId,
+      this.location,
+      this.syllabus,
+      required this.useFinalGradeOverride,
+      this.finalGrade,
+      this.weightCategoriesJson,
+      required this.isCompleted,
+      this.completedAt,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.cachedAt,
+      required this.needsSync,
+      required this.isDeleted});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['term_id'] = Variable<String>(termId);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || code != null) {
+      map['code'] = Variable<String>(code);
+    }
+    map['color'] = Variable<String>(color);
+    map['credits'] = Variable<int>(credits);
+    if (!nullToAbsent || teacherId != null) {
+      map['teacher_id'] = Variable<String>(teacherId);
+    }
+    if (!nullToAbsent || location != null) {
+      map['location'] = Variable<String>(location);
+    }
+    if (!nullToAbsent || syllabus != null) {
+      map['syllabus'] = Variable<String>(syllabus);
+    }
+    map['use_final_grade_override'] = Variable<bool>(useFinalGradeOverride);
+    if (!nullToAbsent || finalGrade != null) {
+      map['final_grade'] = Variable<double>(finalGrade);
+    }
+    if (!nullToAbsent || weightCategoriesJson != null) {
+      map['weight_categories_json'] = Variable<String>(weightCategoriesJson);
+    }
+    map['is_completed'] = Variable<bool>(isCompleted);
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['cached_at'] = Variable<DateTime>(cachedAt);
+    map['needs_sync'] = Variable<bool>(needsSync);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    return map;
+  }
+
+  SubjectDetailsCompanion toCompanion(bool nullToAbsent) {
+    return SubjectDetailsCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      termId: Value(termId),
+      name: Value(name),
+      code: code == null && nullToAbsent ? const Value.absent() : Value(code),
+      color: Value(color),
+      credits: Value(credits),
+      teacherId: teacherId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(teacherId),
+      location: location == null && nullToAbsent
+          ? const Value.absent()
+          : Value(location),
+      syllabus: syllabus == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syllabus),
+      useFinalGradeOverride: Value(useFinalGradeOverride),
+      finalGrade: finalGrade == null && nullToAbsent
+          ? const Value.absent()
+          : Value(finalGrade),
+      weightCategoriesJson: weightCategoriesJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(weightCategoriesJson),
+      isCompleted: Value(isCompleted),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      cachedAt: Value(cachedAt),
+      needsSync: Value(needsSync),
+      isDeleted: Value(isDeleted),
+    );
+  }
+
+  factory SubjectDetail.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SubjectDetail(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      termId: serializer.fromJson<String>(json['termId']),
+      name: serializer.fromJson<String>(json['name']),
+      code: serializer.fromJson<String?>(json['code']),
+      color: serializer.fromJson<String>(json['color']),
+      credits: serializer.fromJson<int>(json['credits']),
+      teacherId: serializer.fromJson<String?>(json['teacherId']),
+      location: serializer.fromJson<String?>(json['location']),
+      syllabus: serializer.fromJson<String?>(json['syllabus']),
+      useFinalGradeOverride:
+          serializer.fromJson<bool>(json['useFinalGradeOverride']),
+      finalGrade: serializer.fromJson<double?>(json['finalGrade']),
+      weightCategoriesJson:
+          serializer.fromJson<String?>(json['weightCategoriesJson']),
+      isCompleted: serializer.fromJson<bool>(json['isCompleted']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
+      needsSync: serializer.fromJson<bool>(json['needsSync']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'termId': serializer.toJson<String>(termId),
+      'name': serializer.toJson<String>(name),
+      'code': serializer.toJson<String?>(code),
+      'color': serializer.toJson<String>(color),
+      'credits': serializer.toJson<int>(credits),
+      'teacherId': serializer.toJson<String?>(teacherId),
+      'location': serializer.toJson<String?>(location),
+      'syllabus': serializer.toJson<String?>(syllabus),
+      'useFinalGradeOverride': serializer.toJson<bool>(useFinalGradeOverride),
+      'finalGrade': serializer.toJson<double?>(finalGrade),
+      'weightCategoriesJson': serializer.toJson<String?>(weightCategoriesJson),
+      'isCompleted': serializer.toJson<bool>(isCompleted),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'cachedAt': serializer.toJson<DateTime>(cachedAt),
+      'needsSync': serializer.toJson<bool>(needsSync),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+    };
+  }
+
+  SubjectDetail copyWith(
+          {String? id,
+          String? userId,
+          String? termId,
+          String? name,
+          Value<String?> code = const Value.absent(),
+          String? color,
+          int? credits,
+          Value<String?> teacherId = const Value.absent(),
+          Value<String?> location = const Value.absent(),
+          Value<String?> syllabus = const Value.absent(),
+          bool? useFinalGradeOverride,
+          Value<double?> finalGrade = const Value.absent(),
+          Value<String?> weightCategoriesJson = const Value.absent(),
+          bool? isCompleted,
+          Value<DateTime?> completedAt = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          DateTime? cachedAt,
+          bool? needsSync,
+          bool? isDeleted}) =>
+      SubjectDetail(
+        id: id ?? this.id,
+        userId: userId ?? this.userId,
+        termId: termId ?? this.termId,
+        name: name ?? this.name,
+        code: code.present ? code.value : this.code,
+        color: color ?? this.color,
+        credits: credits ?? this.credits,
+        teacherId: teacherId.present ? teacherId.value : this.teacherId,
+        location: location.present ? location.value : this.location,
+        syllabus: syllabus.present ? syllabus.value : this.syllabus,
+        useFinalGradeOverride:
+            useFinalGradeOverride ?? this.useFinalGradeOverride,
+        finalGrade: finalGrade.present ? finalGrade.value : this.finalGrade,
+        weightCategoriesJson: weightCategoriesJson.present
+            ? weightCategoriesJson.value
+            : this.weightCategoriesJson,
+        isCompleted: isCompleted ?? this.isCompleted,
+        completedAt: completedAt.present ? completedAt.value : this.completedAt,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        cachedAt: cachedAt ?? this.cachedAt,
+        needsSync: needsSync ?? this.needsSync,
+        isDeleted: isDeleted ?? this.isDeleted,
+      );
+  SubjectDetail copyWithCompanion(SubjectDetailsCompanion data) {
+    return SubjectDetail(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      termId: data.termId.present ? data.termId.value : this.termId,
+      name: data.name.present ? data.name.value : this.name,
+      code: data.code.present ? data.code.value : this.code,
+      color: data.color.present ? data.color.value : this.color,
+      credits: data.credits.present ? data.credits.value : this.credits,
+      teacherId: data.teacherId.present ? data.teacherId.value : this.teacherId,
+      location: data.location.present ? data.location.value : this.location,
+      syllabus: data.syllabus.present ? data.syllabus.value : this.syllabus,
+      useFinalGradeOverride: data.useFinalGradeOverride.present
+          ? data.useFinalGradeOverride.value
+          : this.useFinalGradeOverride,
+      finalGrade:
+          data.finalGrade.present ? data.finalGrade.value : this.finalGrade,
+      weightCategoriesJson: data.weightCategoriesJson.present
+          ? data.weightCategoriesJson.value
+          : this.weightCategoriesJson,
+      isCompleted:
+          data.isCompleted.present ? data.isCompleted.value : this.isCompleted,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+      needsSync: data.needsSync.present ? data.needsSync.value : this.needsSync,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SubjectDetail(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('termId: $termId, ')
+          ..write('name: $name, ')
+          ..write('code: $code, ')
+          ..write('color: $color, ')
+          ..write('credits: $credits, ')
+          ..write('teacherId: $teacherId, ')
+          ..write('location: $location, ')
+          ..write('syllabus: $syllabus, ')
+          ..write('useFinalGradeOverride: $useFinalGradeOverride, ')
+          ..write('finalGrade: $finalGrade, ')
+          ..write('weightCategoriesJson: $weightCategoriesJson, ')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('needsSync: $needsSync, ')
+          ..write('isDeleted: $isDeleted')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      userId,
+      termId,
+      name,
+      code,
+      color,
+      credits,
+      teacherId,
+      location,
+      syllabus,
+      useFinalGradeOverride,
+      finalGrade,
+      weightCategoriesJson,
+      isCompleted,
+      completedAt,
+      createdAt,
+      updatedAt,
+      cachedAt,
+      needsSync,
+      isDeleted);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SubjectDetail &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.termId == this.termId &&
+          other.name == this.name &&
+          other.code == this.code &&
+          other.color == this.color &&
+          other.credits == this.credits &&
+          other.teacherId == this.teacherId &&
+          other.location == this.location &&
+          other.syllabus == this.syllabus &&
+          other.useFinalGradeOverride == this.useFinalGradeOverride &&
+          other.finalGrade == this.finalGrade &&
+          other.weightCategoriesJson == this.weightCategoriesJson &&
+          other.isCompleted == this.isCompleted &&
+          other.completedAt == this.completedAt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.cachedAt == this.cachedAt &&
+          other.needsSync == this.needsSync &&
+          other.isDeleted == this.isDeleted);
+}
+
+class SubjectDetailsCompanion extends UpdateCompanion<SubjectDetail> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> termId;
+  final Value<String> name;
+  final Value<String?> code;
+  final Value<String> color;
+  final Value<int> credits;
+  final Value<String?> teacherId;
+  final Value<String?> location;
+  final Value<String?> syllabus;
+  final Value<bool> useFinalGradeOverride;
+  final Value<double?> finalGrade;
+  final Value<String?> weightCategoriesJson;
+  final Value<bool> isCompleted;
+  final Value<DateTime?> completedAt;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime> cachedAt;
+  final Value<bool> needsSync;
+  final Value<bool> isDeleted;
+  final Value<int> rowid;
+  const SubjectDetailsCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.termId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.code = const Value.absent(),
+    this.color = const Value.absent(),
+    this.credits = const Value.absent(),
+    this.teacherId = const Value.absent(),
+    this.location = const Value.absent(),
+    this.syllabus = const Value.absent(),
+    this.useFinalGradeOverride = const Value.absent(),
+    this.finalGrade = const Value.absent(),
+    this.weightCategoriesJson = const Value.absent(),
+    this.isCompleted = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.needsSync = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SubjectDetailsCompanion.insert({
+    required String id,
+    required String userId,
+    required String termId,
+    required String name,
+    this.code = const Value.absent(),
+    this.color = const Value.absent(),
+    this.credits = const Value.absent(),
+    this.teacherId = const Value.absent(),
+    this.location = const Value.absent(),
+    this.syllabus = const Value.absent(),
+    this.useFinalGradeOverride = const Value.absent(),
+    this.finalGrade = const Value.absent(),
+    this.weightCategoriesJson = const Value.absent(),
+    this.isCompleted = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.needsSync = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        userId = Value(userId),
+        termId = Value(termId),
+        name = Value(name);
+  static Insertable<SubjectDetail> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? termId,
+    Expression<String>? name,
+    Expression<String>? code,
+    Expression<String>? color,
+    Expression<int>? credits,
+    Expression<String>? teacherId,
+    Expression<String>? location,
+    Expression<String>? syllabus,
+    Expression<bool>? useFinalGradeOverride,
+    Expression<double>? finalGrade,
+    Expression<String>? weightCategoriesJson,
+    Expression<bool>? isCompleted,
+    Expression<DateTime>? completedAt,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? cachedAt,
+    Expression<bool>? needsSync,
+    Expression<bool>? isDeleted,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (termId != null) 'term_id': termId,
+      if (name != null) 'name': name,
+      if (code != null) 'code': code,
+      if (color != null) 'color': color,
+      if (credits != null) 'credits': credits,
+      if (teacherId != null) 'teacher_id': teacherId,
+      if (location != null) 'location': location,
+      if (syllabus != null) 'syllabus': syllabus,
+      if (useFinalGradeOverride != null)
+        'use_final_grade_override': useFinalGradeOverride,
+      if (finalGrade != null) 'final_grade': finalGrade,
+      if (weightCategoriesJson != null)
+        'weight_categories_json': weightCategoriesJson,
+      if (isCompleted != null) 'is_completed': isCompleted,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (needsSync != null) 'needs_sync': needsSync,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SubjectDetailsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? userId,
+      Value<String>? termId,
+      Value<String>? name,
+      Value<String?>? code,
+      Value<String>? color,
+      Value<int>? credits,
+      Value<String?>? teacherId,
+      Value<String?>? location,
+      Value<String?>? syllabus,
+      Value<bool>? useFinalGradeOverride,
+      Value<double?>? finalGrade,
+      Value<String?>? weightCategoriesJson,
+      Value<bool>? isCompleted,
+      Value<DateTime?>? completedAt,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<DateTime>? cachedAt,
+      Value<bool>? needsSync,
+      Value<bool>? isDeleted,
+      Value<int>? rowid}) {
+    return SubjectDetailsCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      termId: termId ?? this.termId,
+      name: name ?? this.name,
+      code: code ?? this.code,
+      color: color ?? this.color,
+      credits: credits ?? this.credits,
+      teacherId: teacherId ?? this.teacherId,
+      location: location ?? this.location,
+      syllabus: syllabus ?? this.syllabus,
+      useFinalGradeOverride:
+          useFinalGradeOverride ?? this.useFinalGradeOverride,
+      finalGrade: finalGrade ?? this.finalGrade,
+      weightCategoriesJson: weightCategoriesJson ?? this.weightCategoriesJson,
+      isCompleted: isCompleted ?? this.isCompleted,
+      completedAt: completedAt ?? this.completedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      cachedAt: cachedAt ?? this.cachedAt,
+      needsSync: needsSync ?? this.needsSync,
+      isDeleted: isDeleted ?? this.isDeleted,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (termId.present) {
+      map['term_id'] = Variable<String>(termId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (code.present) {
+      map['code'] = Variable<String>(code.value);
+    }
+    if (color.present) {
+      map['color'] = Variable<String>(color.value);
+    }
+    if (credits.present) {
+      map['credits'] = Variable<int>(credits.value);
+    }
+    if (teacherId.present) {
+      map['teacher_id'] = Variable<String>(teacherId.value);
+    }
+    if (location.present) {
+      map['location'] = Variable<String>(location.value);
+    }
+    if (syllabus.present) {
+      map['syllabus'] = Variable<String>(syllabus.value);
+    }
+    if (useFinalGradeOverride.present) {
+      map['use_final_grade_override'] =
+          Variable<bool>(useFinalGradeOverride.value);
+    }
+    if (finalGrade.present) {
+      map['final_grade'] = Variable<double>(finalGrade.value);
+    }
+    if (weightCategoriesJson.present) {
+      map['weight_categories_json'] =
+          Variable<String>(weightCategoriesJson.value);
+    }
+    if (isCompleted.present) {
+      map['is_completed'] = Variable<bool>(isCompleted.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<DateTime>(cachedAt.value);
+    }
+    if (needsSync.present) {
+      map['needs_sync'] = Variable<bool>(needsSync.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SubjectDetailsCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('termId: $termId, ')
+          ..write('name: $name, ')
+          ..write('code: $code, ')
+          ..write('color: $color, ')
+          ..write('credits: $credits, ')
+          ..write('teacherId: $teacherId, ')
+          ..write('location: $location, ')
+          ..write('syllabus: $syllabus, ')
+          ..write('useFinalGradeOverride: $useFinalGradeOverride, ')
+          ..write('finalGrade: $finalGrade, ')
+          ..write('weightCategoriesJson: $weightCategoriesJson, ')
+          ..write('isCompleted: $isCompleted, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('needsSync: $needsSync, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3870,6 +7837,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TermsTable terms = $TermsTable(this);
   late final $SubjectsTable subjects = $SubjectsTable(this);
   late final $ClassTemplatesTable classTemplates = $ClassTemplatesTable(this);
+  late final $AssignmentsTable assignments = $AssignmentsTable(this);
+  late final $ExamsTable exams = $ExamsTable(this);
+  late final $HolidaysTable holidays = $HolidaysTable(this);
+  late final $TeachersTable teachers = $TeachersTable(this);
+  late final $SubjectDetailsTable subjectDetails = $SubjectDetailsTable(this);
   late final GroupDao groupDao = GroupDao(this as AppDatabase);
   late final EventDao eventDao = EventDao(this as AppDatabase);
   late final UserDao userDao = UserDao(this as AppDatabase);
@@ -3877,6 +7849,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final SettingsDao settingsDao = SettingsDao(this as AppDatabase);
   late final MemberScheduleDao memberScheduleDao =
       MemberScheduleDao(this as AppDatabase);
+  late final AssignmentDao assignmentDao = AssignmentDao(this as AppDatabase);
+  late final ExamDao examDao = ExamDao(this as AppDatabase);
+  late final HolidayDao holidayDao = HolidayDao(this as AppDatabase);
+  late final TeacherDao teacherDao = TeacherDao(this as AppDatabase);
+  late final AcademicDao academicDao = AcademicDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3891,7 +7868,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         appSettings,
         terms,
         subjects,
-        classTemplates
+        classTemplates,
+        assignments,
+        exams,
+        holidays,
+        teachers,
+        subjectDetails
       ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules(
@@ -6617,6 +10599,1747 @@ typedef $$ClassTemplatesTableProcessedTableManager = ProcessedTableManager<
     (ClassTemplate, $$ClassTemplatesTableReferences),
     ClassTemplate,
     PrefetchHooks Function({bool subjectId})>;
+typedef $$AssignmentsTableCreateCompanionBuilder = AssignmentsCompanion
+    Function({
+  required String id,
+  required String userId,
+  required String termId,
+  required String subjectId,
+  required String title,
+  Value<String> description,
+  required DateTime dueDate,
+  Value<String> priority,
+  Value<int> weight,
+  Value<int> grade,
+  Value<String> status,
+  Value<bool> isGraded,
+  Value<DateTime?> completedAt,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime> cachedAt,
+  Value<bool> needsSync,
+  Value<bool> isDeleted,
+  Value<int> rowid,
+});
+typedef $$AssignmentsTableUpdateCompanionBuilder = AssignmentsCompanion
+    Function({
+  Value<String> id,
+  Value<String> userId,
+  Value<String> termId,
+  Value<String> subjectId,
+  Value<String> title,
+  Value<String> description,
+  Value<DateTime> dueDate,
+  Value<String> priority,
+  Value<int> weight,
+  Value<int> grade,
+  Value<String> status,
+  Value<bool> isGraded,
+  Value<DateTime?> completedAt,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime> cachedAt,
+  Value<bool> needsSync,
+  Value<bool> isDeleted,
+  Value<int> rowid,
+});
+
+class $$AssignmentsTableFilterComposer
+    extends Composer<_$AppDatabase, $AssignmentsTable> {
+  $$AssignmentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get termId => $composableBuilder(
+      column: $table.termId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get subjectId => $composableBuilder(
+      column: $table.subjectId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get dueDate => $composableBuilder(
+      column: $table.dueDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get priority => $composableBuilder(
+      column: $table.priority, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get weight => $composableBuilder(
+      column: $table.weight, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get grade => $composableBuilder(
+      column: $table.grade, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isGraded => $composableBuilder(
+      column: $table.isGraded, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get needsSync => $composableBuilder(
+      column: $table.needsSync, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+}
+
+class $$AssignmentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $AssignmentsTable> {
+  $$AssignmentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get termId => $composableBuilder(
+      column: $table.termId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get subjectId => $composableBuilder(
+      column: $table.subjectId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get dueDate => $composableBuilder(
+      column: $table.dueDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get priority => $composableBuilder(
+      column: $table.priority, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get weight => $composableBuilder(
+      column: $table.weight, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get grade => $composableBuilder(
+      column: $table.grade, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isGraded => $composableBuilder(
+      column: $table.isGraded, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get needsSync => $composableBuilder(
+      column: $table.needsSync, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+}
+
+class $$AssignmentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AssignmentsTable> {
+  $$AssignmentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get termId =>
+      $composableBuilder(column: $table.termId, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get dueDate =>
+      $composableBuilder(column: $table.dueDate, builder: (column) => column);
+
+  GeneratedColumn<String> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<int> get weight =>
+      $composableBuilder(column: $table.weight, builder: (column) => column);
+
+  GeneratedColumn<int> get grade =>
+      $composableBuilder(column: $table.grade, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<bool> get isGraded =>
+      $composableBuilder(column: $table.isGraded, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get needsSync =>
+      $composableBuilder(column: $table.needsSync, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+}
+
+class $$AssignmentsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $AssignmentsTable,
+    Assignment,
+    $$AssignmentsTableFilterComposer,
+    $$AssignmentsTableOrderingComposer,
+    $$AssignmentsTableAnnotationComposer,
+    $$AssignmentsTableCreateCompanionBuilder,
+    $$AssignmentsTableUpdateCompanionBuilder,
+    (Assignment, BaseReferences<_$AppDatabase, $AssignmentsTable, Assignment>),
+    Assignment,
+    PrefetchHooks Function()> {
+  $$AssignmentsTableTableManager(_$AppDatabase db, $AssignmentsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AssignmentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AssignmentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AssignmentsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> userId = const Value.absent(),
+            Value<String> termId = const Value.absent(),
+            Value<String> subjectId = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<DateTime> dueDate = const Value.absent(),
+            Value<String> priority = const Value.absent(),
+            Value<int> weight = const Value.absent(),
+            Value<int> grade = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<bool> isGraded = const Value.absent(),
+            Value<DateTime?> completedAt = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<bool> needsSync = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AssignmentsCompanion(
+            id: id,
+            userId: userId,
+            termId: termId,
+            subjectId: subjectId,
+            title: title,
+            description: description,
+            dueDate: dueDate,
+            priority: priority,
+            weight: weight,
+            grade: grade,
+            status: status,
+            isGraded: isGraded,
+            completedAt: completedAt,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            cachedAt: cachedAt,
+            needsSync: needsSync,
+            isDeleted: isDeleted,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String userId,
+            required String termId,
+            required String subjectId,
+            required String title,
+            Value<String> description = const Value.absent(),
+            required DateTime dueDate,
+            Value<String> priority = const Value.absent(),
+            Value<int> weight = const Value.absent(),
+            Value<int> grade = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<bool> isGraded = const Value.absent(),
+            Value<DateTime?> completedAt = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<bool> needsSync = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              AssignmentsCompanion.insert(
+            id: id,
+            userId: userId,
+            termId: termId,
+            subjectId: subjectId,
+            title: title,
+            description: description,
+            dueDate: dueDate,
+            priority: priority,
+            weight: weight,
+            grade: grade,
+            status: status,
+            isGraded: isGraded,
+            completedAt: completedAt,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            cachedAt: cachedAt,
+            needsSync: needsSync,
+            isDeleted: isDeleted,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$AssignmentsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $AssignmentsTable,
+    Assignment,
+    $$AssignmentsTableFilterComposer,
+    $$AssignmentsTableOrderingComposer,
+    $$AssignmentsTableAnnotationComposer,
+    $$AssignmentsTableCreateCompanionBuilder,
+    $$AssignmentsTableUpdateCompanionBuilder,
+    (Assignment, BaseReferences<_$AppDatabase, $AssignmentsTable, Assignment>),
+    Assignment,
+    PrefetchHooks Function()>;
+typedef $$ExamsTableCreateCompanionBuilder = ExamsCompanion Function({
+  required String id,
+  required String userId,
+  required String termId,
+  required String subjectId,
+  required String title,
+  Value<String> description,
+  required DateTime date,
+  Value<String?> startTime,
+  Value<String?> endTime,
+  Value<String?> location,
+  Value<String?> teacherId,
+  Value<int> weight,
+  Value<int> grade,
+  Value<bool> isCompleted,
+  Value<bool> isGraded,
+  Value<DateTime?> completedAt,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime> cachedAt,
+  Value<bool> needsSync,
+  Value<bool> isDeleted,
+  Value<int> rowid,
+});
+typedef $$ExamsTableUpdateCompanionBuilder = ExamsCompanion Function({
+  Value<String> id,
+  Value<String> userId,
+  Value<String> termId,
+  Value<String> subjectId,
+  Value<String> title,
+  Value<String> description,
+  Value<DateTime> date,
+  Value<String?> startTime,
+  Value<String?> endTime,
+  Value<String?> location,
+  Value<String?> teacherId,
+  Value<int> weight,
+  Value<int> grade,
+  Value<bool> isCompleted,
+  Value<bool> isGraded,
+  Value<DateTime?> completedAt,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime> cachedAt,
+  Value<bool> needsSync,
+  Value<bool> isDeleted,
+  Value<int> rowid,
+});
+
+class $$ExamsTableFilterComposer extends Composer<_$AppDatabase, $ExamsTable> {
+  $$ExamsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get termId => $composableBuilder(
+      column: $table.termId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get subjectId => $composableBuilder(
+      column: $table.subjectId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get startTime => $composableBuilder(
+      column: $table.startTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get endTime => $composableBuilder(
+      column: $table.endTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get location => $composableBuilder(
+      column: $table.location, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get teacherId => $composableBuilder(
+      column: $table.teacherId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get weight => $composableBuilder(
+      column: $table.weight, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get grade => $composableBuilder(
+      column: $table.grade, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isCompleted => $composableBuilder(
+      column: $table.isCompleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isGraded => $composableBuilder(
+      column: $table.isGraded, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get needsSync => $composableBuilder(
+      column: $table.needsSync, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+}
+
+class $$ExamsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ExamsTable> {
+  $$ExamsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get termId => $composableBuilder(
+      column: $table.termId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get subjectId => $composableBuilder(
+      column: $table.subjectId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get startTime => $composableBuilder(
+      column: $table.startTime, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get endTime => $composableBuilder(
+      column: $table.endTime, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get location => $composableBuilder(
+      column: $table.location, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get teacherId => $composableBuilder(
+      column: $table.teacherId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get weight => $composableBuilder(
+      column: $table.weight, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get grade => $composableBuilder(
+      column: $table.grade, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isCompleted => $composableBuilder(
+      column: $table.isCompleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isGraded => $composableBuilder(
+      column: $table.isGraded, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get needsSync => $composableBuilder(
+      column: $table.needsSync, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+}
+
+class $$ExamsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ExamsTable> {
+  $$ExamsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get termId =>
+      $composableBuilder(column: $table.termId, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectId =>
+      $composableBuilder(column: $table.subjectId, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get startTime =>
+      $composableBuilder(column: $table.startTime, builder: (column) => column);
+
+  GeneratedColumn<String> get endTime =>
+      $composableBuilder(column: $table.endTime, builder: (column) => column);
+
+  GeneratedColumn<String> get location =>
+      $composableBuilder(column: $table.location, builder: (column) => column);
+
+  GeneratedColumn<String> get teacherId =>
+      $composableBuilder(column: $table.teacherId, builder: (column) => column);
+
+  GeneratedColumn<int> get weight =>
+      $composableBuilder(column: $table.weight, builder: (column) => column);
+
+  GeneratedColumn<int> get grade =>
+      $composableBuilder(column: $table.grade, builder: (column) => column);
+
+  GeneratedColumn<bool> get isCompleted => $composableBuilder(
+      column: $table.isCompleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isGraded =>
+      $composableBuilder(column: $table.isGraded, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get needsSync =>
+      $composableBuilder(column: $table.needsSync, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+}
+
+class $$ExamsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ExamsTable,
+    Exam,
+    $$ExamsTableFilterComposer,
+    $$ExamsTableOrderingComposer,
+    $$ExamsTableAnnotationComposer,
+    $$ExamsTableCreateCompanionBuilder,
+    $$ExamsTableUpdateCompanionBuilder,
+    (Exam, BaseReferences<_$AppDatabase, $ExamsTable, Exam>),
+    Exam,
+    PrefetchHooks Function()> {
+  $$ExamsTableTableManager(_$AppDatabase db, $ExamsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ExamsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ExamsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ExamsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> userId = const Value.absent(),
+            Value<String> termId = const Value.absent(),
+            Value<String> subjectId = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<DateTime> date = const Value.absent(),
+            Value<String?> startTime = const Value.absent(),
+            Value<String?> endTime = const Value.absent(),
+            Value<String?> location = const Value.absent(),
+            Value<String?> teacherId = const Value.absent(),
+            Value<int> weight = const Value.absent(),
+            Value<int> grade = const Value.absent(),
+            Value<bool> isCompleted = const Value.absent(),
+            Value<bool> isGraded = const Value.absent(),
+            Value<DateTime?> completedAt = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<bool> needsSync = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ExamsCompanion(
+            id: id,
+            userId: userId,
+            termId: termId,
+            subjectId: subjectId,
+            title: title,
+            description: description,
+            date: date,
+            startTime: startTime,
+            endTime: endTime,
+            location: location,
+            teacherId: teacherId,
+            weight: weight,
+            grade: grade,
+            isCompleted: isCompleted,
+            isGraded: isGraded,
+            completedAt: completedAt,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            cachedAt: cachedAt,
+            needsSync: needsSync,
+            isDeleted: isDeleted,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String userId,
+            required String termId,
+            required String subjectId,
+            required String title,
+            Value<String> description = const Value.absent(),
+            required DateTime date,
+            Value<String?> startTime = const Value.absent(),
+            Value<String?> endTime = const Value.absent(),
+            Value<String?> location = const Value.absent(),
+            Value<String?> teacherId = const Value.absent(),
+            Value<int> weight = const Value.absent(),
+            Value<int> grade = const Value.absent(),
+            Value<bool> isCompleted = const Value.absent(),
+            Value<bool> isGraded = const Value.absent(),
+            Value<DateTime?> completedAt = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<bool> needsSync = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ExamsCompanion.insert(
+            id: id,
+            userId: userId,
+            termId: termId,
+            subjectId: subjectId,
+            title: title,
+            description: description,
+            date: date,
+            startTime: startTime,
+            endTime: endTime,
+            location: location,
+            teacherId: teacherId,
+            weight: weight,
+            grade: grade,
+            isCompleted: isCompleted,
+            isGraded: isGraded,
+            completedAt: completedAt,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            cachedAt: cachedAt,
+            needsSync: needsSync,
+            isDeleted: isDeleted,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$ExamsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ExamsTable,
+    Exam,
+    $$ExamsTableFilterComposer,
+    $$ExamsTableOrderingComposer,
+    $$ExamsTableAnnotationComposer,
+    $$ExamsTableCreateCompanionBuilder,
+    $$ExamsTableUpdateCompanionBuilder,
+    (Exam, BaseReferences<_$AppDatabase, $ExamsTable, Exam>),
+    Exam,
+    PrefetchHooks Function()>;
+typedef $$HolidaysTableCreateCompanionBuilder = HolidaysCompanion Function({
+  required String id,
+  required String userId,
+  required String name,
+  required DateTime startDate,
+  required DateTime endDate,
+  Value<String> source,
+  Value<String?> countryCode,
+  Value<DateTime> createdAt,
+  Value<DateTime> cachedAt,
+  Value<bool> needsSync,
+  Value<bool> isDeleted,
+  Value<int> rowid,
+});
+typedef $$HolidaysTableUpdateCompanionBuilder = HolidaysCompanion Function({
+  Value<String> id,
+  Value<String> userId,
+  Value<String> name,
+  Value<DateTime> startDate,
+  Value<DateTime> endDate,
+  Value<String> source,
+  Value<String?> countryCode,
+  Value<DateTime> createdAt,
+  Value<DateTime> cachedAt,
+  Value<bool> needsSync,
+  Value<bool> isDeleted,
+  Value<int> rowid,
+});
+
+class $$HolidaysTableFilterComposer
+    extends Composer<_$AppDatabase, $HolidaysTable> {
+  $$HolidaysTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get startDate => $composableBuilder(
+      column: $table.startDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get endDate => $composableBuilder(
+      column: $table.endDate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get source => $composableBuilder(
+      column: $table.source, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get countryCode => $composableBuilder(
+      column: $table.countryCode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get needsSync => $composableBuilder(
+      column: $table.needsSync, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+}
+
+class $$HolidaysTableOrderingComposer
+    extends Composer<_$AppDatabase, $HolidaysTable> {
+  $$HolidaysTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get startDate => $composableBuilder(
+      column: $table.startDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get endDate => $composableBuilder(
+      column: $table.endDate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get source => $composableBuilder(
+      column: $table.source, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get countryCode => $composableBuilder(
+      column: $table.countryCode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get needsSync => $composableBuilder(
+      column: $table.needsSync, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+}
+
+class $$HolidaysTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HolidaysTable> {
+  $$HolidaysTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startDate =>
+      $composableBuilder(column: $table.startDate, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endDate =>
+      $composableBuilder(column: $table.endDate, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get countryCode => $composableBuilder(
+      column: $table.countryCode, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get needsSync =>
+      $composableBuilder(column: $table.needsSync, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+}
+
+class $$HolidaysTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $HolidaysTable,
+    Holiday,
+    $$HolidaysTableFilterComposer,
+    $$HolidaysTableOrderingComposer,
+    $$HolidaysTableAnnotationComposer,
+    $$HolidaysTableCreateCompanionBuilder,
+    $$HolidaysTableUpdateCompanionBuilder,
+    (Holiday, BaseReferences<_$AppDatabase, $HolidaysTable, Holiday>),
+    Holiday,
+    PrefetchHooks Function()> {
+  $$HolidaysTableTableManager(_$AppDatabase db, $HolidaysTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HolidaysTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HolidaysTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HolidaysTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> userId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<DateTime> startDate = const Value.absent(),
+            Value<DateTime> endDate = const Value.absent(),
+            Value<String> source = const Value.absent(),
+            Value<String?> countryCode = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<bool> needsSync = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              HolidaysCompanion(
+            id: id,
+            userId: userId,
+            name: name,
+            startDate: startDate,
+            endDate: endDate,
+            source: source,
+            countryCode: countryCode,
+            createdAt: createdAt,
+            cachedAt: cachedAt,
+            needsSync: needsSync,
+            isDeleted: isDeleted,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String userId,
+            required String name,
+            required DateTime startDate,
+            required DateTime endDate,
+            Value<String> source = const Value.absent(),
+            Value<String?> countryCode = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<bool> needsSync = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              HolidaysCompanion.insert(
+            id: id,
+            userId: userId,
+            name: name,
+            startDate: startDate,
+            endDate: endDate,
+            source: source,
+            countryCode: countryCode,
+            createdAt: createdAt,
+            cachedAt: cachedAt,
+            needsSync: needsSync,
+            isDeleted: isDeleted,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$HolidaysTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $HolidaysTable,
+    Holiday,
+    $$HolidaysTableFilterComposer,
+    $$HolidaysTableOrderingComposer,
+    $$HolidaysTableAnnotationComposer,
+    $$HolidaysTableCreateCompanionBuilder,
+    $$HolidaysTableUpdateCompanionBuilder,
+    (Holiday, BaseReferences<_$AppDatabase, $HolidaysTable, Holiday>),
+    Holiday,
+    PrefetchHooks Function()>;
+typedef $$TeachersTableCreateCompanionBuilder = TeachersCompanion Function({
+  required String id,
+  required String userId,
+  required String name,
+  Value<String?> position,
+  Value<String?> department,
+  Value<String?> affiliation,
+  Value<String?> email,
+  Value<String?> phone,
+  Value<String?> officeLocation,
+  Value<String?> officeHours,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime> cachedAt,
+  Value<bool> needsSync,
+  Value<bool> isDeleted,
+  Value<int> rowid,
+});
+typedef $$TeachersTableUpdateCompanionBuilder = TeachersCompanion Function({
+  Value<String> id,
+  Value<String> userId,
+  Value<String> name,
+  Value<String?> position,
+  Value<String?> department,
+  Value<String?> affiliation,
+  Value<String?> email,
+  Value<String?> phone,
+  Value<String?> officeLocation,
+  Value<String?> officeHours,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime> cachedAt,
+  Value<bool> needsSync,
+  Value<bool> isDeleted,
+  Value<int> rowid,
+});
+
+class $$TeachersTableFilterComposer
+    extends Composer<_$AppDatabase, $TeachersTable> {
+  $$TeachersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get position => $composableBuilder(
+      column: $table.position, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get department => $composableBuilder(
+      column: $table.department, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get affiliation => $composableBuilder(
+      column: $table.affiliation, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get email => $composableBuilder(
+      column: $table.email, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get phone => $composableBuilder(
+      column: $table.phone, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get officeLocation => $composableBuilder(
+      column: $table.officeLocation,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get officeHours => $composableBuilder(
+      column: $table.officeHours, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get needsSync => $composableBuilder(
+      column: $table.needsSync, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+}
+
+class $$TeachersTableOrderingComposer
+    extends Composer<_$AppDatabase, $TeachersTable> {
+  $$TeachersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get position => $composableBuilder(
+      column: $table.position, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get department => $composableBuilder(
+      column: $table.department, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get affiliation => $composableBuilder(
+      column: $table.affiliation, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get email => $composableBuilder(
+      column: $table.email, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get phone => $composableBuilder(
+      column: $table.phone, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get officeLocation => $composableBuilder(
+      column: $table.officeLocation,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get officeHours => $composableBuilder(
+      column: $table.officeHours, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get needsSync => $composableBuilder(
+      column: $table.needsSync, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+}
+
+class $$TeachersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TeachersTable> {
+  $$TeachersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<String> get department => $composableBuilder(
+      column: $table.department, builder: (column) => column);
+
+  GeneratedColumn<String> get affiliation => $composableBuilder(
+      column: $table.affiliation, builder: (column) => column);
+
+  GeneratedColumn<String> get email =>
+      $composableBuilder(column: $table.email, builder: (column) => column);
+
+  GeneratedColumn<String> get phone =>
+      $composableBuilder(column: $table.phone, builder: (column) => column);
+
+  GeneratedColumn<String> get officeLocation => $composableBuilder(
+      column: $table.officeLocation, builder: (column) => column);
+
+  GeneratedColumn<String> get officeHours => $composableBuilder(
+      column: $table.officeHours, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get needsSync =>
+      $composableBuilder(column: $table.needsSync, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+}
+
+class $$TeachersTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $TeachersTable,
+    Teacher,
+    $$TeachersTableFilterComposer,
+    $$TeachersTableOrderingComposer,
+    $$TeachersTableAnnotationComposer,
+    $$TeachersTableCreateCompanionBuilder,
+    $$TeachersTableUpdateCompanionBuilder,
+    (Teacher, BaseReferences<_$AppDatabase, $TeachersTable, Teacher>),
+    Teacher,
+    PrefetchHooks Function()> {
+  $$TeachersTableTableManager(_$AppDatabase db, $TeachersTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TeachersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TeachersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TeachersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> userId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> position = const Value.absent(),
+            Value<String?> department = const Value.absent(),
+            Value<String?> affiliation = const Value.absent(),
+            Value<String?> email = const Value.absent(),
+            Value<String?> phone = const Value.absent(),
+            Value<String?> officeLocation = const Value.absent(),
+            Value<String?> officeHours = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<bool> needsSync = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TeachersCompanion(
+            id: id,
+            userId: userId,
+            name: name,
+            position: position,
+            department: department,
+            affiliation: affiliation,
+            email: email,
+            phone: phone,
+            officeLocation: officeLocation,
+            officeHours: officeHours,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            cachedAt: cachedAt,
+            needsSync: needsSync,
+            isDeleted: isDeleted,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String userId,
+            required String name,
+            Value<String?> position = const Value.absent(),
+            Value<String?> department = const Value.absent(),
+            Value<String?> affiliation = const Value.absent(),
+            Value<String?> email = const Value.absent(),
+            Value<String?> phone = const Value.absent(),
+            Value<String?> officeLocation = const Value.absent(),
+            Value<String?> officeHours = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<bool> needsSync = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TeachersCompanion.insert(
+            id: id,
+            userId: userId,
+            name: name,
+            position: position,
+            department: department,
+            affiliation: affiliation,
+            email: email,
+            phone: phone,
+            officeLocation: officeLocation,
+            officeHours: officeHours,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            cachedAt: cachedAt,
+            needsSync: needsSync,
+            isDeleted: isDeleted,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$TeachersTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $TeachersTable,
+    Teacher,
+    $$TeachersTableFilterComposer,
+    $$TeachersTableOrderingComposer,
+    $$TeachersTableAnnotationComposer,
+    $$TeachersTableCreateCompanionBuilder,
+    $$TeachersTableUpdateCompanionBuilder,
+    (Teacher, BaseReferences<_$AppDatabase, $TeachersTable, Teacher>),
+    Teacher,
+    PrefetchHooks Function()>;
+typedef $$SubjectDetailsTableCreateCompanionBuilder = SubjectDetailsCompanion
+    Function({
+  required String id,
+  required String userId,
+  required String termId,
+  required String name,
+  Value<String?> code,
+  Value<String> color,
+  Value<int> credits,
+  Value<String?> teacherId,
+  Value<String?> location,
+  Value<String?> syllabus,
+  Value<bool> useFinalGradeOverride,
+  Value<double?> finalGrade,
+  Value<String?> weightCategoriesJson,
+  Value<bool> isCompleted,
+  Value<DateTime?> completedAt,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime> cachedAt,
+  Value<bool> needsSync,
+  Value<bool> isDeleted,
+  Value<int> rowid,
+});
+typedef $$SubjectDetailsTableUpdateCompanionBuilder = SubjectDetailsCompanion
+    Function({
+  Value<String> id,
+  Value<String> userId,
+  Value<String> termId,
+  Value<String> name,
+  Value<String?> code,
+  Value<String> color,
+  Value<int> credits,
+  Value<String?> teacherId,
+  Value<String?> location,
+  Value<String?> syllabus,
+  Value<bool> useFinalGradeOverride,
+  Value<double?> finalGrade,
+  Value<String?> weightCategoriesJson,
+  Value<bool> isCompleted,
+  Value<DateTime?> completedAt,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime> cachedAt,
+  Value<bool> needsSync,
+  Value<bool> isDeleted,
+  Value<int> rowid,
+});
+
+class $$SubjectDetailsTableFilterComposer
+    extends Composer<_$AppDatabase, $SubjectDetailsTable> {
+  $$SubjectDetailsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get termId => $composableBuilder(
+      column: $table.termId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get code => $composableBuilder(
+      column: $table.code, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get color => $composableBuilder(
+      column: $table.color, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get credits => $composableBuilder(
+      column: $table.credits, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get teacherId => $composableBuilder(
+      column: $table.teacherId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get location => $composableBuilder(
+      column: $table.location, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get syllabus => $composableBuilder(
+      column: $table.syllabus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get useFinalGradeOverride => $composableBuilder(
+      column: $table.useFinalGradeOverride,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get finalGrade => $composableBuilder(
+      column: $table.finalGrade, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get weightCategoriesJson => $composableBuilder(
+      column: $table.weightCategoriesJson,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isCompleted => $composableBuilder(
+      column: $table.isCompleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get needsSync => $composableBuilder(
+      column: $table.needsSync, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+}
+
+class $$SubjectDetailsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SubjectDetailsTable> {
+  $$SubjectDetailsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get termId => $composableBuilder(
+      column: $table.termId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get code => $composableBuilder(
+      column: $table.code, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get color => $composableBuilder(
+      column: $table.color, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get credits => $composableBuilder(
+      column: $table.credits, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get teacherId => $composableBuilder(
+      column: $table.teacherId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get location => $composableBuilder(
+      column: $table.location, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get syllabus => $composableBuilder(
+      column: $table.syllabus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get useFinalGradeOverride => $composableBuilder(
+      column: $table.useFinalGradeOverride,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get finalGrade => $composableBuilder(
+      column: $table.finalGrade, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get weightCategoriesJson => $composableBuilder(
+      column: $table.weightCategoriesJson,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isCompleted => $composableBuilder(
+      column: $table.isCompleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get needsSync => $composableBuilder(
+      column: $table.needsSync, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+}
+
+class $$SubjectDetailsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SubjectDetailsTable> {
+  $$SubjectDetailsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get termId =>
+      $composableBuilder(column: $table.termId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get code =>
+      $composableBuilder(column: $table.code, builder: (column) => column);
+
+  GeneratedColumn<String> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<int> get credits =>
+      $composableBuilder(column: $table.credits, builder: (column) => column);
+
+  GeneratedColumn<String> get teacherId =>
+      $composableBuilder(column: $table.teacherId, builder: (column) => column);
+
+  GeneratedColumn<String> get location =>
+      $composableBuilder(column: $table.location, builder: (column) => column);
+
+  GeneratedColumn<String> get syllabus =>
+      $composableBuilder(column: $table.syllabus, builder: (column) => column);
+
+  GeneratedColumn<bool> get useFinalGradeOverride => $composableBuilder(
+      column: $table.useFinalGradeOverride, builder: (column) => column);
+
+  GeneratedColumn<double> get finalGrade => $composableBuilder(
+      column: $table.finalGrade, builder: (column) => column);
+
+  GeneratedColumn<String> get weightCategoriesJson => $composableBuilder(
+      column: $table.weightCategoriesJson, builder: (column) => column);
+
+  GeneratedColumn<bool> get isCompleted => $composableBuilder(
+      column: $table.isCompleted, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get needsSync =>
+      $composableBuilder(column: $table.needsSync, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+}
+
+class $$SubjectDetailsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SubjectDetailsTable,
+    SubjectDetail,
+    $$SubjectDetailsTableFilterComposer,
+    $$SubjectDetailsTableOrderingComposer,
+    $$SubjectDetailsTableAnnotationComposer,
+    $$SubjectDetailsTableCreateCompanionBuilder,
+    $$SubjectDetailsTableUpdateCompanionBuilder,
+    (
+      SubjectDetail,
+      BaseReferences<_$AppDatabase, $SubjectDetailsTable, SubjectDetail>
+    ),
+    SubjectDetail,
+    PrefetchHooks Function()> {
+  $$SubjectDetailsTableTableManager(
+      _$AppDatabase db, $SubjectDetailsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SubjectDetailsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SubjectDetailsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SubjectDetailsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> userId = const Value.absent(),
+            Value<String> termId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> code = const Value.absent(),
+            Value<String> color = const Value.absent(),
+            Value<int> credits = const Value.absent(),
+            Value<String?> teacherId = const Value.absent(),
+            Value<String?> location = const Value.absent(),
+            Value<String?> syllabus = const Value.absent(),
+            Value<bool> useFinalGradeOverride = const Value.absent(),
+            Value<double?> finalGrade = const Value.absent(),
+            Value<String?> weightCategoriesJson = const Value.absent(),
+            Value<bool> isCompleted = const Value.absent(),
+            Value<DateTime?> completedAt = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<bool> needsSync = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SubjectDetailsCompanion(
+            id: id,
+            userId: userId,
+            termId: termId,
+            name: name,
+            code: code,
+            color: color,
+            credits: credits,
+            teacherId: teacherId,
+            location: location,
+            syllabus: syllabus,
+            useFinalGradeOverride: useFinalGradeOverride,
+            finalGrade: finalGrade,
+            weightCategoriesJson: weightCategoriesJson,
+            isCompleted: isCompleted,
+            completedAt: completedAt,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            cachedAt: cachedAt,
+            needsSync: needsSync,
+            isDeleted: isDeleted,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String userId,
+            required String termId,
+            required String name,
+            Value<String?> code = const Value.absent(),
+            Value<String> color = const Value.absent(),
+            Value<int> credits = const Value.absent(),
+            Value<String?> teacherId = const Value.absent(),
+            Value<String?> location = const Value.absent(),
+            Value<String?> syllabus = const Value.absent(),
+            Value<bool> useFinalGradeOverride = const Value.absent(),
+            Value<double?> finalGrade = const Value.absent(),
+            Value<String?> weightCategoriesJson = const Value.absent(),
+            Value<bool> isCompleted = const Value.absent(),
+            Value<DateTime?> completedAt = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<bool> needsSync = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SubjectDetailsCompanion.insert(
+            id: id,
+            userId: userId,
+            termId: termId,
+            name: name,
+            code: code,
+            color: color,
+            credits: credits,
+            teacherId: teacherId,
+            location: location,
+            syllabus: syllabus,
+            useFinalGradeOverride: useFinalGradeOverride,
+            finalGrade: finalGrade,
+            weightCategoriesJson: weightCategoriesJson,
+            isCompleted: isCompleted,
+            completedAt: completedAt,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            cachedAt: cachedAt,
+            needsSync: needsSync,
+            isDeleted: isDeleted,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$SubjectDetailsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $SubjectDetailsTable,
+    SubjectDetail,
+    $$SubjectDetailsTableFilterComposer,
+    $$SubjectDetailsTableOrderingComposer,
+    $$SubjectDetailsTableAnnotationComposer,
+    $$SubjectDetailsTableCreateCompanionBuilder,
+    $$SubjectDetailsTableUpdateCompanionBuilder,
+    (
+      SubjectDetail,
+      BaseReferences<_$AppDatabase, $SubjectDetailsTable, SubjectDetail>
+    ),
+    SubjectDetail,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6641,4 +12364,14 @@ class $AppDatabaseManager {
       $$SubjectsTableTableManager(_db, _db.subjects);
   $$ClassTemplatesTableTableManager get classTemplates =>
       $$ClassTemplatesTableTableManager(_db, _db.classTemplates);
+  $$AssignmentsTableTableManager get assignments =>
+      $$AssignmentsTableTableManager(_db, _db.assignments);
+  $$ExamsTableTableManager get exams =>
+      $$ExamsTableTableManager(_db, _db.exams);
+  $$HolidaysTableTableManager get holidays =>
+      $$HolidaysTableTableManager(_db, _db.holidays);
+  $$TeachersTableTableManager get teachers =>
+      $$TeachersTableTableManager(_db, _db.teachers);
+  $$SubjectDetailsTableTableManager get subjectDetails =>
+      $$SubjectDetailsTableTableManager(_db, _db.subjectDetails);
 }

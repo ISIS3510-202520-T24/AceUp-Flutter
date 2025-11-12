@@ -1,10 +1,9 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // Firebase
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart' show User;
+import 'package:firebase_auth/firebase_auth.dart' show User; // ignore: uri_does_not_exist
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 
@@ -42,6 +41,7 @@ import 'core/connectivity/connectivity_manager.dart';
 // Data
 import 'data/local/database/app_database.dart';
 import 'data/repositories/shared_repository.dart';
+import 'data/repositories/academic_repository.dart';
 
 // Tema
 import 'themes/app_theme.dart';
@@ -66,6 +66,12 @@ Future<void> main() async {
   
   // 5) Initialize SharedRepository
   final sharedRepository = SharedRepository(
+    database: database,
+    firestore: FirebaseFirestore.instance,
+    connectivity: connectivity,
+  );
+
+  final academicRepository = AcademicRepository(
     database: database,
     firestore: FirebaseFirestore.instance,
     connectivity: connectivity,
@@ -97,6 +103,7 @@ Future<void> main() async {
     ..put<AuthService>(authService)
     ..put<BiometricService>(bioService)
     ..put<SharedRepository>(sharedRepository)
+    ..put<AcademicRepository>(academicRepository)
     ..put<ConnectivityManager>(connectivity)
     ..put<SyncService>(syncService)
     ..put<LoginViewModel>(loginVM);
@@ -124,6 +131,7 @@ Future<void> main() async {
           Provider<AuthService>.value(value: authService),
           Provider<BiometricService>.value(value: bioService),
           Provider<SharedRepository>.value(value: sharedRepository),
+          Provider<AcademicRepository>.value(value: academicRepository),
           Provider<ConnectivityManager>.value(value: connectivity),
           
           // SyncService es ChangeNotifier, debe usar ChangeNotifierProvider

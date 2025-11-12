@@ -1,60 +1,26 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/assignments/assignment_model.dart';
+import '../../data/repositories/academic_repository.dart';
 import '../subjects/subject_service.dart';
 import '../analytics/analytics_service.dart';
 
 class AssignmentService {
+  final AcademicRepository _repository;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final SubjectService _subjectService = SubjectService();
   final AnalyticsService _analytics = AnalyticsService();
 
-  /// Gets all assignments for a user
+  AssignmentService({required AcademicRepository repository})
+      : _repository = repository;
+
+  /// Gets all assignments for a user (using offline-first repository)
   Future<List<Assignment>> getAllAssignmentsForUser(String userId) async {
-    List<Assignment> allAssignments = [];
-
-    try {
-      // Navigate: users/{userId}/terms/{termId}/subjects/{subjectId}/assignments
-      final termsSnapshot = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .get();
-
-      for (var termDoc in termsSnapshot.docs) {
-        final subjectsSnapshot = await termDoc.reference.collection('subjects').get();
-
-        for (var subjectDoc in subjectsSnapshot.docs) {
-          final subjectData = subjectDoc.data();
-          final subjectName = subjectData['name'] ?? 'Unknown Subject';
-
-          final assignmentsSnapshot =
-          await subjectDoc.reference.collection('assignments').get();
-
-          for (var assignmentDoc in assignmentsSnapshot.docs) {
-            allAssignments.add(Assignment.fromFirestore(
-              assignmentDoc,
-              subjectName,
-              termId: termDoc.id,
-              subjectId: subjectDoc.id,
-            ));
-          }
-        }
-      }
-    } catch (e) {
-      print('Error loading all assignments: $e');
-      rethrow;
-    }
-
-    return allAssignments;
+    return await _repository.getAllAssignmentsForUser(userId);
   }
 
-  /// Gets assignments due today for a user
+  /// Gets assignments due today for a user (using offline-first repository)
   Future<List<Assignment>> getAssignmentsDueToday(String userId, DateTime today) async {
-    final allAssignments = await getAllAssignmentsForUser(userId);
-
-    return allAssignments.where((assignment) {
-      return assignment.isDueToday(today);
-    }).toList();
+    return await _repository.getAssignmentsDueToday(userId, today);
   }
 
   /// Updates the status of an assignment
@@ -66,17 +32,9 @@ class AssignmentService {
       String newStatus,
       ) async {
     try {
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .doc(termId)
-          .collection('subjects')
-          .doc(subjectId)
-          .collection('assignments')
-          .doc(assignmentId)
-          .update({'status': newStatus});
-      
+      // Update via repository (offline-first)
+      await _repository.updateAssignmentStatus(assignmentId, newStatus);
+
       // Re-evaluar completitud del subject (BQ 3.1)
       await _subjectService.reevaluateSubjectCompleteness(userId, termId, subjectId);
     } catch (e) {
@@ -88,14 +46,14 @@ class AssignmentService {
   /// Creates or updates an assignment and re-evaluates subject completeness
   /// **Business Question 3.1**: Trackea cambios en weights para GPA
   Future<void> saveAssignment(
-    String userId,
-    String termId,
-    String subjectId,
-    String assignmentId,
-    Map<String, dynamic> assignmentData,
-  ) async {
+      String userId,
+      String termId,
+      String subjectId,
+      String assignmentId,
+      Map<String, dynamic> assignmentData,
+      ) async {
     try {
-      // Obtener weight anterior si existe
+      // Obtener weight anterior si existe (from Firestore for analytics)
       final assignmentRef = _firestore
           .collection('users')
           .doc(userId)
@@ -107,16 +65,33 @@ class AssignmentService {
           .doc(assignmentId);
 
       final existingDoc = await assignmentRef.get();
-      final oldWeight = existingDoc.exists 
+      final oldWeight = existingDoc.exists
           ? (existingDoc.data()?['weight'] as int? ?? 0)
           : 0;
       final newWeight = assignmentData['weight'] as int? ?? 0;
 
-      await assignmentRef.set(assignmentData, SetOptions(merge: true));
-      
+      // Create Assignment model
+      final assignment = Assignment(
+        id: assignmentId,
+        title: assignmentData['title'] ?? '',
+        description: assignmentData['description'] ?? '',
+        dueDate: (assignmentData['dueDate'] as Timestamp).toDate(),
+        priority: assignmentData['priority'] ?? 'Medium',
+        weight: newWeight,
+        grade: assignmentData['grade'] ?? 0,
+        status: assignmentData['status'] ?? 'Pending',
+        subjectName: '', // Will be populated from cache if needed
+        termId: termId,
+        subjectId: subjectId,
+        userId: userId,
+      );
+
+      // Save via repository (offline-first)
+      await _repository.saveAssignment(assignment);
+
       // Re-evaluar completitud del subject después de guardar
       await _subjectService.reevaluateSubjectCompleteness(userId, termId, subjectId);
-      
+
       // 📊 Analytics: Track cambio de weight (BQ 3.1)
       if (oldWeight != newWeight) {
         final totalWeightAfter = await _subjectService.getTotalWeightForSubject(
@@ -124,7 +99,7 @@ class AssignmentService {
           termId,
           subjectId,
         );
-        
+
         await _analytics.trackAssignmentWeightChanged(
           userId: userId,
           subjectId: subjectId,
@@ -134,7 +109,7 @@ class AssignmentService {
           totalWeightAfter: totalWeightAfter,
         );
       }
-      
+
       print('✅ Assignment saved and subject completeness updated');
     } catch (e) {
       print('❌ Error saving assignment: $e');
@@ -144,26 +119,18 @@ class AssignmentService {
 
   /// Deletes an assignment and re-evaluates subject completeness
   Future<void> deleteAssignment(
-    String userId,
-    String termId,
-    String subjectId,
-    String assignmentId,
-  ) async {
+      String userId,
+      String termId,
+      String subjectId,
+      String assignmentId,
+      ) async {
     try {
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .doc(termId)
-          .collection('subjects')
-          .doc(subjectId)
-          .collection('assignments')
-          .doc(assignmentId)
-          .delete();
-      
+      // Delete via repository (offline-first soft delete)
+      await _repository.deleteAssignment(assignmentId);
+
       // Re-evaluar completitud del subject después de borrar
       await _subjectService.reevaluateSubjectCompleteness(userId, termId, subjectId);
-      
+
       print('✅ Assignment deleted and subject completeness updated');
     } catch (e) {
       print('❌ Error deleting assignment: $e');
@@ -173,21 +140,11 @@ class AssignmentService {
 
   /// Gets pending assignments sorted by due date (closest first)
   Future<List<Assignment>> getPendingAssignments(String userId) async {
-    final allAssignments = await getAllAssignmentsForUser(userId);
-
-    final pending = allAssignments.where((a) => a.isPending).toList();
-    pending.sort((a, b) => a.dueDate.compareTo(b.dueDate));
-
-    return pending;
+    return await _repository.getPendingAssignments(userId);
   }
 
   /// Gets completed assignments sorted by due date (most recent first)
   Future<List<Assignment>> getCompletedAssignments(String userId) async {
-    final allAssignments = await getAllAssignmentsForUser(userId);
-
-    final completed = allAssignments.where((a) => a.isCompleted).toList();
-    completed.sort((a, b) => b.dueDate.compareTo(a.dueDate));
-
-    return completed;
+    return await _repository.getCompletedAssignments(userId);
   }
 }
