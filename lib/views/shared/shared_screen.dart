@@ -598,7 +598,7 @@ class _SharedScreenState extends State<SharedScreen> {
                 backgroundImage: AssetImage(selectedPresetAvatar!),
               );
             } else if (existingImageUrl != null) {
-              // Mostrar imagen existente
+              // Mostrar imagen existente con caché optimizado
               avatarWidget = CachedNetworkImage(
                 imageUrl: existingImageUrl,
                 imageBuilder: (context, imageProvider) => CircleAvatar(
@@ -613,6 +613,11 @@ class _SharedScreenState extends State<SharedScreen> {
                   radius: 40,
                   child: Icon(Icons.group),
                 ),
+                // Configuración de caché consistente con la lista
+                memCacheHeight: 160,  // 2x el tamaño de display (80px)
+                memCacheWidth: 160,
+                maxHeightDiskCache: 240,  // Tamaño máximo en disco
+                maxWidthDiskCache: 240,
               );
             } else {
               // Avatar por defecto

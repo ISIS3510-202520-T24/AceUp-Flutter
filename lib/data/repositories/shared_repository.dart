@@ -202,7 +202,7 @@ class SharedRepository {
     
     print('✅ [DEBUG] Group saved to local DB with imageUrl: ${group.imageUrl}');
 
-    // 2. Insert group members into GroupMembers table
+    // 2. Insert group members into GroupMembers table AND queue for sync
     for (final uid in group.memberUids) {
       try {
         String nick = 'User';
@@ -231,20 +231,40 @@ class SharedRepository {
           }
         }
 
+        final memberId = '${group.id}_$uid';
+        
+        // Insert into local GroupMembers table
         await _db.groupDao.addMember(db.GroupMembersCompanion.insert(
-          id: '${group.id}_$uid',
+          id: memberId,
           groupId: group.id,
           userId: uid,
           userNick: nick,
           userEmail: email,
           joinedAt: DateTime.now(),
         ));
+        
+        // 🔥 QUEUE MEMBER FOR SYNC TO FIRESTORE
+        await _db.syncDao.addToSyncQueue(db.SyncQueueCompanion.insert(
+          entityType: 'group_member',
+          entityId: memberId,
+          operation: 'create',
+          createdAt: DateTime.now(),
+          dataJson: Value(jsonEncode({
+            'groupId': group.id,
+            'uid': uid,
+            'nick': nick,
+            'email': email,
+            'joinedAt': DateTime.now().toIso8601String(),
+          })),
+        ));
+        
+        print('✅ Member $uid queued for sync');
       } catch (e) {
         print('⚠️  Failed to add member $uid: $e');
       }
     }
 
-    // 3. Queue for sync
+    // 3. Queue group for sync
     await _db.syncDao.addToSyncQueue(db.SyncQueueCompanion.insert(
       entityType: 'group',
       entityId: group.id,
@@ -257,7 +277,7 @@ class SharedRepository {
       })),
     ));
 
-    print('✅ Group created locally, queued for sync');
+    print('✅ Group created locally, group + ${group.memberUids.length} members queued for sync');
   }
 
   /// Update group (queues for sync)
@@ -265,6 +285,13 @@ class SharedRepository {
     final dbGroup = await _db.groupDao.getGroupById(group.id);
     if (dbGroup == null) return;
 
+    // Get old member UIDs to detect deletions
+    final oldMemberUids = dbGroup.memberUids.split(',').where((uid) => uid.isNotEmpty).toSet();
+    final newMemberUids = group.memberUids.toSet();
+    
+    // Detect removed members
+    final removedUids = oldMemberUids.difference(newMemberUids);
+    
     await _db.groupDao.updateGroup(db.Group(
       id: group.id,
       name: group.name,
@@ -277,6 +304,22 @@ class SharedRepository {
 
     // Update group members: remove old ones and add new ones
     await _db.groupDao.removeAllMembers(group.id);
+    
+    // 🔥 QUEUE DELETE OPERATIONS FOR REMOVED MEMBERS
+    for (final uid in removedUids) {
+      final memberId = '${group.id}_$uid';
+      await _db.syncDao.addToSyncQueue(db.SyncQueueCompanion.insert(
+        entityType: 'group_member',
+        entityId: memberId,
+        operation: 'delete',
+        createdAt: DateTime.now(),
+        dataJson: Value(jsonEncode({
+          'groupId': group.id,
+          'uid': uid,
+        })),
+      ));
+      print('✅ Member $uid queued for deletion');
+    }
     
     for (final uid in group.memberUids) {
       try {
@@ -306,19 +349,40 @@ class SharedRepository {
           }
         }
 
+        final memberId = '${group.id}_$uid';
+        
+        // Insert into local GroupMembers table
         await _db.groupDao.addMember(db.GroupMembersCompanion.insert(
-          id: '${group.id}_$uid',
+          id: memberId,
           groupId: group.id,
           userId: uid,
           userNick: nick,
           userEmail: email,
           joinedAt: DateTime.now(),
         ));
+        
+        // 🔥 QUEUE MEMBER FOR SYNC TO FIRESTORE
+        await _db.syncDao.addToSyncQueue(db.SyncQueueCompanion.insert(
+          entityType: 'group_member',
+          entityId: memberId,
+          operation: 'create',
+          createdAt: DateTime.now(),
+          dataJson: Value(jsonEncode({
+            'groupId': group.id,
+            'uid': uid,
+            'nick': nick,
+            'email': email,
+            'joinedAt': DateTime.now().toIso8601String(),
+          })),
+        ));
+        
+        print('✅ Member $uid queued for sync');
       } catch (e) {
         print('⚠️  Failed to update member $uid: $e');
       }
     }
 
+    // Queue group for sync
     await _db.syncDao.addToSyncQueue(db.SyncQueueCompanion.insert(
       entityType: 'group',
       entityId: group.id,
@@ -331,7 +395,7 @@ class SharedRepository {
       })),
     ));
 
-    print('✅ Group updated locally, queued for sync');
+    print('✅ Group updated locally, group + ${group.memberUids.length} members queued for sync');
   }
 
   /// Delete group (queues for sync)

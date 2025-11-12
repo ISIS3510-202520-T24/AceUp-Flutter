@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
@@ -14,31 +15,27 @@ class GroupImageService {
 
   /// Uploads a group image to Firebase Storage.
   /// 
+  /// 🔹 ISOLATE: Uses compute() to compress image in separate isolate, preventing UI freeze.
   /// The image is compressed to 512x512 pixels with 85% quality to save bandwidth.
   /// Returns the download URL if successful, null otherwise.
   /// 
   /// Path format: group_images/{groupId}.jpg
   Future<String?> uploadGroupImage(File imageFile, String groupId) async {
     try {
-      // Read and decode image
+      // Read image bytes
       final bytes = await imageFile.readAsBytes();
-      img.Image? image = img.decodeImage(bytes);
       
-      if (image == null) {
-        debugPrint('Failed to decode image');
+      // 🔹 ISOLATE: Comprimir imagen en isolate separado usando compute()
+      // compute() ejecuta _compressImageInIsolate en un thread de background
+      debugPrint('🔄 Comprimiendo imagen en isolate...');
+      final compressed = await compute(_compressImageInIsolate, bytes);
+      
+      if (compressed == null) {
+        debugPrint('❌ Failed to compress image in isolate');
         return null;
       }
-
-      // Resize to 512x512 maintaining aspect ratio
-      img.Image resized;
-      if (image.width > image.height) {
-        resized = img.copyResize(image, width: _maxImageSize);
-      } else {
-        resized = img.copyResize(image, height: _maxImageSize);
-      }
-
-      // Encode as JPEG with compression
-      final compressed = img.encodeJpg(resized, quality: _jpegQuality);
+      
+      debugPrint('✅ Imagen comprimida en isolate (${compressed.length} bytes)');
 
       // Upload to Firebase Storage
       final ref = _storage.ref().child('group_images/$groupId.jpg');
@@ -92,5 +89,32 @@ class GroupImageService {
       debugPrint('ℹNo image found for groupId: $groupId');
       return null;
     }
+  }
+}
+
+/// 🔹 ISOLATE: Función top-level que se ejecuta en un isolate separado
+/// Esta función DEBE estar fuera de la clase para poder ser usada con compute()
+/// 
+/// Recibe bytes de imagen y retorna bytes comprimidos en JPEG
+Uint8List? _compressImageInIsolate(Uint8List bytes) {
+  try {
+    // Decode image
+    img.Image? image = img.decodeImage(bytes);
+    if (image == null) return null;
+
+    // Resize to 512x512 maintaining aspect ratio
+    img.Image resized;
+    if (image.width > image.height) {
+      resized = img.copyResize(image, width: 512);
+    } else {
+      resized = img.copyResize(image, height: 512);
+    }
+
+    // Encode as JPEG with 85% quality
+    final compressed = img.encodeJpg(resized, quality: 85);
+    return Uint8List.fromList(compressed);
+  } catch (e) {
+    debugPrint('Error in isolate compression: $e');
+    return null;
   }
 }

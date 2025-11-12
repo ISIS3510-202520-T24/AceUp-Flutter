@@ -18,6 +18,8 @@ import 'services/auth/auth_service.dart';
 import 'services/auth/biometric_service.dart';
 import 'services/profile/profile_notifier.dart';
 import 'services/shared/sync_service.dart';
+import 'services/storage/hive_service.dart';
+import 'services/storage/app_preferences.dart';
 
 // ViewModels
 import 'viewmodels/auth/login_viewmodel.dart';
@@ -33,6 +35,7 @@ import 'views/today/today_screen.dart';
 import 'views/holidays/holidays_screen.dart';
 import 'views/assignments/assignments_screen.dart';
 import 'views/shared/shared_screen.dart';
+import 'views/shared/group_stats_screen.dart';
 import 'views/settings/settings_screen.dart';
 
 // Core
@@ -59,6 +62,14 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // 2.5) Inicializar Hive (BD Llave/Valor)
+  await HiveService.instance.initialize();
+  print('Hive initialized');
+
+  // 2.6) Inicializar SharedPreferences
+  await AppPreferences.instance.initialize();
+  print('SharedPreferences initialized');
 
   // 3) Initialize local database
   final database = AppDatabase();
@@ -195,6 +206,7 @@ class AceUpApp extends StatelessWidget {
     '/shared': (context) => const SharedScreenWrapper(),
     '/assignments': (context) => const AssignmentsScreen(),
     '/settings': (context) => const SettingsScreen(),
+    '/group-stats': (context) => const GroupStatsScreen(),
     '/account': (context) => LogoutScreen(
           vm: VmScope.of(context).get<LoginViewModel>(),
         ),
