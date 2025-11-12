@@ -178,6 +178,13 @@ class BurgerMenu extends StatelessWidget {
                   route: '/settings',
                   isSelected: currentRoute == '/settings',
                 ),
+                _menuItem(
+                  context: context,
+                  title: "Storage Stats",
+                  icon: Icons.storage,
+                  route: '/group-stats',
+                  isSelected: currentRoute == '/group-stats',
+                ),
               ],
             ),
           ),
