@@ -90,6 +90,12 @@ class SyncDao extends DatabaseAccessor<AppDatabase> with _$SyncDaoMixin {
     return counts;
   }
 
+  Future<List<SyncQueueData>> getAllPendingOperations() async {
+    return await (select(syncQueue)
+      ..orderBy([(sq) => OrderingTerm.asc(sq.createdAt)])
+    ).get();
+  }
+
   // ==================== STREAMS ====================
   
   /// Watch cola de sincronización

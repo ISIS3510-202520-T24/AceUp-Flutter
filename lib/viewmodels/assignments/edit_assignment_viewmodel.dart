@@ -1,15 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart'; // ignore: uri_does_not_exist
 import '../../models/assignments/assignment_model.dart';
-import '../../services/assignments/assignment_service.dart';
+import '../../data/repositories/academic_repository.dart';
 import '../../services/auth/auth_service.dart';
+
+// ignore_for_file: creation_with_non_type
 
 enum EditAssignmentViewState { idle, loading, saving, error }
 
 class EditAssignmentViewModel extends ChangeNotifier {
-  final AssignmentService _assignmentService = AssignmentService();
+  final AcademicRepository _repository;
   final AuthService _authService = AuthService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final _uuid = const Uuid();
 
   EditAssignmentViewState _state = EditAssignmentViewState.idle;
   EditAssignmentViewState get state => _state;
@@ -65,8 +69,11 @@ class EditAssignmentViewModel extends ChangeNotifier {
   final List<String> priorities = ['High', 'Medium', 'Low'];
   final List<int> weights = List.generate(20, (index) => (index + 1) * 5); // 5, 10, 15, ..., 100
 
-  EditAssignmentViewModel(Assignment? assignment) {
-    _assignment = assignment;
+  EditAssignmentViewModel({
+    required AcademicRepository repository,
+    Assignment? assignment,
+  })  : _repository = repository,
+        _assignment = assignment {
     _initializeControllers();
     _loadSubjects();
   }
@@ -76,7 +83,8 @@ class EditAssignmentViewModel extends ChangeNotifier {
       // Edit mode - populate with existing data
       titleController = TextEditingController(text: _assignment!.title);
       descriptionController = TextEditingController(text: _assignment!.description);
-      gradeController = TextEditingController(text: _assignment!.grade > 0 ? _assignment!.grade.toString() : '');
+      gradeController = TextEditingController(
+          text: _assignment!.grade > 0 ? _assignment!.grade.toString() : '');
 
       _selectedSubject = _assignment!.subjectName;
       _selectedTermId = _assignment!.termId;
@@ -244,13 +252,26 @@ class EditAssignmentViewModel extends ChangeNotifier {
     }
 
     try {
-      if (isCreateMode) {
-        // Create new assignment
-        await _createAssignment(userId);
-      } else {
-        // Update existing assignment
-        await _updateAssignment(userId);
-      }
+      // Create Assignment model
+      final assignment = Assignment(
+        id: _assignment?.id ?? _uuid.v4(),
+        title: titleController.text.trim(),
+        description: descriptionController.text.trim(),
+        dueDate: combinedDueDateTime,
+        priority: _selectedPriority,
+        weight: _selectedWeight,
+        grade: _isGraded && gradeController.text.isNotEmpty
+            ? int.tryParse(gradeController.text) ?? 0
+            : 0,
+        status: _isCompleted ? 'Completed' : 'Pending',
+        subjectName: _selectedSubject ?? '',
+        termId: _selectedTermId!,
+        subjectId: _selectedSubjectId!,
+        userId: userId,
+      );
+
+      // Save via repository (offline-first)
+      await _repository.saveAssignment(assignment);
 
       _state = EditAssignmentViewState.idle;
       notifyListeners();
@@ -261,55 +282,6 @@ class EditAssignmentViewModel extends ChangeNotifier {
       notifyListeners();
       return false;
     }
-  }
-
-  Future<void> _createAssignment(String userId) async {
-    final assignmentData = {
-      'title': titleController.text.trim(),
-      'description': descriptionController.text.trim(),
-      'dueDate': Timestamp.fromDate(combinedDueDateTime),
-      'priority': _selectedPriority,
-      'weight': _selectedWeight,
-      'grade': 0,
-      'status': 'Pending',
-      'createdAt': Timestamp.now(),
-      'updatedAt': Timestamp.now(),
-    };
-
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('terms')
-        .doc(_selectedTermId)
-        .collection('subjects')
-        .doc(_selectedSubjectId)
-        .collection('assignments')
-        .add(assignmentData);
-  }
-
-  Future<void> _updateAssignment(String userId) async {
-    final updatedData = {
-      'title': titleController.text.trim(),
-      'description': descriptionController.text.trim(),
-      'dueDate': Timestamp.fromDate(combinedDueDateTime),
-      'priority': _selectedPriority,
-      'weight': _selectedWeight,
-      'grade': _isGraded && gradeController.text.isNotEmpty
-          ? int.tryParse(gradeController.text) ?? 0
-          : 0,
-      'updatedAt': Timestamp.now(),
-    };
-
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('terms')
-        .doc(_assignment!.termId)
-        .collection('subjects')
-        .doc(_assignment!.subjectId)
-        .collection('assignments')
-        .doc(_assignment!.id)
-        .update(updatedData);
   }
 
   bool _validateForm() {

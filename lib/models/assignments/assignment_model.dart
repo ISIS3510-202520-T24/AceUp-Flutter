@@ -12,6 +12,7 @@ class Assignment {
   final String subjectName;
   final String? termId;
   final String? subjectId;
+  final String? userId;
 
   Assignment({
     required this.id,
@@ -25,6 +26,7 @@ class Assignment {
     required this.subjectName,
     this.termId,
     this.subjectId,
+    this.userId,
   });
 
   factory Assignment.fromFirestore(
