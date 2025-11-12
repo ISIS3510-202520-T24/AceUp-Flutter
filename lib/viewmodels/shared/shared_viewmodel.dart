@@ -10,6 +10,7 @@ import '../../data/repositories/shared_repository.dart';
 import '../../core/connectivity/connectivity_manager.dart';
 import '../../models/user_model.dart';
 import '../../services/shared/sync_service.dart';
+import '../../services/storage/app_preferences.dart';
 
 // El enum de estado que usan ambos ViewModels
 enum ViewState { idle, loading, error }
@@ -37,13 +38,38 @@ class SharedViewModel extends ChangeNotifier {
   })  : _repository = repository,
         _connectivity = connectivity,
         _syncService = syncService {
-    // Listen to connectivity changes
+    // 🔹 STREAM: Subscribe a cambios de conectividad
     _connectivity.onConnectivityChanged.listen((isOnline) {
+      final wasOffline = !_isOnline;
       _isOnline = isOnline;
       notifyListeners();
+      
+      // 🔹 FUTURE CON HANDLER: Si recuperamos conexión después de estar offline, verificar preferencia
+      if (isOnline && wasOffline) {
+        print('🌐 Conexión restaurada en SharedViewModel');
+        
+        // Verificar si auto-refresh está habilitado
+        final autoRefresh = AppPreferences.instance.autoRefreshOnReconnect;
+        if (!autoRefresh) {
+          print('🚫 Auto-refresh deshabilitado por preferencias - no recargando usuarios');
+          return;
+        }
+        
+        print('✅ Auto-refresh habilitado - recargando usuarios');
+        fetchAllUsers()
+          .then((_) {
+            print('✅ Usuarios recargados después de reconexión');
+          })
+          .catchError((error) {
+            print('❌ Error al recargar usuarios: $error');
+          });
+      }
     });
     
-    // fetchAllUsers(); // TODO: Implement with repository
+    // 🔹 FUTURE CON HANDLER: Cargar usuarios iniciales
+    fetchAllUsers()
+      .then((_) => print('✅ Usuarios iniciales cargados'))
+      .catchError((error) => print('⚠️ Error cargando usuarios iniciales: $error'));
   }
 
   // Metodo privado para cambiar el estado y notificar a la UI
@@ -87,7 +113,10 @@ class SharedViewModel extends ChangeNotifier {
   Future<void> addGroup(String name, List<String> memberEmails, {String? imageUrl}) async {
     try {
       final authService = AuthService();
+      final currentUserId = authService.currentUser?.uid;
       final currentUserEmail = authService.currentUser?.email;
+      
+      // Asegurar que el usuario actual esté en la lista de emails
       if (currentUserEmail != null && !memberEmails.any((email) => email.toLowerCase() == currentUserEmail.toLowerCase())) {
         memberEmails.add(currentUserEmail);
       }
@@ -100,6 +129,20 @@ class SharedViewModel extends ChangeNotifier {
       // Convert emails to UIDs
       final memberUids = _emailsToUids(memberEmails);
       
+      // 🔥 IMPORTANTE: Asegurar que el creador SIEMPRE esté en memberUids
+      // Esto evita problemas cuando el usuario actual no está en availableUsers
+      if (currentUserId != null && !memberUids.contains(currentUserId)) {
+        memberUids.insert(0, currentUserId); // Agregar al inicio
+        print('✅ Creador del grupo agregado a memberUids: $currentUserId');
+      }
+      
+      // Validar que haya al menos un miembro
+      if (memberUids.isEmpty) {
+        print('❌ No se pudo agregar ningún miembro al grupo');
+        console.log('Error: No members could be added to the group');
+        return;
+      }
+      
       final newGroup = Group(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: name,
@@ -107,12 +150,13 @@ class SharedViewModel extends ChangeNotifier {
         imageUrl: imageUrl,
       );
 
+      print('📝 Creando grupo con ${memberUids.length} miembros: $memberUids');
       await _repository.createGroup(newGroup);
       
       // Trigger immediate sync if online
       if (_syncService != null && _connectivity.isOnline) {
         print('🚀 [CREATE] Triggering immediate sync after group creation');
-        _syncService!.syncPendingOperations();
+        _syncService.syncPendingOperations();
       }
       
       // Refresh groups - Force refresh with current user
@@ -120,7 +164,6 @@ class SharedViewModel extends ChangeNotifier {
         await fetchGroups(_currentUserId!);
       } else {
         // Si no hay currentUserId, obtenerlo del AuthService
-        final authService = AuthService();
         final userId = authService.currentUser?.uid;
         if (userId != null) {
           await fetchGroups(userId);
@@ -139,6 +182,9 @@ class SharedViewModel extends ChangeNotifier {
   /// Actualiza un grupo existente - se guarda localmente y se sincroniza en background
   Future<void> updateGroup(String id, String name, List<String> memberEmails, {String? imageUrl}) async {
     try {
+      final authService = AuthService();
+      final currentUserId = authService.currentUser?.uid;
+      
       // Ensure users are loaded
       if (availableUsers.isEmpty) {
         await fetchAllUsers();
@@ -147,6 +193,20 @@ class SharedViewModel extends ChangeNotifier {
       // Convert emails to UIDs
       final memberUids = _emailsToUids(memberEmails);
       
+      // 🔥 IMPORTANTE: Asegurar que el usuario actual siempre esté en memberUids
+      // (puede que se esté editando el grupo y el creador se removió por error)
+      if (currentUserId != null && !memberUids.contains(currentUserId)) {
+        memberUids.insert(0, currentUserId);
+        print('✅ Usuario actual agregado a memberUids durante actualización: $currentUserId');
+      }
+      
+      // Validar que haya al menos un miembro
+      if (memberUids.isEmpty) {
+        print('❌ No se pudo actualizar: el grupo quedaría sin miembros');
+        console.log('Error: Group must have at least one member');
+        return;
+      }
+      
       final updatedGroup = Group(
         id: id,
         name: name,
@@ -154,6 +214,7 @@ class SharedViewModel extends ChangeNotifier {
         imageUrl: imageUrl,
       );
 
+      print('📝 Actualizando grupo con ${memberUids.length} miembros: $memberUids');
       await _repository.updateGroup(updatedGroup);
       
       // Refresh groups - Skip Firestore and use local data immediately after update

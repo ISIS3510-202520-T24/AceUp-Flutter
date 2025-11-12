@@ -13,6 +13,9 @@ import '../../services/auth/auth_service.dart';
 import '../../services/profile/profile_cache_service.dart';
 import '../../services/profile/profile_notifier.dart';
 import '../../models/user_profile.dart';
+import '../../services/auth/secure_store.dart'; // para limpiar credenciales biométricas
+import '../../services/auth/session_prefs.dart';
+import '../../services/auth/secure_store.dart'; // si ya lo estabas usando para biometría
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -267,14 +270,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _snack('Could not send reset link.');
     }
   }
-
   Future<void> _logout() async {
+  try {
     final auth = context.read<AuthService>();
     await auth.signOut();
-
-    if (!mounted) return;
-    Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
+    await SecureStore.clearBiometricCredentials(); // si usas quick-login
+    await SecureStore.clearSessionCredentials();   // ✅ limpia auto-login
+    await SessionPrefs.setWasLoggedIn(false);      // ✅ apaga flag offline
+  } catch (e) {
+    _snack('Could not sign out: $e');
   }
+
+  if (!mounted) return;
+  Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
+}
+
+  
+
+
 
   @override
   Widget build(BuildContext context) {

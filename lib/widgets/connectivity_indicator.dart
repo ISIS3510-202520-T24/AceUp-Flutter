@@ -1,9 +1,11 @@
 // lib/widgets/connectivity_indicator.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/connectivity/connectivity_manager.dart';
 import '../services/shared/sync_service.dart';
+import '../services/storage/app_preferences.dart';
 
 /// Widget que muestra el estado de conectividad y sincronización
 class ConnectivityIndicator extends StatelessWidget {
@@ -115,18 +117,60 @@ class ConnectivityIndicator extends StatelessWidget {
 }
 
 /// Banner persistente para mostrar estado offline
-class OfflineBanner extends StatelessWidget {
+/// Banner que se muestra cuando el usuario está offline
+/// Respeta la preferencia del usuario (showOfflineBanner)
+/// 
+/// IMPORTANTE: Este widget escucha cambios en AppPreferences
+/// y se reconstruye automáticamente cuando cambia showOfflineBanner
+class OfflineBanner extends StatefulWidget {
   const OfflineBanner({super.key});
+
+  @override
+  State<OfflineBanner> createState() => _OfflineBannerState();
+}
+
+class _OfflineBannerState extends State<OfflineBanner> {
+  StreamSubscription? _preferencesSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    // 🔹 Escuchar cambios en las preferencias
+    _preferencesSubscription = AppPreferences.instance.onPreferenceChanged.listen((key) {
+      // Si cambió showOfflineBanner, reconstruir el widget
+      if (key == 'show_offline_banner' && mounted) {
+        print('🔔 OfflineBanner: Recibida notificación de cambio en preferencia');
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _preferencesSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final connectivity = context.watch<ConnectivityManager>();
     final colors = Theme.of(context).colorScheme;
 
+    // No mostrar si está online
     if (connectivity.isOnline) {
       return const SizedBox.shrink();
     }
 
+    // 🔹 CONSULTAR PREFERENCIA DEL USUARIO
+    // Si el usuario deshabilitó el banner, no mostrarlo
+    // Esta lectura se ejecuta cada vez que se reconstruye el widget
+    final showBanner = AppPreferences.instance.showOfflineBanner;
+    if (!showBanner) {
+      print('🚫 OfflineBanner: Banner deshabilitado por preferencia del usuario');
+      return const SizedBox.shrink();
+    }
+
+    print('✅ OfflineBanner: Mostrando banner (preferencia habilitada)');
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
