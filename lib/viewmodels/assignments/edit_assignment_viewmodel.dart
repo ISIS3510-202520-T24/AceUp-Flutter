@@ -252,26 +252,13 @@ class EditAssignmentViewModel extends ChangeNotifier {
     }
 
     try {
-      // Create Assignment model
-      final assignment = Assignment(
-        id: _assignment?.id ?? _uuid.v4(),
-        title: titleController.text.trim(),
-        description: descriptionController.text.trim(),
-        dueDate: combinedDueDateTime,
-        priority: _selectedPriority,
-        weight: _selectedWeight,
-        grade: _isGraded && gradeController.text.isNotEmpty
-            ? int.tryParse(gradeController.text) ?? 0
-            : 0,
-        status: _isCompleted ? 'Completed' : 'Pending',
-        subjectName: _selectedSubject ?? '',
-        termId: _selectedTermId!,
-        subjectId: _selectedSubjectId!,
-        userId: userId,
-      );
-
-      // Save via repository (offline-first)
-      await _repository.saveAssignment(assignment);
+      if (isCreateMode) {
+        // Create new assignment
+        await _createAssignment(userId);
+      } else {
+        // Update existing assignment
+        await _updateAssignment(userId);
+      }
 
       _state = EditAssignmentViewState.idle;
       notifyListeners();
@@ -282,6 +269,55 @@ class EditAssignmentViewModel extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  Future<void> _createAssignment(String userId) async {
+    final assignmentData = {
+      'title': titleController.text.trim(),
+      'description': descriptionController.text.trim(),
+      'dueDate': Timestamp.fromDate(combinedDueDateTime),
+      'priority': _selectedPriority,
+      'weight': _selectedWeight,
+      'grade': 0,
+      'status': 'Pending',
+      'createdAt': Timestamp.now(),
+      'updatedAt': Timestamp.now(),
+    };
+
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('terms')
+        .doc(_selectedTermId)
+        .collection('subjects')
+        .doc(_selectedSubjectId)
+        .collection('assignments')
+        .add(assignmentData);
+  }
+
+  Future<void> _updateAssignment(String userId) async {
+    final updatedData = {
+      'title': titleController.text.trim(),
+      'description': descriptionController.text.trim(),
+      'dueDate': Timestamp.fromDate(combinedDueDateTime),
+      'priority': _selectedPriority,
+      'weight': _selectedWeight,
+      'grade': _isGraded && gradeController.text.isNotEmpty
+          ? int.tryParse(gradeController.text) ?? 0
+          : 0,
+      'updatedAt': Timestamp.now(),
+    };
+
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('terms')
+        .doc(_assignment!.termId)
+        .collection('subjects')
+        .doc(_assignment!.subjectId)
+        .collection('assignments')
+        .doc(_assignment!.id)
+        .update(updatedData);
   }
 
   bool _validateForm() {
@@ -296,14 +332,6 @@ class EditAssignmentViewModel extends ChangeNotifier {
     // Subject is required
     if (_selectedSubject == null || _selectedSubject!.isEmpty) {
       _errorMessage = 'Subject is required';
-      _state = EditAssignmentViewState.error;
-      notifyListeners();
-      return false;
-    }
-
-    // Due date must be set (always true, but keeping for consistency)
-    if (_selectedDueDate == null) {
-      _errorMessage = 'Due date is required';
       _state = EditAssignmentViewState.error;
       notifyListeners();
       return false;

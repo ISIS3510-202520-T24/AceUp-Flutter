@@ -64,19 +64,18 @@ class _EditAssignmentContent extends StatelessWidget {
                 Expanded(
                   child: AppFormField(
                     controller: viewModel.titleController,
-                    label: 'Title',
-                    hint: 'Enter assignment title',
+                    hint: 'Title',
+                    type: FormFieldType.text,
                   ),
                 ),
                 if (viewModel.isEditMode) ...[
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 8),
                   Checkbox(
                     value: viewModel.isCompleted,
-                    onChanged: (_) => viewModel.toggleAssignmentStatus(),
-                  ),
-                  Text(
-                    'Done',
-                    style: AppTypography.bodyS.copyWith(color: colors.onSurface),
+                    onChanged: (value) => viewModel.toggleAssignmentStatus(),
+                    activeColor: colors.primary,
+                    checkColor: colors.onPrimary,
+                    side: BorderSide(color: colors.primary, width: 2),
                   ),
                 ],
               ],
@@ -86,26 +85,22 @@ class _EditAssignmentContent extends StatelessWidget {
             // Description Field
             AppFormField(
               controller: viewModel.descriptionController,
-              label: 'Description',
-              hint: 'Enter assignment description',
-              maxLines: 3,
+              hint: 'Description',
+              type: FormFieldType.multiline,
+              maxLines: 5,
             ),
             const SizedBox(height: 16),
 
-            // Due Date & Time
-            Text(
-              'Due Date & Time',
-              style: AppTypography.bodyM.copyWith(
-                color: colors.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
             Row(
               children: [
+                Icon(
+                  AppIcons.calendarDay,
+                  size: 18,
+                  color: colors.outline,
+                ),
                 Expanded(
                   child: _DatePickerField(
-                    label: 'Date',
+                    label: 'Due date',
                     date: viewModel.selectedDueDate,
                     onTap: () => _selectDueDate(context, viewModel),
                   ),
@@ -122,75 +117,149 @@ class _EditAssignmentContent extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Priority Dropdown
-            AppDropdownField<String>(
-              value: viewModel.selectedPriority,
-              items: viewModel.priorities,
-              getLabel: (priority) => priority,
-              onChanged: (value) {
-                if (value != null) viewModel.setPriority(value);
-              },
-            ),
-            const SizedBox(height: 16),
+            // Reminder Row (only show if not completed)
+            if (!viewModel.isCompleted) ...[
+              Row(
+                children: [
+                  Icon(
+                    AppIcons.notification,
+                    size: 18,
+                    color: colors.outline,
+                  ),
+                  Expanded(
+                    child: _DatePickerField(
+                      label: 'Reminder',
+                      date: viewModel.selectedReminderDate,
+                      onTap: () => _selectReminderDate(context, viewModel),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _TimePickerField(
+                      label: 'Time',
+                      time: viewModel.selectedReminderTime,
+                      onTap: () => _selectReminderTime(context, viewModel),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
 
-            // Weight Dropdown
-            AppDropdownField<int>(
-              value: viewModel.selectedWeight,
-              items: viewModel.weights,
-              getLabel: (weight) => '$weight%',
-              onChanged: (value) {
-                if (value != null) viewModel.setWeight(value);
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Grade Section
+            // Weight and Priority Row
             Row(
               children: [
-                Checkbox(
-                  value: viewModel.isGraded,
-                  onChanged: (_) => viewModel.toggleGraded(),
+                Icon(
+                  AppIcons.weight,
+                  size: 18,
+                  color: colors.outline,
                 ),
-                Text(
-                  'Graded',
-                  style: AppTypography.bodyM.copyWith(color: colors.onSurface),
+                Expanded(
+                  child: AppDropdownField<int>(
+                    value: viewModel.selectedWeight,
+                    items: viewModel.weights,
+                    getLabel: (weight) => '$weight%',
+                    onChanged: (value) {
+                      if (value != null) viewModel.setWeight(value);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: AppDropdownField<String>(
+                    value: viewModel.selectedPriority,
+                    items: viewModel.priorities,
+                    getLabel: (priority) => priority,
+                    onChanged: (value) {
+                      if (value != null) viewModel.setPriority(value);
+                    },
+                  ),
                 ),
               ],
             ),
-            if (viewModel.isGraded) ...[
-              const SizedBox(height: 8),
-              AppFormField(
-                controller: viewModel.gradeController,
-                label: 'Grade',
-                hint: 'Enter grade (0-100)',
-                type: FormFieldType.number,
-              ),
-            ],
+            const SizedBox(height: 16),
 
-            const SizedBox(height: 24),
+            Row(
+              children: [
+                Icon(
+                  AppIcons.grade,
+                  size: 18,
+                  color: colors.outline,
+                ),
+                Expanded(
+                  child: AppFormField(
+                    controller: viewModel.gradeController,
+                    label: 'Grade',
+                    hint: 'Enter grade',
+                    type: FormFieldType.number,
+                    enabled: viewModel.isCompleted,
+                  ),
+                ),
+                const SizedBox(width: 8),
+
+                Checkbox(
+                  value: viewModel.isGraded,
+                  onChanged: viewModel.isCompleted ? (value) {
+                    viewModel.toggleGraded();
+                  } : null,
+                  activeColor: colors.primary,
+                  checkColor: colors.onPrimary,
+                  side: BorderSide(
+                    color: viewModel.isCompleted ? colors.primary : colors.shadow,
+                    width: 2,
+                  ),
+                ),
+              ],
+            ),
 
             // Error Message
-            if (viewModel.state == EditAssignmentViewState.error &&
-                viewModel.errorMessage != null)
+            if (viewModel.errorMessage != null) ...[
+              const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colors.error.withOpacity(0.1),
+                  color: colors.error.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(AppIcons.priority, color: colors.error, size: 20),
+                    Icon(Icons.error_outline, color: colors.error),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         viewModel.errorMessage!,
-                        style: AppTypography.bodyS.copyWith(color: colors.error),
+                        style: AppTypography.bodyM.copyWith(color: colors.error),
                       ),
                     ),
                   ],
                 ),
               ),
+            ],
+
+            // Validation hint for create mode
+            if (viewModel.isCreateMode && !viewModel.canSave) ...[
+            const SizedBox(height: 16),
+
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colors.secondary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(AppIcons.priority, color: colors.secondary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        viewModel.errorMessage!,
+                        style: AppTypography.bodyS.copyWith(color: colors.secondary),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -221,8 +290,29 @@ class _EditAssignmentContent extends StatelessWidget {
     }
   }
 
-  Future<void> _saveAssignment(
-      BuildContext context, EditAssignmentViewModel viewModel) async {
+  Future<void> _selectReminderDate(BuildContext context, EditAssignmentViewModel viewModel) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: viewModel.selectedReminderDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+    if (picked != null) {
+      viewModel.setReminderDate(picked);
+    }
+  }
+
+  Future<void> _selectReminderTime(BuildContext context, EditAssignmentViewModel viewModel) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: viewModel.selectedReminderTime ?? TimeOfDay.now(),
+    );
+    if (picked != null) {
+      viewModel.setReminderTime(picked);
+    }
+  }
+
+  Future<void> _saveAssignment(BuildContext context, EditAssignmentViewModel viewModel) async {
     final success = await viewModel.saveAssignment();
     if (success && context.mounted) {
       Navigator.of(context).pop(true);

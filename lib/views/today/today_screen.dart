@@ -76,18 +76,18 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
       body: Column(
         children: [
           ContentSwitcher(
-            tabs: viewModel.tabLabels,
             controller: _tabController,
+            tabs: viewModel.tabLabels,
           ),
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
                 KeepAliveWrapper(
-                  child: _buildTabContent(context, viewModel, TodayTab.timetable),
+                  child: _buildTimetableContent(context, viewModel),
                 ),
                 KeepAliveWrapper(
-                  child: _buildTabContent(context, viewModel, TodayTab.assignments),
+                  child: _buildAssignmentsContent(context, viewModel),
                 ),
               ],
             ),
@@ -113,6 +113,90 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildProgressWidget(BuildContext context, TodayViewModel viewModel) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: colors.surfaceDim,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: colors.surface,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildProgressItem(
+                        context,
+                        count: viewModel.completedCount,
+                        label: 'Done: ',
+                        color: AppColors.successDark,
+                      ),
+                      _buildProgressItem(
+                        context,
+                        count: viewModel.pendingCount,
+                        label: 'Pending: ',
+                        color: AppColors.errorDark,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressItem(
+      BuildContext context, {
+        required int count,
+        required String label,
+        required Color color,
+      }) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    return Row(
+      children: [
+        Text(
+          label,
+          style: AppTypography.h4.copyWith(color: colors.onSurface),
+        ),
+        Text(
+          '$count',
+          style: AppTypography.h4.copyWith(color: color),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTimetableContent(BuildContext context, TodayViewModel viewModel) {
+    return _buildTabContent(context, viewModel, TodayTab.timetable);
+  }
+
+  Widget _buildAssignmentsContent(BuildContext context, TodayViewModel viewModel) {
+    return Column(
+        children: [
+          _buildProgressWidget(context, viewModel),
+          Expanded(child: _buildTabContent(context, viewModel, TodayTab.assignments)),
+        ]
     );
   }
 
@@ -162,7 +246,7 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
 
     if (tab == TodayTab.assignments && viewModel.assignmentsDueToday.isNotEmpty) {
       return _buildAssignmentsList(viewModel);
-    } else if (tab == TodayTab.timetable && viewModel.timetable.isNotEmpty) {
+    } else if (tab == TodayTab.timetable && viewModel.timetable.isNotEmpty && viewModel.exams.isNotEmpty) {
       return _buildTimetableList(viewModel.timetable, viewModel.exams);
     }
 
@@ -170,6 +254,20 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
       message: viewModel.emptyStateMessage,
       subtitle: viewModel.emptyStateSubtitle,
       icon: viewModel.emptyStateIcon,
+    );
+  }
+
+  Widget _buildExamsList(List<String> exams) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: exams.length,
+      itemBuilder: (context, index) {
+        return Card(
+          child: ListTile(
+            title: Text(exams[index]),
+          ),
+        );
+      },
     );
   }
 
@@ -188,128 +286,106 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
   }
 
   Widget _buildAssignmentsList(TodayViewModel viewModel) {
-    final colors = Theme.of(context).colorScheme;
+    final assignments = viewModel.assignmentsDueToday;
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: viewModel.assignmentsDueToday.length,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      itemCount: assignments.length,
       itemBuilder: (context, index) {
-        final assignment = viewModel.assignmentsDueToday[index];
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: colors.outline.withOpacity(0.2),
-            ),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Checkbox(
-              value: assignment.isCompleted,
-              onChanged: (_) => viewModel.toggleAssignmentStatus(assignment),
-            ),
-            title: Text(
-              assignment.title,
-              style: AppTypography.bodyL.copyWith(
-                decoration: assignment.isCompleted ? TextDecoration.lineThrough : null,
-                color: assignment.isCompleted ? colors.secondary : colors.onSurface,
-              ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                Text(
-                  assignment.subjectName,
-                  style: AppTypography.bodyS.copyWith(
-                    color: colors.secondary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      AppIcons.clock,
-                      size: 14,
-                      color: colors.secondary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _formatTime(assignment.dueDate),
-                      style: AppTypography.bodyS.copyWith(
-                        color: colors.secondary,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    _buildPriorityChip(assignment.priority, colors),
-                  ],
-                ),
-              ],
-            ),
-            onTap: () => _navigateToEditAssignment(context, assignment),
-          ),
-        );
+        final assignment = assignments[index];
+        return _buildAssignmentCard(context, assignment, viewModel);
       },
     );
   }
 
-  Widget _buildPriorityChip(String priority, ColorScheme colors) {
-    Color chipColor;
-    switch (priority.toLowerCase()) {
-      case 'high':
-        chipColor = AppColors.errorDark;
+  Widget _buildAssignmentCard(
+      BuildContext context,
+      assignment,
+      TodayViewModel viewModel,
+      ) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    IconData priorityIcon;
+    Color priorityColor;
+    switch (assignment.priority) {
+      case 'High':
+        priorityIcon = AppIcons.priority;
+        priorityColor = AppColors.errorMedium;
         break;
-      case 'medium':
-        chipColor = AppColors.warningDark;
+      case 'Low':
+        priorityIcon = AppIcons.priority;
+        priorityColor = AppColors.successMedium;
         break;
-      case 'low':
-        chipColor = AppColors.successDark;
-        break;
-      default:
-        chipColor = colors.secondaryContainer;
+      default: // Medium
+        priorityIcon = AppIcons.priority;
+        priorityColor = AppColors.warningMedium;
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: chipColor,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        priority,
-        style: AppTypography.bodyXS.copyWith(
-          color: colors.onSurface,
-          fontWeight: FontWeight.w500,
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12.0),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Checkbox(
+              value: assignment.isCompleted,
+              onChanged: (value) {
+                viewModel.toggleAssignmentStatus(assignment);
+              },
+              activeColor: colors.primary,
+              checkColor: colors.onPrimary,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    assignment.subjectName,
+                    style: AppTypography.h5.copyWith(
+                      color: colors.onSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  // Title
+                  Text(
+                    assignment.title,
+                    style: AppTypography.bodyM.copyWith(
+                      color: colors.onSurface,
+
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    assignment.description,
+                    style: AppTypography.bodyS.copyWith(
+                      color: colors.onPrimaryContainer,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              priorityIcon,
+              color: priorityColor,
+              size: 21,
+            ),
+          ],
         ),
       ),
     );
-  }
-
-  String _formatTime(DateTime dateTime) {
-    final hour = dateTime.hour.toString().padLeft(2, '0');
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
   }
 
   Future<void> _handleAddAssignmentAction(BuildContext context, TodayViewModel viewModel) async {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const EditAssignmentScreen(assignment: null),
-      ),
-    );
-
-    if (result == true && context.mounted) {
-      context.read<TodayViewModel>().refreshAssignments();
-    }
-  }
-
-  Future<void> _navigateToEditAssignment(BuildContext context, assignment) async {
-    final result = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => EditAssignmentScreen(assignment: assignment),
       ),
     );
 

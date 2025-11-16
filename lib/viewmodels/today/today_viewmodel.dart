@@ -28,37 +28,6 @@ class TodayViewModel extends ChangeNotifier {
 
   final List<String> tabLabels = ['Timetable', 'Assignments'];
 
-  // Mock data for timetable (you'll implement this properly later)
-  List<String> get timetable => ['Morning Class', 'Afternoon Lab'];
-  List<String> get exams => ['Midterm Exam'];
-
-  String get emptyStateMessage {
-    switch (_selectedTab) {
-      case TodayTab.timetable:
-        return 'No classes today';
-      case TodayTab.assignments:
-        return 'No assignments due today';
-    }
-  }
-
-  String get emptyStateSubtitle {
-    switch (_selectedTab) {
-      case TodayTab.timetable:
-        return 'Enjoy your free day!';
-      case TodayTab.assignments:
-        return 'You\'re all caught up!';
-    }
-  }
-
-  IconData get emptyStateIcon {
-    switch (_selectedTab) {
-      case TodayTab.timetable:
-        return AppIcons.calendarDay;
-      case TodayTab.assignments:
-        return AppIcons.assignments;
-    }
-  }
-
   TodayViewModel({required AcademicRepository repository})
       : _repository = repository {
     _loadAssignmentsDueToday();
@@ -91,10 +60,7 @@ class TodayViewModel extends ChangeNotifier {
     try {
       final today = DateTime.now();
 
-      // Load from repository (offline-first)
       _assignmentsDueToday = await _repository.getAssignmentsDueToday(userId, today);
-
-      // Sort: pending first, then completed
       _assignmentsDueToday.sort((a, b) {
         if (a.isPending && b.isCompleted) return -1;
         if (a.isCompleted && b.isPending) return 1;
@@ -121,15 +87,65 @@ class TodayViewModel extends ChangeNotifier {
     try {
       final newStatus = assignment.isPending ? 'Completed' : 'Pending';
 
-      // Update via repository (offline-first)
       await _repository.updateAssignmentStatus(assignment.id, newStatus);
 
-      // Reload assignments
       await _loadAssignmentsDueToday();
     } catch (e) {
       _errorMessage = 'Failed to update assignment: $e';
       _state = TodayViewState.error;
       notifyListeners();
+    }
+  }
+
+  int get pendingCount =>
+      _assignmentsDueToday
+          .where((a) => a.isPending)
+          .length;
+
+  int get completedCount =>
+      _assignmentsDueToday
+          .where((a) => a.isCompleted)
+          .length;
+
+  List<String> get exams => [];
+
+  List<String> get timetable => [];
+
+  List<String> get assignments => [];
+
+  bool get hasContent {
+    switch (_selectedTab) {
+      case TodayTab.timetable:
+        return timetable.isNotEmpty && exams.isNotEmpty;
+      case TodayTab.assignments:
+        return _assignmentsDueToday.isNotEmpty;
+    }
+  }
+
+  String get emptyStateMessage {
+    switch (_selectedTab) {
+      case TodayTab.timetable:
+        return 'No classes left for today';
+      case TodayTab.assignments:
+        return 'No assignments due today';
+    }
+  }
+
+  String get emptyStateSubtitle {
+    switch (_selectedTab) {
+      case TodayTab.timetable:
+        return 'Enjoy your free time!';
+      case TodayTab.assignments:
+        return 'Great job staying ahead!';
+    }
+  }
+
+  IconData get emptyStateIcon {
+    switch (_selectedTab) {
+      case TodayTab.timetable:
+        return AppIcons.chalkboard;
+      case TodayTab.assignments:
+        return AppIcons.assignments;
     }
   }
 

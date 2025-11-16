@@ -117,9 +117,7 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
 
     if (viewModel.state == AssignmentsViewState.loading) {
       return Center(
-        child: CircularProgressIndicator(
-          color: colors.primary,
-        ),
+        child: CircularProgressIndicator(),
       );
     }
 
@@ -156,133 +154,177 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
       );
     }
 
+    if (viewModel.hasContent) {
+      return _buildContentList(context, viewModel, tab);
+    } else {
+      return EmptyState(
+          message: viewModel.emptyStateMessage,
+          subtitle: viewModel.emptyStateSubtitle,
+          icon: AppIcons.assignments);
+    }
+  }
+
+  Widget _buildContentList(BuildContext context, AssignmentsViewModel viewModel, AssignmentsTab tab) {
+
     final assignments = tab == AssignmentsTab.pending
         ? viewModel.pendingAssignments
         : viewModel.completedAssignments;
 
-    if (assignments.isEmpty) {
-      return EmptyState(
-        message: tab == AssignmentsTab.pending
-            ? 'No pending assignments'
-            : 'No completed assignments',
-        subtitle: tab == AssignmentsTab.pending
-            ? 'Create a new assignment to get started'
-            : 'Complete some assignments to see them here',
-        icon: AppIcons.assignments,
-      );
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: assignments.length,
-      itemBuilder: (context, index) {
-        final assignment = assignments[index];
-
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: BorderSide(
-              color: colors.outline.withOpacity(0.2),
-            ),
-          ),
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Checkbox(
-              value: assignment.isCompleted,
-              onChanged: (_) => viewModel.toggleAssignmentStatus(assignment),
-            ),
-            title: Text(
-              assignment.title,
-              style: AppTypography.bodyL.copyWith(
-                decoration: assignment.isCompleted ? TextDecoration.lineThrough : null,
-                color: assignment.isCompleted ? colors.secondary : colors.onSurface,
-              ),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 4),
-                Text(
-                  assignment.subjectName,
-                  style: AppTypography.bodyS.copyWith(
-                    color: colors.secondary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      AppIcons.calendarDay,
-                      size: 14,
-                      color: colors.secondary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      DateFormat('MMM d, yyyy').format(assignment.dueDate),
-                      style: AppTypography.bodyS.copyWith(
-                        color: colors.secondary,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    _buildPriorityChip(assignment.priority, colors),
-                  ],
-                ),
-              ],
-            ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '${assignment.weight}%',
-                  style: AppTypography.bodyM.copyWith(
-                    color: colors.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'weight',
-                  style: AppTypography.bodyXS.copyWith(
-                    color: colors.secondary,
-                  ),
-                ),
-              ],
-            ),
-            onTap: () => _navigateToEditAssignment(context, assignment),
-          ),
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: () => viewModel.refreshAssignments(),
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: assignments.length,
+        itemBuilder: (context, index) {
+          final assignment = assignments[index];
+          return _buildAssignmentCard(context, assignment, viewModel);
+        },
+      ),
     );
   }
 
-  Widget _buildPriorityChip(String priority, ColorScheme colors) {
-    Color chipColor;
-    switch (priority.toLowerCase()) {
-      case 'high':
-        chipColor = AppColors.errorDark;
+  Widget _buildAssignmentCard(
+      BuildContext context,
+      dynamic assignment,
+      AssignmentsViewModel viewModel,
+      ) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
+    IconData priorityIcon;
+    Color priorityColor;
+    switch (assignment.priority) {
+      case 'High':
+        priorityIcon = AppIcons.priority;
+        priorityColor = AppColors.errorMedium;
         break;
-      case 'medium':
-        chipColor = AppColors.warningDark;
+      case 'Low':
+        priorityIcon = AppIcons.priority;
+        priorityColor = AppColors.successMedium;
         break;
-      case 'low':
-        chipColor = AppColors.successDark;
-        break;
-      default:
-        chipColor = colors.secondaryContainer;
+      default: // Medium
+        priorityIcon = AppIcons.priority;
+        priorityColor = AppColors.warningMedium;
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: chipColor,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        priority,
-        style: AppTypography.bodyXS.copyWith(
-          color: colors.onSurface,
-          fontWeight: FontWeight.w500,
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dueDate = DateTime(
+      assignment.dueDate.year,
+      assignment.dueDate.month,
+      assignment.dueDate.day,
+    );
+
+    String dueDateText;
+    if (dueDate.isAtSameMomentAs(today)) {
+      dueDateText = 'Due Today';
+    } else if (dueDate.isBefore(today)) {
+      final difference = today.difference(dueDate).inDays;
+      if (assignment.isPending) {
+        dueDateText = difference == 1
+            ? 'Overdue by 1 day'
+            : 'Overdue by $difference days';
+      } else {
+        dueDateText = DateFormat('MMM d, yyyy').format(assignment.dueDate);
+      }
+    } else {
+      final difference = dueDate.difference(today).inDays;
+      if (difference == 1) {
+        dueDateText = 'Due Tomorrow';
+      } else if (difference <= 7) {
+        dueDateText = 'Due in $difference days';
+      } else {
+        dueDateText = DateFormat('MMM d, yyyy').format(assignment.dueDate);
+      }
+    }
+
+    return InkWell(
+      onTap: () async {
+        final result = await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => EditAssignmentScreen(assignment: assignment),
+          ),
+        );
+        if (result == true) {
+          viewModel.refreshAssignments();
+        }
+      },
+
+      child: Card(
+        elevation: 0,
+        margin: const EdgeInsets.only(bottom: 12.0),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Checkbox(
+                value: assignment.isCompleted,
+                onChanged: (value) {
+                  viewModel.toggleAssignmentStatus(assignment);
+                },
+                activeColor: colors.primary,
+                checkColor: colors.onPrimary,
+                side: BorderSide(color: colors.primary, width: 2),
+              ),
+              const SizedBox(width: 8),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      assignment.subjectName,
+                      style: AppTypography.h5.copyWith(
+                        color: colors.onSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+
+                    Text(
+                      assignment.title,
+                      style: AppTypography.bodyM.copyWith(
+                        color: colors.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+
+                    Text(
+                      assignment.description,
+                      style: AppTypography.bodyS.copyWith(
+                        color: colors.onPrimaryContainer,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    dueDateText,
+                    style: AppTypography.bodyS.copyWith(
+                      color: dueDate.isBefore(today) && assignment.isPending
+                          ? colors.onError
+                          : colors.onPrimaryContainer,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  Icon(
+                    priorityIcon,
+                    size: 21,
+                    color: priorityColor,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -295,20 +337,8 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
       ),
     );
 
-    if (result == true && context.mounted) {
-      context.read<AssignmentsViewModel>().refreshAssignments();
-    }
-  }
-
-  Future<void> _navigateToEditAssignment(BuildContext context, assignment) async {
-    final result = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => EditAssignmentScreen(assignment: assignment),
-      ),
-    );
-
-    if (result == true && context.mounted) {
-      context.read<AssignmentsViewModel>().refreshAssignments();
+    if (result == true) {
+      viewModel.refreshAssignments();
     }
   }
 }
