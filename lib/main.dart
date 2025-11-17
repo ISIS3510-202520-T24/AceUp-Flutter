@@ -194,12 +194,8 @@ class AceUpApp extends StatelessWidget {
     );
     return child!;
   },
-
-  // 🔸 Arrancamos por '/', y '/' es AuthGate. NO uses 'home:' en ningún lado.
   initialRoute: '/',
-
   routes: {
-    // '/' -> AuthGate decide: si hay sesión => Today; si no => Login
     '/': (context) => AuthGate(
           home: const TodayScreen(),
           login: LoginScreen(

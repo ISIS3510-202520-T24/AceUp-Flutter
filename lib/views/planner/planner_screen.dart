@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/planner/planner_viewmodel.dart';
 import '../../themes/app_typography.dart';
 import '../../themes/app_icons.dart';
+import '../../widgets/burger_menu.dart';
+import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
 import 'term_screen.dart';
 import 'edit_term_screen.dart';
@@ -28,25 +30,27 @@ class _PlannerContent extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colors.surface,
+      drawer: const BurgerMenu(),
       appBar: const TopBar(
         title: 'Planner',
-        leftControlType: LeftControlType.menu,
-        rightControlType: RightControlType.none,
       ),
       body: _buildBody(context, viewModel, colors),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const EditTermScreen()),
-          );
-          if (result == true) {
-            viewModel.refreshTerms();
-          }
-        },
-        backgroundColor: colors.primary,
-        child: Icon(Icons.add, color: colors.onPrimary),
+      floatingActionButton: FAB(
+        options: [
+          FabOption(
+            icon: AppIcons.add,
+            label: 'Add Term',
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const EditTermScreen()),
+              );
+              if (result == true) {
+                viewModel.refreshTerms();
+              }
+            },
+          ),
+        ]
       ),
     );
   }

@@ -21,14 +21,12 @@ class BurgerMenu extends StatelessWidget {
     final email = auth.currentUser?.email ?? '';
     final fallbackNick = auth.currentUser?.displayName ?? 'Student';
 
-    // Escuchar nickname/foto globales en vivo
     final profile = context.watch<ProfileNotifier>();
 
     final shownNick = (profile.nickname.trim().isNotEmpty)
         ? profile.nickname.trim()
         : (fallbackNick.isNotEmpty ? fallbackNick : email);
 
-    // resolver imagen del avatar
     ImageProvider? avatarImage;
     final avatarPath = profile.avatarLocalPath;
 
@@ -53,10 +51,14 @@ class BurgerMenu extends StatelessWidget {
             child: SafeArea(
               bottom: false,
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  Text(
+                    "AceUp",
+                    style: AppTypography.logo.copyWith(color: colors.tertiary),
+                  ),
                   CircleAvatar(
                     radius: 28,
-                    backgroundColor: colors.primaryContainer,
                     backgroundImage: avatarImage,
                     child: avatarImage == null
                         ? Text(
@@ -64,31 +66,10 @@ class BurgerMenu extends StatelessWidget {
                           ? shownNick[0].toUpperCase()
                           : '?',
                       style: AppTypography.h3.copyWith(
-                        color: colors.onPrimary,
+                        color: colors.surface,
                       ),
                     )
                         : null,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          shownNick,
-                          style: AppTypography.h4.copyWith(
-                            color: colors.onPrimary,
-                          ),
-                        ),
-                        Text(
-                          email,
-                          style: AppTypography.bodyS.copyWith(
-                            color: colors.secondary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
                   ),
                 ],
               ),
@@ -164,16 +145,6 @@ class BurgerMenu extends StatelessWidget {
                   route: '/holidays',
                   isSelected: currentRoute == '/holidays',
                 ),
-
-                const SizedBox(height: 16),
-                _sectionHeader(context, "Account"),
-                _menuItem(
-                  context: context,
-                  title: "Settings",
-                  icon: AppIcons.settings,
-                  route: '/settings',
-                  isSelected: currentRoute == '/settings',
-                ),
                 _menuItem(
                   context: context,
                   title: "Storage Stats",
@@ -184,7 +155,14 @@ class BurgerMenu extends StatelessWidget {
               ],
             ),
           ),
-          const _SettingsTile(),
+          const Spacer(),
+          _menuItem(
+            context: context,
+            title: "Settings",
+            icon: AppIcons.settings,
+            route: '/settings',
+            isSelected: currentRoute == '/settings',
+          ),
         ],
       ),
     );
@@ -241,44 +219,6 @@ class BurgerMenu extends StatelessWidget {
           Navigator.pushReplacementNamed(context, route);
         }
       },
-    );
-  }
-}
-
-class _SettingsTile extends StatelessWidget {
-  const _SettingsTile();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final currentRoute = ModalRoute.of(context)?.settings.name;
-    final isSelected = currentRoute == '/settings';
-
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: colors.outlineVariant, width: 1),
-        ),
-      ),
-      child: ListTile(
-        leading: Icon(
-          AppIcons.settings,
-          size: 20,
-          color: colors.primary,
-        ),
-        title: Text(
-          'Settings',
-          style: AppTypography.actionL.copyWith(color: colors.onSurface),
-        ),
-        selected: isSelected,
-        selectedTileColor: colors.tertiary,
-        onTap: () {
-          Navigator.pop(context);
-          if (!isSelected) {
-            Navigator.pushReplacementNamed(context, '/settings');
-          }
-        },
-      ),
     );
   }
 }
