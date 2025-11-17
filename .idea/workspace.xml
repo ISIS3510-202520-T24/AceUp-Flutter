@@ -10,21 +10,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="83f1ba98-ac45-48c6-90e8-73adca6f18e6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/lib/models/planner/term_model.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/viewmodels/planner/edit_subject_viewmodel.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/viewmodels/planner/edit_term_viewmodel.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/viewmodels/planner/planner_viewmodel.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/viewmodels/planner/term_viewmodel.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/views/planner/edit_subject_screen.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/views/planner/edit_term_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/models/subject_model.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/models/planner/subject_model.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/services/subjects/subject_service.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/services/subjects/subject_service.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/viewmodels/planner/subject_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/planner/subject_viewmodel.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/planner/planner_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/planner/planner_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/planner/subject_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/planner/subject_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/planner/term_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/planner/term_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/widgets/burger_menu.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/burger_menu.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

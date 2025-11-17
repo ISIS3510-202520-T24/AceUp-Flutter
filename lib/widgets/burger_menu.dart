@@ -1,5 +1,3 @@
-// lib/widgets/burger_menu.dart
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -48,13 +46,12 @@ class BurgerMenu extends StatelessWidget {
     return Drawer(
       child: Column(
         children: [
-          // header user
-          SafeArea(
-            bottom: false,
-            child: Container(
-              width: double.infinity,
-              color: colors.surfaceContainerHigh,
-              padding: const EdgeInsets.all(16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            decoration: BoxDecoration(color: colors.onPrimary),
+            child: SafeArea(
+              bottom: false,
               child: Row(
                 children: [
                   CircleAvatar(
@@ -63,13 +60,13 @@ class BurgerMenu extends StatelessWidget {
                     backgroundImage: avatarImage,
                     child: avatarImage == null
                         ? Text(
-                            shownNick.isNotEmpty
-                                ? shownNick[0].toUpperCase()
-                                : '?',
-                            style: AppTypography.h3.copyWith(
-                              color: colors.onPrimary,
-                            ),
-                          )
+                      shownNick.isNotEmpty
+                          ? shownNick[0].toUpperCase()
+                          : '?',
+                      style: AppTypography.h3.copyWith(
+                        color: colors.onPrimary,
+                      ),
+                    )
                         : null,
                   ),
                   const SizedBox(width: 12),
@@ -98,10 +95,10 @@ class BurgerMenu extends StatelessWidget {
             ),
           ),
 
-          // menu items
           Expanded(
             child: ListView(
-              padding: EdgeInsets.zero,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.symmetric(vertical:8),
               children: [
                 const SizedBox(height: 8),
                 _sectionHeader(context, "Schedule"),
@@ -187,8 +184,7 @@ class BurgerMenu extends StatelessWidget {
               ],
             ),
           ),
-
-          const _LogoutTile(),
+          const _SettingsTile(),
         ],
       ),
     );
@@ -197,7 +193,7 @@ class BurgerMenu extends StatelessWidget {
   Widget _sectionHeader(BuildContext context, String title) {
     final colors = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Text(
         title,
         style: AppTypography.h4.copyWith(color: colors.onPrimary),
@@ -218,57 +214,45 @@ class BurgerMenu extends StatelessWidget {
     return ListTile(
       leading: Icon(
         icon,
-        color: isSelected ? colors.primary : colors.onSurfaceVariant,
+        size: 20,
+        color: isComingSoon ? colors.shadow : colors.primary,
       ),
-      title: Row(
-        children: [
-          Expanded(
-            child: Text(
-              title,
-              style: AppTypography.actionL.copyWith(
-                color: isSelected ? colors.primary : colors.onSurface,
+      title: Text(
+        title,
+        style: isComingSoon ? AppTypography.actionL.copyWith(color: colors.shadow) : AppTypography.actionL.copyWith(color: colors.onSurface),
+      ),
+      selected: isSelected,
+      selectedTileColor: colors.tertiary,
+      onTap: () {
+        Navigator.pop(context);
+
+        if (isComingSoon) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$title - Coming soon!'),
+              duration: const Duration(seconds: 1),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
-          ),
-          if (isComingSoon)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
-              decoration: BoxDecoration(
-                color: colors.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                'soon',
-                style: AppTypography.bodyXS.copyWith(
-                  color: colors.secondary,
-                ),
-              ),
-            ),
-        ],
-      ),
-      onTap: route == null
-          ? null
-          : () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, route);
-            },
+          );
+        } else if (route != null && !isSelected) {
+          Navigator.pushReplacementNamed(context, route);
+        }
+      },
     );
   }
 }
 
-class _LogoutTile extends StatelessWidget {
-  const _LogoutTile();
+class _SettingsTile extends StatelessWidget {
+  const _SettingsTile();
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final auth = context.read<AuthService>();
-
-    Future<void> _doLogout() async {
-      await auth.signOut();
-      if (!context.mounted) return;
-      Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
-    }
+    final currentRoute = ModalRoute.of(context)?.settings.name;
+    final isSelected = currentRoute == '/settings';
 
     return Container(
       decoration: BoxDecoration(
@@ -276,18 +260,24 @@ class _LogoutTile extends StatelessWidget {
           top: BorderSide(color: colors.outlineVariant, width: 1),
         ),
       ),
-      child: SafeArea(
-        top: false,
-        child: ListTile(
-          leading: Icon(AppIcons.logout, color: colors.primary),
-          title: Text(
-            'Logout',
-            style: AppTypography.actionL.copyWith(
-              color: colors.onSurface,
-            ),
-          ),
-          onTap: _doLogout,
+      child: ListTile(
+        leading: Icon(
+          AppIcons.settings,
+          size: 20,
+          color: colors.primary,
         ),
+        title: Text(
+          'Settings',
+          style: AppTypography.actionL.copyWith(color: colors.onSurface),
+        ),
+        selected: isSelected,
+        selectedTileColor: colors.tertiary,
+        onTap: () {
+          Navigator.pop(context);
+          if (!isSelected) {
+            Navigator.pushReplacementNamed(context, '/settings');
+          }
+        },
       ),
     );
   }
