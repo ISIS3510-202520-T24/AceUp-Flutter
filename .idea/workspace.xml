@@ -10,16 +10,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="83f1ba98-ac45-48c6-90e8-73adca6f18e6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/lib/views/planner/planner_screen.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/views/planner/subject_screen.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/views/planner/term_screen.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/lib/viewmodels/planner/subject_viewmodel.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/aceup_clean.iml" beforeDir="false" afterPath="$PROJECT_DIR$/aceup_clean.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/viewmodels/assignments/assignments_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/assignments/assignments_viewmodel.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/viewmodels/assignments/edit_assignment_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/assignments/edit_assignment_viewmodel.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/viewmodels/today/today_viewmodel.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/viewmodels/today/today_viewmodel.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/assignments/assignments_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/assignments/assignments_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/assignments/edit_assignment_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/assignments/edit_assignment_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/planner/subject_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/planner/subject_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/views/today/today_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/today/today_screen.dart" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -121,7 +114,7 @@
     &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
     &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
     &quot;dart.analysis.tool.window.visible&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;develop&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;feature/planner-section-of-aceup&quot;,
     &quot;io.flutter.reload.alreadyRun&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/LAURA/AceUp-Flutter/assets/icons&quot;,
     &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,

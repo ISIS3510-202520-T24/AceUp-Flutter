@@ -68,7 +68,6 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<TodayViewModel>();
-    final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
       drawer: const BurgerMenu(),
