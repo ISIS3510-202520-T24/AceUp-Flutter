@@ -142,9 +142,8 @@ class BurgerMenu extends StatelessWidget {
                   context: context,
                   title: "Planner",
                   icon: AppIcons.planner,
-                  route: null,
-                  isSelected: false,
-                  isComingSoon: true,
+                  route: '/planner',
+                  isSelected: currentRoute == '/planner',
                 ),
                 _menuItem(
                   context: context,

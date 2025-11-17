@@ -30,6 +30,7 @@ import 'views/auth/login_screen.dart';
 import 'views/auth/biometric_screen.dart';
 import 'views/auth/signup_screen.dart';
 import 'views/auth/logout_screen.dart';
+import 'views/planner/planner_screen.dart';
 import 'views/today/today_screen.dart';
 import 'views/holidays/holidays_screen.dart';
 import 'views/assignments/assignments_screen.dart';
@@ -212,6 +213,7 @@ class AceUpApp extends StatelessWidget {
     '/today': (context) => const TodayScreen(),
     '/holidays': (context) => const HolidaysScreen(),
     '/shared': (context) => const SharedScreenWrapper(),
+    '/planner' : (context) => const PlannerScreen(),
     '/assignments': (context) => const AssignmentsScreen(),
     '/settings': (context) => const SettingsScreen(),
     '/group-stats': (context) => const GroupStatsScreen(),

@@ -12,13 +12,22 @@ import '../../widgets/top_bar.dart';
 import '../assignments/edit_assignment_screen.dart';
 
 class SubjectScreen extends StatelessWidget {
-  const SubjectScreen({super.key});
+  final String subjectId;
+  final String termId;
+
+  const SubjectScreen({
+    super.key,
+    required this.subjectId,
+    required this.termId,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => SubjectViewModel(
         repository: context.read<AcademicRepository>(),
+        subjectId: subjectId,
+        termId: termId,
       ),
       child: const _SubjectScreenContent(),
     );
@@ -67,9 +76,12 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
     return Scaffold(
       drawer: const BurgerMenu(),
       appBar: TopBar(
-        title: 'Subject Details',
+        title: viewModel.subject?.name ?? 'Subject',
         leftControlType: LeftControlType.back,
         rightControlType: RightControlType.edit,
+        onRightPressed: () {
+          // TODO: Navigate to edit subject screen
+        },
       ),
       body: Column(
         children: [

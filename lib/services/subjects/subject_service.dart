@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../models/subject_model.dart';
+import '../../models/planner/subject_model.dart';
 import '../analytics/analytics_service.dart';
 
 /// Servicio para gestionar Subjects con validación de datos para GPA

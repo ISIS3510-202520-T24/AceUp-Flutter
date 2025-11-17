@@ -1,0 +1,234 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/planner/planner_viewmodel.dart';
+import '../../themes/app_typography.dart';
+import '../../themes/app_icons.dart';
+import '../../widgets/top_bar.dart';
+import 'term_screen.dart';
+import 'edit_term_screen.dart';
+
+class PlannerScreen extends StatelessWidget {
+  const PlannerScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => PlannerViewModel(),
+      child: const _PlannerContent(),
+    );
+  }
+}
+
+class _PlannerContent extends StatelessWidget {
+  const _PlannerContent();
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = context.watch<PlannerViewModel>();
+    final colors = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      backgroundColor: colors.surface,
+      appBar: const TopBar(
+        title: 'Planner',
+        leftControlType: LeftControlType.menu,
+        rightControlType: RightControlType.none,
+      ),
+      body: _buildBody(context, viewModel, colors),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const EditTermScreen()),
+          );
+          if (result == true) {
+            viewModel.refreshTerms();
+          }
+        },
+        backgroundColor: colors.primary,
+        child: Icon(Icons.add, color: colors.onPrimary),
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context, PlannerViewModel viewModel, ColorScheme colors) {
+    if (viewModel.state == PlannerViewState.loading) {
+      return Center(
+        child: CircularProgressIndicator(color: colors.primary),
+      );
+    }
+
+    if (viewModel.state == PlannerViewState.error) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(AppIcons.priority, size: 48, color: colors.error),
+              const SizedBox(height: 16),
+              Text(
+                viewModel.errorMessage ?? 'An error occurred',
+                style: AppTypography.bodyM.copyWith(color: colors.onSurface),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () => viewModel.refreshTerms(),
+      child: Column(
+        children: [
+          _buildGPASection(context, viewModel, colors),
+          _buildTermsSection(context, viewModel, colors),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGPASection(BuildContext context, PlannerViewModel viewModel, ColorScheme colors) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          _buildStatItem(
+            context,
+            label: 'Overall GPA',
+            value: viewModel.overallGPA?.toStringAsFixed(2) ?? '0.00',
+            colors: colors,
+          ),
+          _buildStatItem(
+            context,
+            label: 'Total Credits',
+            value: viewModel.totalCredits.toString(),
+            colors: colors,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(BuildContext context, {
+    required String label,
+    required String value,
+    required ColorScheme colors,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: AppTypography.bodyM.copyWith(color: colors.onPrimaryContainer),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: AppTypography.h2.copyWith(color: colors.onSurface),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTermsSection(BuildContext context, PlannerViewModel viewModel, ColorScheme colors) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            child: Text(
+              'Terms',
+              style: AppTypography.h3.copyWith(color: colors.onSurface),
+            ),
+          ),
+          Expanded(
+            child: viewModel.terms.isEmpty
+                ? Center(
+              child: Text(
+                'No terms yet. Add one to get started!',
+                style: AppTypography.bodyM.copyWith(color: colors.onSurfaceVariant),
+              ),
+            )
+                : ListView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+              itemCount: viewModel.terms.length,
+              itemBuilder: (context, index) {
+                final term = viewModel.terms[index];
+                return _buildTermCard(context, term, viewModel, colors);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTermCard(BuildContext context, term, PlannerViewModel viewModel, ColorScheme colors) {
+    final dateRange = viewModel.getTermDateRange(term);
+    final termGPA = viewModel.getTermGPA(term.id);
+    final termCredits = viewModel.getTermCredits(term.id);
+
+    return InkWell(
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => TermScreen(termId: term.id),
+          ),
+        );
+        if (result == true) {
+          viewModel.refreshTerms();
+        }
+      },
+      child: Card(
+        elevation: 0,
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      term.name,
+                      style: AppTypography.h4.copyWith(color: colors.onSurface),
+                    ),
+                    if (dateRange.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        dateRange,
+                        style: AppTypography.bodyS.copyWith(color: colors.onPrimaryContainer),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'GPA: ${termGPA?.toStringAsFixed(2) ?? '0.00'}',
+                    style: AppTypography.bodyM.copyWith(color: colors.onSurface),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Credits: $termCredits',
+                    style: AppTypography.bodyS.copyWith(color: colors.onPrimaryContainer),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
