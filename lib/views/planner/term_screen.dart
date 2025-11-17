@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/planner/term_viewmodel.dart';
 import '../../themes/app_typography.dart';
 import '../../themes/app_icons.dart';
+import '../../widgets/content_counter.dart';
 import '../../widgets/top_bar.dart';
 import 'subject_screen.dart';
 import 'edit_subject_screen.dart';
@@ -89,7 +90,17 @@ class _TermContent extends StatelessWidget {
       onRefresh: () => viewModel.refreshTerm(),
       child: Column(
         children: [
-          _buildGPASection(context, viewModel, colors),
+          SizedBox(height: 16.0),
+          ContentCounter(
+            firstItem: CounterItem(
+              title: 'Term GPA: ',
+              value: viewModel.termGPA?.toStringAsFixed(2) ?? '0.00',
+            ),
+            secondItem: CounterItem(
+              title: 'Term Credits: ',
+              value: '${viewModel.termCredits}',
+            ),
+          ),
           _buildSubjectsSection(context, viewModel, colors),
         ],
       ),

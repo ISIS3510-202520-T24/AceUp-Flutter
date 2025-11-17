@@ -13,8 +13,7 @@ class ContentSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
+    final colors = Theme.of(context).colorScheme;
 
     const EdgeInsets outerPadding = EdgeInsets.all(15);
     const EdgeInsets innerPadding = EdgeInsets.all(4);
@@ -41,8 +40,8 @@ class ContentSwitcher extends StatelessWidget {
         dividerColor: Colors.transparent,
         labelColor: colors.onPrimary,
         unselectedLabelColor: colors.inversePrimary,
-        labelStyle: AppTypography.h5,
-        unselectedLabelStyle: AppTypography.h5,
+        labelStyle: tabs.length == 2 ? AppTypography.h4 : AppTypography.h5,
+        unselectedLabelStyle: tabs.length == 2 ? AppTypography.h4 : AppTypography.h5,
         splashFactory: NoSplash.splashFactory,
         overlayColor: WidgetStateProperty.all(Colors.transparent),
         tabs: tabs.map((label) => Tab(text: label)).toList(),

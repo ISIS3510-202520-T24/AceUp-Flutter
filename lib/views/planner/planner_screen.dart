@@ -4,6 +4,7 @@ import '../../viewmodels/planner/planner_viewmodel.dart';
 import '../../themes/app_typography.dart';
 import '../../themes/app_icons.dart';
 import '../../widgets/burger_menu.dart';
+import '../../widgets/content_counter.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
 import 'term_screen.dart';
@@ -86,54 +87,20 @@ class _PlannerContent extends StatelessWidget {
       onRefresh: () => viewModel.refreshTerms(),
       child: Column(
         children: [
-          _buildGPASection(context, viewModel, colors),
+          SizedBox(height: 16.0),
+          ContentCounter(
+            firstItem: CounterItem(
+              title: 'Overall GPA: ',
+              value: viewModel.overallGPA?.toStringAsFixed(2) ?? 'None',
+            ),
+            secondItem: CounterItem(
+              title: 'Total Credits: ',
+              value: '${viewModel.totalCredits}',
+            ),
+          ),
           _buildTermsSection(context, viewModel, colors),
         ],
       ),
-    );
-  }
-
-  Widget _buildGPASection(BuildContext context, PlannerViewModel viewModel, ColorScheme colors) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _buildStatItem(
-            context,
-            label: 'Overall GPA',
-            value: viewModel.overallGPA?.toStringAsFixed(2) ?? '0.00',
-            colors: colors,
-          ),
-          _buildStatItem(
-            context,
-            label: 'Total Credits',
-            value: viewModel.totalCredits.toString(),
-            colors: colors,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem(BuildContext context, {
-    required String label,
-    required String value,
-    required ColorScheme colors,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTypography.bodyM.copyWith(color: colors.onPrimaryContainer),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: AppTypography.h2.copyWith(color: colors.onSurface),
-        ),
-      ],
     );
   }
 

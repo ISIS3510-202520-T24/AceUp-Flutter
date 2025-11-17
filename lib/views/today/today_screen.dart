@@ -6,6 +6,7 @@ import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 
 import '../../widgets/burger_menu.dart';
+import '../../widgets/content_counter.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/keep_alive_wrapper.dart';
@@ -115,77 +116,6 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
     );
   }
 
-  Widget _buildProgressWidget(BuildContext context, TodayViewModel viewModel) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: colors.surfaceDim,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: colors.surface,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildProgressItem(
-                        context,
-                        count: viewModel.completedCount,
-                        label: 'Done: ',
-                        color: AppColors.successDark,
-                      ),
-                      _buildProgressItem(
-                        context,
-                        count: viewModel.pendingCount,
-                        label: 'Pending: ',
-                        color: AppColors.errorDark,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressItem(
-      BuildContext context, {
-        required int count,
-        required String label,
-        required Color color,
-      }) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    return Row(
-      children: [
-        Text(
-          label,
-          style: AppTypography.h4.copyWith(color: colors.onSurface),
-        ),
-        Text(
-          '$count',
-          style: AppTypography.h4.copyWith(color: color),
-        ),
-      ],
-    );
-  }
-
   Widget _buildTimetableContent(BuildContext context, TodayViewModel viewModel) {
     return _buildTabContent(context, viewModel, TodayTab.timetable);
   }
@@ -193,7 +123,18 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
   Widget _buildAssignmentsContent(BuildContext context, TodayViewModel viewModel) {
     return Column(
         children: [
-          _buildProgressWidget(context, viewModel),
+          ContentCounter(
+            firstItem: CounterItem(
+              title: 'Done: ',
+              value: '${viewModel.completedCount}',
+              color: AppColors.successDark,
+            ),
+            secondItem: CounterItem(
+              title: 'Pending: ',
+              value: ' ${viewModel.pendingCount}',
+              color: AppColors.errorDark,
+            ),
+          ),
           Expanded(child: _buildTabContent(context, viewModel, TodayTab.assignments)),
         ]
     );

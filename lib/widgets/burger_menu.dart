@@ -37,7 +37,6 @@ class BurgerMenu extends StatelessWidget {
     } else if (avatarPath != null && avatarPath.isNotEmpty) {
       avatarImage = FileImage(File(avatarPath));
     } else {
-      // fallback inicial si nunca se guardó nada
       avatarImage = const AssetImage('assets/avatars/avatar_1.png');
     }
 
@@ -82,7 +81,7 @@ class BurgerMenu extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical:8),
               children: [
                 const SizedBox(height: 8),
-                _sectionHeader(context, "Schedule"),
+                _sectionHeader(context, "My Schedules"),
                 _menuItem(
                   context: context,
                   title: "Today",
@@ -155,7 +154,6 @@ class BurgerMenu extends StatelessWidget {
               ],
             ),
           ),
-          const Spacer(),
           _menuItem(
             context: context,
             title: "Settings",
