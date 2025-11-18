@@ -45,30 +45,44 @@ class BurgerMenu extends StatelessWidget {
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
             decoration: BoxDecoration(color: colors.onPrimary),
             child: SafeArea(
               bottom: false,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "AceUp",
-                    style: AppTypography.logo.copyWith(color: colors.tertiary),
-                  ),
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundImage: avatarImage,
-                    child: avatarImage == null
-                        ? Text(
-                      shownNick.isNotEmpty
-                          ? shownNick[0].toUpperCase()
-                          : '?',
-                      style: AppTypography.h3.copyWith(
-                        color: colors.surface,
+                  Column(
+                    children: [
+                      Text(
+                        shownNick.isNotEmpty ? "$shownNick's" : "",
+                        style: AppTypography.h5.copyWith(color: colors.tertiary, height: 0.8),
                       ),
-                    )
-                        : null,
+                      Text(
+                        "AceUp",
+                        style: AppTypography.logo.copyWith(color: colors.tertiary, height: 0.8),
+                      ),
+                    ],
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/account');
+                    },
+                    child: CircleAvatar(
+                      radius: 28,
+                      backgroundImage: avatarImage,
+                      child: avatarImage == null
+                          ? Text(
+                        shownNick.isNotEmpty
+                            ? shownNick[0].toUpperCase()
+                            : '?',
+                        style: AppTypography.h3.copyWith(
+                          color: colors.surface,
+                        ),
+                      )
+                          : null,
+                    ),
                   ),
                 ],
               ),
@@ -76,90 +90,97 @@ class BurgerMenu extends StatelessWidget {
           ),
 
           Expanded(
-            child: ListView(
-              physics: const NeverScrollableScrollPhysics(),
-              padding: EdgeInsets.symmetric(vertical:8),
-              children: [
-                const SizedBox(height: 8),
-                _sectionHeader(context, "My Schedules"),
-                _menuItem(
-                  context: context,
-                  title: "Today",
-                  icon: AppIcons.calendarDay,
-                  route: '/today',
-                  isSelected: currentRoute == '/today',
-                ),
-                _menuItem(
-                  context: context,
-                  title: "Week View",
-                  icon: AppIcons.calendarWeek,
-                  route: null,
-                  isSelected: false,
-                  isComingSoon: true,
-                ),
-                _menuItem(
-                  context: context,
-                  title: "Calendar",
-                  icon: AppIcons.calendarMonth,
-                  route: null,
-                  isSelected: false,
-                  isComingSoon: true,
-                ),
-                _menuItem(
-                  context: context,
-                  title: "Shared",
-                  icon: AppIcons.shared,
-                  route: '/shared',
-                  isSelected: currentRoute == '/shared',
-                ),
+            child: SafeArea(
+              top: false,
+              child: ListView(
+                physics: const NeverScrollableScrollPhysics(),
+                padding: EdgeInsets.zero,
+                children: [
+                  const SizedBox(height: 8),
+                  _sectionHeader(context, "My Schedules"),
+                  _menuItem(
+                    context: context,
+                    title: "Today",
+                    icon: AppIcons.calendarDay,
+                    route: '/today',
+                    isSelected: currentRoute == '/today',
+                  ),
+                  _menuItem(
+                    context: context,
+                    title: "Week View",
+                    icon: AppIcons.calendarWeek,
+                    route: null,
+                    isSelected: false,
+                    isComingSoon: true,
+                  ),
+                  _menuItem(
+                    context: context,
+                    title: "Calendar",
+                    icon: AppIcons.calendarMonth,
+                    route: null,
+                    isSelected: false,
+                    isComingSoon: true,
+                  ),
+                  _menuItem(
+                    context: context,
+                    title: "Shared",
+                    icon: AppIcons.shared,
+                    route: '/shared',
+                    isSelected: currentRoute == '/shared',
+                  ),
 
-                const SizedBox(height: 16),
-                _sectionHeader(context, "My Data"),
-                _menuItem(
-                  context: context,
-                  title: "Planner",
-                  icon: AppIcons.planner,
-                  route: '/planner',
-                  isSelected: currentRoute == '/planner',
-                ),
-                _menuItem(
-                  context: context,
-                  title: "Assignments",
-                  icon: AppIcons.assignments,
-                  route: '/assignments',
-                  isSelected: currentRoute == '/assignments',
-                ),
-                _menuItem(
-                  context: context,
-                  title: "Teachers",
-                  icon: AppIcons.teacher,
-                  route: null,
-                  isSelected: false,
-                  isComingSoon: true,
-                ),
-                _menuItem(
-                  context: context,
-                  title: "Holidays",
-                  icon: AppIcons.holidays,
-                  route: '/holidays',
-                  isSelected: currentRoute == '/holidays',
-                ),
-                _menuItem(
-                  context: context,
-                  title: "Storage Stats",
-                  icon: Icons.storage,
-                  route: '/group-stats',
-                  isSelected: currentRoute == '/group-stats',
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  _sectionHeader(context, "My Data"),
+                  _menuItem(
+                    context: context,
+                    title: "Planner",
+                    icon: AppIcons.planner,
+                    route: '/planner',
+                    isSelected: currentRoute == '/planner',
+                  ),
+                  _menuItem(
+                    context: context,
+                    title: "Assignments",
+                    icon: AppIcons.assignments,
+                    route: '/assignments',
+                    isSelected: currentRoute == '/assignments',
+                  ),
+                  _menuItem(
+                    context: context,
+                    title: "Teachers",
+                    icon: AppIcons.teacher,
+                    route: null,
+                    isSelected: false,
+                    isComingSoon: true,
+                  ),
+                  _menuItem(
+                    context: context,
+                    title: "Holidays",
+                    icon: AppIcons.holidays,
+                    route: '/holidays',
+                    isSelected: currentRoute == '/holidays',
+                  ),
+                  _menuItem(
+                    context: context,
+                    title: "Storage Stats",
+                    icon: Icons.storage,
+                    route: '/group-stats',
+                    isSelected: currentRoute == '/group-stats',
+                  ),
+                  SizedBox(height: 80.0)
+                ],
+              ),
             ),
           ),
-          _menuItem(
-            context: context,
-            title: "Settings",
-            icon: AppIcons.settings,
-            route: '/settings',
-            isSelected: currentRoute == '/settings',
+          SafeArea(
+            top: false,
+            child: _menuItem(
+              context: context,
+              title: "Settings",
+              icon: AppIcons.settings,
+              route: '/settings',
+              isSelected: currentRoute == '/settings',
+            ),
           ),
         ],
       ),

@@ -33,8 +33,7 @@ class _TermContent extends StatelessWidget {
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: TopBar(
-        title: viewModel.term?.name ?? 'Term',
-        leftControlType: LeftControlType.back,
+        title: 'Planner',
         rightControlType: RightControlType.edit,
         onRightPressed: () {
           // TODO: Navigate to edit term screen
@@ -90,6 +89,27 @@ class _TermContent extends StatelessWidget {
       onRefresh: () => viewModel.refreshTerm(),
       child: Column(
         children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            color: colors.tertiary,
+            child: Row(
+              children: [
+                IconButton(
+                  icon: Icon(AppIcons.arrowLeft, size: 20),
+                  color: colors.onTertiary,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                Expanded(
+                  child: Text(
+                    viewModel.term?.name ?? 'Term',
+                    style: AppTypography.h4.copyWith(
+                      color: colors.onPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           SizedBox(height: 16.0),
           ContentCounter(
             firstItem: CounterItem(
@@ -104,50 +124,6 @@ class _TermContent extends StatelessWidget {
           _buildSubjectsSection(context, viewModel, colors),
         ],
       ),
-    );
-  }
-
-  Widget _buildGPASection(BuildContext context, TermViewModel viewModel, ColorScheme colors) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _buildStatItem(
-            context,
-            label: 'Term GPA',
-            value: viewModel.termGPA?.toStringAsFixed(2) ?? '0.00',
-            colors: colors,
-          ),
-          _buildStatItem(
-            context,
-            label: 'Term Credits',
-            value: viewModel.termCredits.toString(),
-            colors: colors,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem(BuildContext context, {
-    required String label,
-    required String value,
-    required ColorScheme colors,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: AppTypography.bodyM.copyWith(color: colors.onPrimaryContainer),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: AppTypography.h2.copyWith(color: colors.onSurface),
-        ),
-      ],
     );
   }
 
