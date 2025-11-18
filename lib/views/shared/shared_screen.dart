@@ -10,6 +10,7 @@ import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/shared/shared_viewmodel.dart';
 import '../../widgets/burger_menu.dart';
+import '../../widgets/content_counter.dart';
 import 'group_detail_screen.dart';
 import '../../widgets/top_bar.dart';
 import '../../services/auth/auth_service.dart';
@@ -148,8 +149,17 @@ class _SharedScreenState extends State<SharedScreen> {
             ),
           
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-            child: _buildTotalGroupsCard(colors, viewModel.groups.length),
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: ContentCounter(
+              firstItem: CounterItem(
+                title: 'Total Groups: ',
+                value: null,
+              ),
+              secondItem: CounterItem(
+                title: null,
+                value: '${viewModel.groups.length}',
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -524,25 +534,6 @@ class _SharedScreenState extends State<SharedScreen> {
             Icon(AppIcons.arrowRight, color: colors.onPrimaryContainer, size: 16),
           ],
         ),
-      ),
-    );
-  }
-  
-  // CORREGIDO: Widget implementado
-  Widget _buildTotalGroupsCard(ColorScheme colors, int count) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.0),
-        boxShadow: [BoxShadow(color: Colors.grey, spreadRadius: 1, blurRadius: 10, offset: const Offset(0, 5))],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text('Total Groups:', style: AppTypography.h5.copyWith(color: colors.onSurface)),
-          Text(count.toString(), style: AppTypography.h5.copyWith(color: colors.onSurface)),
-        ],
       ),
     );
   }

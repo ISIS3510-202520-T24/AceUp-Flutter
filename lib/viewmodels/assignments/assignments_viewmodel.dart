@@ -60,7 +60,6 @@ class AssignmentsViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Load from repository (offline-first)
       _pendingAssignments = await _repository.getPendingAssignments(userId);
       _completedAssignments = await _repository.getCompletedAssignments(userId);
 
@@ -84,15 +83,40 @@ class AssignmentsViewModel extends ChangeNotifier {
     try {
       final newStatus = assignment.isPending ? 'Completed' : 'Pending';
 
-      // Update via repository (offline-first)
       await _repository.updateAssignmentStatus(assignment.id, newStatus);
 
-      // Reload assignments to reflect changes
       await _loadAllAssignments();
     } catch (e) {
       _errorMessage = 'Failed to update assignment: $e';
       _state = AssignmentsViewState.error;
       notifyListeners();
+    }
+  }
+
+  bool get hasContent {
+    switch (_selectedTab) {
+      case AssignmentsTab.pending:
+        return _pendingAssignments.isNotEmpty;
+      case AssignmentsTab.completed:
+        return _completedAssignments.isNotEmpty;
+    }
+  }
+
+  String get emptyStateMessage {
+    switch (_selectedTab) {
+      case AssignmentsTab.pending:
+        return 'You have no pending assignments';
+      case AssignmentsTab.completed:
+        return 'You have no completed assignments';
+    }
+  }
+
+  String get emptyStateSubtitle {
+    switch (_selectedTab) {
+      case AssignmentsTab.pending:
+        return 'All assignments are up to date';
+      case AssignmentsTab.completed:
+        return 'No assignments have been completed yet';
     }
   }
 

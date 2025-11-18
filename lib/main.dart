@@ -29,7 +29,8 @@ import 'viewmodels/holidays/holidays_viewmodel.dart';
 import 'views/auth/login_screen.dart';
 import 'views/auth/biometric_screen.dart';
 import 'views/auth/signup_screen.dart';
-import 'views/auth/logout_screen.dart';
+import 'views/auth/account_screen.dart';
+import 'views/planner/planner_screen.dart';
 import 'views/today/today_screen.dart';
 import 'views/holidays/holidays_screen.dart';
 import 'views/assignments/assignments_screen.dart';
@@ -193,12 +194,8 @@ class AceUpApp extends StatelessWidget {
     );
     return child!;
   },
-
-  // 🔸 Arrancamos por '/', y '/' es AuthGate. NO uses 'home:' en ningún lado.
   initialRoute: '/',
-
   routes: {
-    // '/' -> AuthGate decide: si hay sesión => Today; si no => Login
     '/': (context) => AuthGate(
           home: const TodayScreen(),
           login: LoginScreen(
@@ -212,12 +209,11 @@ class AceUpApp extends StatelessWidget {
     '/today': (context) => const TodayScreen(),
     '/holidays': (context) => const HolidaysScreen(),
     '/shared': (context) => const SharedScreenWrapper(),
+    '/planner' : (context) => const PlannerScreen(),
     '/assignments': (context) => const AssignmentsScreen(),
     '/settings': (context) => const SettingsScreen(),
     '/group-stats': (context) => const GroupStatsScreen(),
-    '/account': (context) => LogoutScreen(
-          vm: VmScope.of(context).get<LoginViewModel>(),
-        ),
+    '/account': (context) => AccountScreen(),
     '/signup': (context) {
       return ChangeNotifierProvider(
         create: (_) => SignUpViewModel(),
