@@ -38,11 +38,57 @@ class _AccountScreenState extends State<AccountScreen> {
   String? _pendingAssetAvatar;
   String? _pendingGalleryPath;
 
-  final List<String> _presetAvatars = const [
-    'assets/avatars/avatar_1.png',
-    'assets/avatars/avatar_2.png',
-    'assets/avatars/avatar_3.png',
-    'assets/avatars/avatar_4.png',
+  final List<String> _presetAvatars = [
+    'assets/avatars/bat_avatar.png',
+    'assets/avatars/bear_avatar.png',
+    'assets/avatars/beaver_avatar.png',
+    'assets/avatars/boar_avatar.png',
+    'assets/avatars/buffalo_avatar.png',
+    'assets/avatars/camel_avatar.png',
+    'assets/avatars/cat_avatar.png',
+    'assets/avatars/chameleon_avatar.png',
+    'assets/avatars/cheetah_avatar.png',
+    'assets/avatars/cow_avatar.png',
+    'assets/avatars/deer_avatar.png',
+    'assets/avatars/dog_avatar.png',
+    'assets/avatars/duck_avatar.png',
+    'assets/avatars/eagle_avatar.png',
+    'assets/avatars/elephant_avatar.png',
+    'assets/avatars/fox_avatar.png',
+    'assets/avatars/frog_avatar.png',
+    'assets/avatars/giraffe_avatar.png',
+    'assets/avatars/goat_avatar.png',
+    'assets/avatars/gorilla_avatar.png',
+    'assets/avatars/hamster_avatar.png',
+    'assets/avatars/hen_avatar.png',
+    'assets/avatars/hippo_avatar.png',
+    'assets/avatars/horse_avatar.png',
+    'assets/avatars/kangaroo_avatar.png',
+    'assets/avatars/koala_avatar.png',
+    'assets/avatars/lemur_avatar.png',
+    'assets/avatars/lion_avatar.png',
+    'assets/avatars/llama_avatar.png',
+    'assets/avatars/monkey_avatar.png',
+    'assets/avatars/ostrich_avatar.png',
+    'assets/avatars/owl_avatar.png',
+    'assets/avatars/panda_avatar.png',
+    'assets/avatars/penguin_avatar.png',
+    'assets/avatars/pig_avatar.png',
+    'assets/avatars/polarbear_avatar.png',
+    'assets/avatars/rabbit_avatar.png',
+    'assets/avatars/raccoon_avatar.png',
+    'assets/avatars/rhinoceros_avatar.png',
+    'assets/avatars/shark_avatar.png',
+    'assets/avatars/sheep_avatar.png',
+    'assets/avatars/sloth_avatar.png',
+    'assets/avatars/snake_avatar.png',
+    'assets/avatars/squirrel_avatar.png',
+    'assets/avatars/swan_avatar.png',
+    'assets/avatars/tiger_avatar.png',
+    'assets/avatars/turtle_avatar.png',
+    'assets/avatars/walrus_avatar.png',
+    'assets/avatars/wolf_avatar.png',
+    'assets/avatars/zebra_avatar.png',
   ];
 
   @override
@@ -144,8 +190,9 @@ class _AccountScreenState extends State<AccountScreen> {
               final asset = _presetAvatars[i];
               return GestureDetector(
                 onTap: () => Navigator.pop(c, asset),
-                child: CircleAvatar(
-                  backgroundImage: AssetImage(asset),
+                child: Image.asset(
+                  asset,
+                  fit: BoxFit.contain,
                 ),
               );
             },

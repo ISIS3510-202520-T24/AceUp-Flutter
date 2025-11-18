@@ -38,7 +38,7 @@ class BurgerMenu extends StatelessWidget {
     } else if (avatarPath != null && avatarPath.isNotEmpty) {
       avatarImage = FileImage(File(avatarPath));
     } else {
-      avatarImage = const AssetImage('assets/avatars/avatar_1.png');
+      avatarImage = const AssetImage('assets/avatars/polarbear_avatar.png');
     }
 
     return Drawer(

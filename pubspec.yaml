@@ -100,14 +100,8 @@ flutter:
   assets:
     - assets/app_icon/
     - assets/logos/
-    - assets/avatars/avatar_1.png
-    - assets/avatars/avatar_2.png
-    - assets/avatars/avatar_3.png
-    - assets/avatars/avatar_4.png
-    - assets/group_avatars/group_1.png
-    - assets/group_avatars/group_2.png
-    - assets/group_avatars/group_3.png
-    - assets/group_avatars/group_4.png
+    - assets/avatars/
+    - assets/group_avatars/
 
   fonts:
     - family: Inter
