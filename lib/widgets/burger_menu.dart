@@ -19,12 +19,13 @@ class BurgerMenu extends StatelessWidget {
 
     final auth = context.read<AuthService>();
     final email = auth.currentUser?.email ?? '';
+    final nick = auth.currentUser?.displayName ?? '';
     final fallbackNick = auth.currentUser?.displayName ?? 'Student';
 
     final profile = context.watch<ProfileNotifier>();
 
-    final shownNick = (profile.nickname.trim().isNotEmpty)
-        ? profile.nickname.trim()
+    final shownNick = (nick.isNotEmpty)
+        ? nick
         : (fallbackNick.isNotEmpty ? fallbackNick : email);
 
     ImageProvider? avatarImage;
@@ -53,14 +54,15 @@ class BurgerMenu extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         shownNick.isNotEmpty ? "$shownNick's" : "",
-                        style: AppTypography.h5.copyWith(color: colors.tertiary, height: 0.8),
+                        style: AppTypography.h5.copyWith(color: colors.tertiary, height: 0.9),
                       ),
                       Text(
                         "AceUp",
-                        style: AppTypography.logo.copyWith(color: colors.tertiary, height: 0.8),
+                        style: AppTypography.logo.copyWith(color: colors.tertiary, height: 0.9),
                       ),
                     ],
                   ),

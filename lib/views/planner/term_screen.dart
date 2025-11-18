@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../../viewmodels/planner/term_viewmodel.dart';
 import '../../themes/app_typography.dart';
 import '../../themes/app_icons.dart';
+import '../../widgets/burger_menu.dart';
 import '../../widgets/content_counter.dart';
+import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
 import 'subject_screen.dart';
 import 'edit_subject_screen.dart';
@@ -31,7 +33,7 @@ class _TermContent extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colors.surface,
+      drawer: BurgerMenu(),
       appBar: TopBar(
         title: 'Planner',
         rightControlType: RightControlType.edit,
@@ -40,20 +42,24 @@ class _TermContent extends StatelessWidget {
         },
       ),
       body: _buildBody(context, viewModel, colors),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => EditSubjectScreen(termId: viewModel.termId),
-            ),
-          );
-          if (result == true) {
-            viewModel.refreshTerm();
-          }
-        },
-        backgroundColor: colors.primary,
-        child: Icon(Icons.add, color: colors.onPrimary),
+      floatingActionButton: FAB(
+        options: [
+          FabOption(
+            icon: AppIcons.add,
+            label: 'Add Subject',
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => EditSubjectScreen(termId: viewModel.termId),
+                ),
+              );
+              if (result == true) {
+                viewModel.refreshTerm();
+              }
+            },
+          ),
+        ],
       ),
     );
   }
