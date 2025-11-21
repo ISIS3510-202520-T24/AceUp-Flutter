@@ -70,7 +70,6 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<AssignmentsViewModel>();
-    final theme = Theme.of(context);
 
     return Scaffold(
       drawer: const BurgerMenu(),

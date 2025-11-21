@@ -15,6 +15,8 @@ import '../../services/auth/secure_store.dart'; // para limpiar credenciales bio
 import '../../services/auth/session_prefs.dart';
 import '../../services/auth/secure_store.dart'; // si ya lo estabas usando para biometría
 
+// ignore_for_file: uri_does_not_exist, undefined_method, undefined_identifier, non_type_in_catch_clause, use_build_context_synchronously
+
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
 

@@ -74,16 +74,14 @@ class BurgerMenu extends StatelessWidget {
                     child: CircleAvatar(
                       radius: 28,
                       backgroundImage: avatarImage,
-                      child: avatarImage == null
-                          ? Text(
+                      child: Text(
                         shownNick.isNotEmpty
                             ? shownNick[0].toUpperCase()
                             : '?',
                         style: AppTypography.h3.copyWith(
                           color: colors.surface,
                         ),
-                      )
-                          : null,
+                      ),
                     ),
                   ),
                 ],
