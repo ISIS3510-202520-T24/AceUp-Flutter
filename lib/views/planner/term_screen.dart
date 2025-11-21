@@ -9,6 +9,7 @@ import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
 import 'subject_screen.dart';
 import 'edit_subject_screen.dart';
+import 'edit_term_screen.dart';
 
 class TermScreen extends StatelessWidget {
   final String termId;
@@ -19,13 +20,15 @@ class TermScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => TermViewModel(termId: termId),
-      child: const _TermContent(),
+      child: _TermContent(termId: termId),
     );
   }
 }
 
 class _TermContent extends StatelessWidget {
-  const _TermContent();
+  final String termId;
+  
+  const _TermContent({required this.termId});
 
   @override
   Widget build(BuildContext context) {
@@ -37,8 +40,16 @@ class _TermContent extends StatelessWidget {
       appBar: TopBar(
         title: 'Planner',
         rightControlType: RightControlType.edit,
-        onRightPressed: () {
-          // TODO: Navigate to edit term screen
+        onRightPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EditTermScreen(termId: termId),
+            ),
+          );
+          if (result == true) {
+            viewModel.refreshTerm();
+          }
         },
       ),
       body: _buildBody(context, viewModel, colors),
@@ -150,15 +161,17 @@ class _TermContent extends StatelessWidget {
                 ? Center(
               child: Text(
                 'No subjects yet. Add one to get started!',
-                style: AppTypography.bodyM.copyWith(color: colors.onSurfaceVariant),
+                style: AppTypography.bodyM.copyWith(
+                  color: colors.onPrimaryContainer,
+                ),
               ),
             )
                 : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: viewModel.subjects.length,
               itemBuilder: (context, index) {
                 final subject = viewModel.subjects[index];
-                return _buildSubjectCard(context, subject, viewModel, colors);
+                return _buildSubjectCard(context, subject, viewModel);
               },
             ),
           ),
@@ -167,21 +180,12 @@ class _TermContent extends StatelessWidget {
     );
   }
 
-  Widget _buildSubjectCard(BuildContext context, subject, TermViewModel viewModel, ColorScheme colors) {
-    // Parse color from hex string or use default
-    Color subjectColor = colors.primary;
-    try {
-      if (subject.code != null) {
-        // If there's a color stored, we'd parse it here
-        // For now, using default colors based on index
-      }
-    } catch (e) {
-      subjectColor = colors.primary;
-    }
+  Widget _buildSubjectCard(BuildContext context, dynamic subject, TermViewModel viewModel) {
+    final colors = Theme.of(context).colorScheme;
 
     return InkWell(
-      onTap: () async {
-        final result = await Navigator.push(
+      onTap: () {
+        Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => SubjectScreen(
@@ -190,43 +194,36 @@ class _TermContent extends StatelessWidget {
             ),
           ),
         );
-        if (result == true) {
-          viewModel.refreshTerm();
-        }
       },
       child: Card(
         elevation: 0,
         margin: const EdgeInsets.only(bottom: 12),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 4,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: subjectColor,
-                  borderRadius: BorderRadius.circular(2),
+              Text(
+                subject.name,
+                style: AppTypography.h4.copyWith(color: colors.onSurface),
+              ),
+              if (subject.code != null && subject.code.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    subject.code,
+                    style: AppTypography.bodyS.copyWith(
+                      color: colors.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 8),
+              Text(
+                '${subject.credits} credits',
+                style: AppTypography.bodyS.copyWith(
+                  color: colors.onPrimaryContainer,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      subject.name,
-                      style: AppTypography.h4.copyWith(color: colors.onSurface),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Credits: ${subject.credits}, Grade: 4.00',
-                      style: AppTypography.bodyS.copyWith(color: colors.onPrimaryContainer),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
             ],
           ),
         ),

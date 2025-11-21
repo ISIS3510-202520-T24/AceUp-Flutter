@@ -18,7 +18,7 @@ class EditSubjectScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => EditSubjectViewModel(termId: termId),
+      create: (_) => EditSubjectViewModel(termId: termId, subjectId: subjectId),
       child: const _EditSubjectContent(),
     );
   }
@@ -40,7 +40,11 @@ class _EditSubjectContent extends StatelessWidget {
         rightControlType: RightControlType.save,
         onRightPressed: () => _saveSubject(context, viewModel),
       ),
-      body: SingleChildScrollView(
+      body: viewModel.state == EditSubjectViewState.loading
+          ? Center(
+        child: CircularProgressIndicator(color: colors.primary),
+      )
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -50,7 +54,12 @@ class _EditSubjectContent extends StatelessWidget {
               hint: 'Subject Name',
             ),
             const SizedBox(height: 24),
-            _buildColorSection(context, viewModel, colors),
+            Text(
+              'Color',
+              style: AppTypography.bodyL.copyWith(color: colors.onSurface),
+            ),
+            const SizedBox(height: 12),
+            _buildColorPicker(context, viewModel, colors),
             const SizedBox(height: 32),
             if (viewModel.state == EditSubjectViewState.saving)
               Center(
@@ -71,61 +80,34 @@ class _EditSubjectContent extends StatelessWidget {
     );
   }
 
-  Widget _buildColorSection(BuildContext context, EditSubjectViewModel viewModel, ColorScheme colors) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Color',
-          style: AppTypography.h4.copyWith(color: colors.onSurface),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: viewModel.colorOptions.map((colorHex) {
-            final isSelected = viewModel.selectedColor == colorHex;
-            final color = _parseColor(colorHex);
+  Widget _buildColorPicker(BuildContext context, EditSubjectViewModel viewModel, ColorScheme colors) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: viewModel.colorOptions.map((colorHex) {
+        final color = Color(int.parse(colorHex.substring(1), radix: 16) + 0xFF000000);
+        final isSelected = viewModel.selectedColor == colorHex;
 
-            return GestureDetector(
-              onTap: () => viewModel.setColor(colorHex),
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: isSelected ? colors.onSurface : Colors.transparent,
-                    width: 3,
-                  ),
-                ),
-                child: isSelected
-                    ? Icon(
-                  Icons.check,
-                  color: _getContrastColor(color),
-                  size: 24,
-                )
-                    : null,
+        return GestureDetector(
+          onTap: () => viewModel.setColor(colorHex),
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isSelected ? colors.primary : colors.outline,
+                width: isSelected ? 3 : 1,
               ),
-            );
-          }).toList(),
-        ),
-      ],
+            ),
+            child: isSelected
+                ? const Icon(Icons.check, color: Colors.white, size: 24)
+                : null,
+          ),
+        );
+      }).toList(),
     );
-  }
-
-  Color _parseColor(String hexColor) {
-    try {
-      return Color(int.parse(hexColor.replaceFirst('#', '0xFF')));
-    } catch (e) {
-      return Colors.blue;
-    }
-  }
-
-  Color _getContrastColor(Color color) {
-    final luminance = (0.299 * color.red + 0.587 * color.green + 0.114 * color.blue) / 255;
-    return luminance > 0.5 ? Colors.black : Colors.white;
   }
 
   Future<void> _saveSubject(BuildContext context, EditSubjectViewModel viewModel) async {

@@ -14,7 +14,7 @@ class EditTermScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => EditTermViewModel(),
+      create: (_) => EditTermViewModel(termId: termId),
       child: const _EditTermContent(),
     );
   }
@@ -36,7 +36,11 @@ class _EditTermContent extends StatelessWidget {
         rightControlType: RightControlType.save,
         onRightPressed: () => _saveTerm(context, viewModel),
       ),
-      body: SingleChildScrollView(
+      body: viewModel.state == EditTermViewState.loading
+          ? Center(
+        child: CircularProgressIndicator(color: colors.primary),
+      )
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

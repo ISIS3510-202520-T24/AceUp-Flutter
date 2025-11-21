@@ -6,13 +6,14 @@ import '../../services/auth/auth_service.dart';
 
 // ignore_for_file: creation_with_non_type
 
-enum EditSubjectViewState { idle, saving, error }
+enum EditSubjectViewState { idle, loading, saving, error }
 
 class EditSubjectViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final _uuid = const Uuid();
   final String termId;
+  final String? subjectId;
 
   EditSubjectViewState _state = EditSubjectViewState.idle;
   EditSubjectViewState get state => _state;
@@ -20,7 +21,7 @@ class EditSubjectViewModel extends ChangeNotifier {
   Subject? _subject;
   Subject? get subject => _subject;
 
-  bool get isEditMode => _subject != null;
+  bool get isEditMode => subjectId != null;
 
   late TextEditingController nameController;
 
@@ -52,19 +53,60 @@ class EditSubjectViewModel extends ChangeNotifier {
 
   EditSubjectViewModel({
     required this.termId,
-    Subject? subject,
-  }) : _subject = subject {
+    this.subjectId,
+  }) {
     _initializeControllers();
+    if (isEditMode) {
+      _loadExistingSubject();
+    }
   }
 
   void _initializeControllers() {
-    if (_subject != null) {
-      nameController = TextEditingController(text: _subject!.name);
-      _selectedColor = '#4CAF50'; // Default since Subject model doesn't have color yet
-    } else {
-      nameController = TextEditingController();
-      _selectedColor = colorOptions[0];
+    nameController = TextEditingController();
+  }
+
+  Future<void> _loadExistingSubject() async {
+    if (subjectId == null) return;
+
+    _state = EditSubjectViewState.loading;
+    notifyListeners();
+
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not logged in';
+      _state = EditSubjectViewState.error;
+      notifyListeners();
+      return;
     }
+
+    try {
+      final subjectDoc = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('terms')
+          .doc(termId)
+          .collection('subjects')
+          .doc(subjectId)
+          .get();
+
+      if (subjectDoc.exists) {
+        _subject = Subject.fromFirestore(subjectDoc);
+        nameController.text = _subject!.name;
+        _selectedColor = colorOptions[0]; // Default since Subject model doesn't store color
+        
+        _state = EditSubjectViewState.idle;
+        _errorMessage = null;
+      } else {
+        _errorMessage = 'Subject not found';
+        _state = EditSubjectViewState.error;
+      }
+    } catch (e) {
+      _errorMessage = 'Failed to load subject: $e';
+      _state = EditSubjectViewState.error;
+      print('Error loading subject: $e');
+    }
+
+    notifyListeners();
   }
 
   void setColor(String color) {
@@ -90,7 +132,7 @@ class EditSubjectViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final subjectId = _subject?.id ?? _uuid.v4();
+      final id = subjectId ?? _uuid.v4();
       final now = DateTime.now();
 
       final subjectData = {
@@ -98,8 +140,7 @@ class EditSubjectViewModel extends ChangeNotifier {
         'termId': termId,
         'name': nameController.text.trim(),
         'color': _selectedColor,
-        'code': null,
-        'credits': 3, // Default credits
+        'credits': _subject?.credits ?? 3, // Keep existing credits or default to 3
         'hasCompleteDataForGPA': false,
         'createdAt': Timestamp.fromDate(_subject?.createdAt ?? now),
         'updatedAt': Timestamp.fromDate(now),
@@ -111,7 +152,7 @@ class EditSubjectViewModel extends ChangeNotifier {
           .collection('terms')
           .doc(termId)
           .collection('subjects')
-          .doc(subjectId)
+          .doc(id)
           .set(subjectData, SetOptions(merge: true));
 
       _state = EditSubjectViewState.idle;
@@ -119,10 +160,10 @@ class EditSubjectViewModel extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
+      _errorMessage = 'Failed to save subject: $e';
       _state = EditSubjectViewState.error;
-      _errorMessage = e.toString();
-      print('Error saving subject: $e');
       notifyListeners();
+      print('Error saving subject: $e');
       return false;
     }
   }
