@@ -11,6 +11,7 @@ import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 
 // Servicios
+import 'services/grades/gpa_calculation_service.dart';
 import 'services/notif/notification_service.dart';
 import 'services/startup_ttfp.dart';
 import 'services/auth/auth_service.dart';
@@ -140,6 +141,10 @@ Future<void> main() async {
           // HolidaysViewModel (ChangeNotifier con lógica de festivos)
           ChangeNotifierProvider<HolidaysViewModel>(
             create: (_) => HolidaysViewModel(),
+          ),
+
+          ProxyProvider<AppDatabase, GpaCalculationService>(
+            update: (_, db, __) => GpaCalculationService(database: db), 
           ),
 
           // Exponer servicios para pantallas que hacen context.read<AuthService>()

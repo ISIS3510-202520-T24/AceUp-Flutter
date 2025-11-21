@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/planner/term_model.dart';
 import '../../models/planner/subject_model.dart';
 import '../../services/auth/auth_service.dart';
+import '../../services/grades/gpa_calculation_service.dart';
+import '../../services/cache/memory_cache_service.dart';
+import '../../data/local/database/app_database.dart' hide Term, Subject;
 
 enum TermViewState { idle, loading, error }
 
 class TermViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final AppDatabase _db;
+  final GpaCalculationService _gpaService;
+  final MemoryCacheService _cache = MemoryCacheService();
   final String termId;
 
   TermViewState _state = TermViewState.idle;
@@ -29,10 +33,18 @@ class TermViewModel extends ChangeNotifier {
   int _termCredits = 0;
   int get termCredits => _termCredits;
 
-  TermViewModel({required this.termId}) {
+  TermViewModel({
+    required this.termId,
+    required AppDatabase database,
+    required GpaCalculationService gpaService,
+  })  : _db = database,
+        _gpaService = gpaService {
     _loadTerm();
   }
 
+  // ==================== LOAD DATA (OFFLINE-FIRST) ====================
+
+  /// Load term and subjects from local database
   Future<void> _loadTerm() async {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
@@ -46,91 +58,156 @@ class TermViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Load term
-      final termDoc = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .doc(termId)
-          .get();
+      print('📊 Loading term $termId from local database...');
+      
+      // Load term from local database
+      final termData = await _db.academicDao.getTermById(termId);
 
-      if (!termDoc.exists) {
+      if (termData == null) {
         _errorMessage = 'Term not found';
         _state = TermViewState.error;
         notifyListeners();
         return;
       }
 
-      _term = Term.fromFirestore(termDoc);
+      // Convert to model
+      _term = Term(
+        id: termData.id,
+        userId: termData.userId,
+        name: termData.name,
+        startDate: termData.startDate,
+        endDate: termData.endDate,
+        createdAt: termData.createdAt,
+        updatedAt: termData.updatedAt,
+      );
+
+      print('✅ Loaded term: ${_term!.name}');
 
       // Load subjects
-      await _loadSubjects(userId);
+      await _loadSubjects();
 
       _state = TermViewState.idle;
       _errorMessage = null;
     } catch (e) {
       _errorMessage = e.toString();
       _state = TermViewState.error;
-      print('Error loading term: $e');
+      print('❌ Error loading term: $e');
     }
 
     notifyListeners();
   }
 
-  Future<void> _loadSubjects(String userId) async {
+  /// Load subjects from local database
+  Future<void> _loadSubjects() async {
     try {
-      final subjectsSnapshot = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .doc(termId)
-          .collection('subjects')
-          .get();
+      print('📚 Loading subjects for term $termId...');
+      
+      // Load from local database
+      final subjectsData = await _db.academicDao.getSubjectsForTerm(termId);
 
-      _subjects = subjectsSnapshot.docs
-          .map((doc) => Subject.fromFirestore(doc))
-          .toList();
+      // Convert to models
+      _subjects = subjectsData.map((subjectData) => Subject(
+        id: subjectData.id,
+        name: subjectData.name,
+        code: subjectData.code,
+        credits: subjectData.credits,
+        termId: subjectData.termId,
+        userId: subjectData.userId,
+        createdAt: subjectData.createdAt,
+        updatedAt: subjectData.updatedAt,
+      )).toList();
 
-      _calculateTermStats();
+      print('✅ Loaded ${_subjects.length} subjects');
+
+      // Calculate term stats
+      await _calculateTermStats();
     } catch (e) {
-      print('Error loading subjects: $e');
+      print('❌ Error loading subjects: $e');
     }
   }
 
-  void _calculateTermStats() {
-    _termCredits = 0;
-    double weightedGPA = 0;
+  // ==================== GPA CALCULATIONS ====================
 
-    for (var subject in _subjects) {
-      _termCredits += subject.credits;
-      // TODO: Calculate actual GPA based on grades when implemented
-      // For now, just count credits
+  /// Calculate term GPA and credits with caching
+  Future<void> _calculateTermStats() async {
+    try {
+      // Check cache first
+      final cachedGpa = _cache.getCachedTermGpa(termId);
+      final cachedCredits = _cache.getCachedTermCredits(termId);
+      
+      if (cachedGpa != null && cachedCredits != null) {
+        _termGPA = cachedGpa;
+        _termCredits = cachedCredits;
+        print('✅ Using cached GPA for term $termId: ${cachedGpa.toStringAsFixed(2)}');
+        return;
+      }
+
+      // Calculate credits
+      _termCredits = await _gpaService.getTermTotalCredits(termId);
+      _cache.cacheTermCredits(termId, _termCredits);
+
+      // Calculate GPA
+      _termGPA = await _gpaService.calculateTermGpa(termId);
+      _cache.cacheTermGpa(termId, _termGPA);
+
+      print('✅ Calculated term GPA: ${_termGPA?.toStringAsFixed(2) ?? 'N/A'} with $_termCredits credits');
+    } catch (e) {
+      print('❌ Error calculating term stats: $e');
+      _termGPA = null;
+      _termCredits = 0;
     }
-
-    _termGPA = _subjects.isNotEmpty ? 4.15 : 0.0; // Placeholder
   }
 
+  /// Get grade for a specific subject with caching
+  Future<double?> getSubjectGrade(String subjectId) async {
+    // Check cache first
+    final cachedGrade = _cache.getCachedSubjectGrade(subjectId);
+    if (cachedGrade != null) {
+      return cachedGrade;
+    }
+
+    // Calculate and cache
+    final grade = await _gpaService.calculateSubjectGrade(subjectId);
+    _cache.cacheSubjectGrade(subjectId, grade);
+    return grade;
+  }
+
+  // ==================== ACTIONS ====================
+
+  /// Refresh term data (reload from database and recalculate)
   Future<void> refreshTerm() async {
+    // Invalidate cache
+    _cache.invalidateTermCache(termId);
     await _loadTerm();
   }
 
+  /// Delete a subject (soft delete in database)
   Future<void> deleteSubject(String subjectId) async {
-    final userId = _authService.currentUser?.uid;
-    if (userId == null) return;
-
     try {
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .doc(termId)
-          .collection('subjects')
-          .doc(subjectId)
-          .delete();
+      // Soft delete in local database
+      await _db.academicDao.softDeleteSubject(subjectId);
+      
+      // Invalidate cache
+      _cache.invalidateSubjectCache(subjectId);
+      _cache.invalidateTermCache(termId);
 
+      // Refresh data
       await refreshTerm();
     } catch (e) {
-      print('Error deleting subject: $e');
+      print('❌ Error deleting subject: $e');
     }
+  }
+
+  /// Force recalculate GPA (invalidate cache)
+  Future<void> recalculateGPA() async {
+    print('🔄 Forcing GPA recalculation for term $termId...');
+    
+    // Clear cache
+    _cache.invalidateTermCache(termId);
+    
+    // Recalculate
+    await _calculateTermStats();
+    
+    notifyListeners();
   }
 }
