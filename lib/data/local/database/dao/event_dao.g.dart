@@ -3,6 +3,4 @@
 part of 'event_dao.dart';
 
 // ignore_for_file: type=lint
-mixin _$EventDaoMixin on DatabaseAccessor<AppDatabase> {
-  $CalendarEventsTable get calendarEvents => attachedDatabase.calendarEvents;
-}
+mixin _$EventDaoMixin on DatabaseAccessor<AppDatabase> {}

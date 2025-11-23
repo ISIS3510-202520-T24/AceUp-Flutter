@@ -47,24 +47,24 @@ import 'core/connectivity/connectivity_manager.dart';
 import 'data/local/database/app_database.dart';
 import 'data/repositories/academic_repository.dart';
 
-// Tema
+// Theme
 import 'themes/app_theme.dart';
 
-// 🔹 NUEVO: AuthGate para sesión persistente
+// AuthGate
 import 'widgets/auth_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1) Marcador de tiempo de arranque (para métricas de TTFP en consola)
+  // 1) TTFP metrics
   StartupTTFP.start();
 
-  // 2) Inicializar Firebase
+  // 2) Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 2.5) Inicializar Hive (BD Llave/Valor)
+  // 2.5) Hive (key-value local storage)
   await HiveService.instance.initialize();
   print('Hive initialized');
 
