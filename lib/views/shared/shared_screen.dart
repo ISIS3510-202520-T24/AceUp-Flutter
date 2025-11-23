@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart'; // Para getTemporaryDirectory
-import '../../models/group_model.dart';
+import '../../models/shared/group_model.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/shared/shared_viewmodel.dart';

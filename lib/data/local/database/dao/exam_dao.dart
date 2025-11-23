@@ -1,181 +1,177 @@
 import 'package:drift/drift.dart';
 import '../app_database.dart';
-import '../tables/academic_tables.dart';
+import '../tables/tables.dart';
 
 part 'exam_dao.g.dart';
 
-@DriftAccessor(tables: [Exams])
+@DriftAccessor(tables: [Exams, Subjects, Terms])
 class ExamDao extends DatabaseAccessor<AppDatabase> with _$ExamDaoMixin {
   ExamDao(AppDatabase db) : super(db);
 
-  // ==================== CREATE ====================
-
-  /// Crear o actualizar exam
-  Future<void> upsertExam(ExamsCompanion exam) async {
-    await into(exams).insert(
-      exam,
-      mode: InsertMode.insertOrReplace,
-    );
-  }
-
-  /// Batch insert/update exams
-  Future<void> upsertExamsBatch(List<ExamsCompanion> examsList) async {
-    await batch((batch) {
-      batch.insertAll(
-        exams,
-        examsList,
-        mode: InsertMode.insertOrReplace,
-      );
-    });
-  }
-
   // ==================== READ ====================
 
-  /// Obtener exam por ID
-  Future<Exam?> getExamById(String id) async {
-    return await (select(exams)
-      ..where((e) => e.id.equals(id) & e.isDeleted.equals(false))
-    ).getSingleOrNull();
+  /// Get exam by ID
+  Future<ExamEntity?> getExamById(String id) {
+    return (select(exams)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
-  /// Obtener todos los exams de un usuario
-  Future<List<Exam>> getAllExamsForUser(String userId) async {
-    return await (select(exams)
-      ..where((e) => e.userId.equals(userId) & e.isDeleted.equals(false))
-      ..orderBy([(e) => OrderingTerm.asc(e.date)])
-    ).get();
+  /// Watch exam by ID
+  Stream<ExamEntity?> watchExamById(String id) {
+    return (select(exams)..where((t) => t.id.equals(id))).watchSingleOrNull();
   }
 
-  /// Obtener exams de un term específico
-  Future<List<Exam>> getExamsForTerm(String termId) async {
-    return await (select(exams)
-      ..where((e) => e.termId.equals(termId) & e.isDeleted.equals(false))
-      ..orderBy([(e) => OrderingTerm.asc(e.date)])
-    ).get();
+  /// Get all exams for subject
+  Future<List<ExamEntity>> getExamsForSubject(String subjectId) {
+    return (select(exams)
+          ..where((t) => t.subjectId.equals(subjectId))
+          ..orderBy([(t) => OrderingTerm.asc(t.date)]))
+        .get();
   }
 
-  /// Obtener exams de un subject específico
-  Future<List<Exam>> getExamsForSubject(String subjectId) async {
-    return await (select(exams)
-      ..where((e) => e.subjectId.equals(subjectId) & e.isDeleted.equals(false))
-      ..orderBy([(e) => OrderingTerm.asc(e.date)])
-    ).get();
+  /// Watch all exams for subject
+  Stream<List<ExamEntity>> watchExamsForSubject(String subjectId) {
+    return (select(exams)
+          ..where((t) => t.subjectId.equals(subjectId))
+          ..orderBy([(t) => OrderingTerm.asc(t.date)]))
+        .watch();
   }
 
-  /// Obtener exams pendientes (no completados)
-  Future<List<Exam>> getPendingExams(String userId) async {
-    return await (select(exams)
-      ..where((e) =>
-      e.userId.equals(userId) &
-      e.isCompleted.equals(false) &
-      e.isDeleted.equals(false))
-      ..orderBy([(e) => OrderingTerm.asc(e.date)])
-    ).get();
+  /// Get all exams for user
+  Future<List<ExamEntity>> getExamsForUser(String userId) async {
+    final userTerms = await (select(terms)..where((t) => t.userId.equals(userId))).get();
+    final termIds = userTerms.map((t) => t.id).toList();
+    if (termIds.isEmpty) return [];
+
+    final userSubjects = await (select(subjects)..where((t) => t.termId.isIn(termIds))).get();
+    final subjectIds = userSubjects.map((s) => s.id).toList();
+    if (subjectIds.isEmpty) return [];
+
+    return (select(exams)
+          ..where((t) => t.subjectId.isIn(subjectIds))
+          ..orderBy([(t) => OrderingTerm.asc(t.date)]))
+        .get();
   }
 
-  /// Obtener exams completados
-  Future<List<Exam>> getCompletedExams(String userId) async {
-    return await (select(exams)
-      ..where((e) =>
-      e.userId.equals(userId) &
-      e.isCompleted.equals(true) &
-      e.isDeleted.equals(false))
-      ..orderBy([(e) => OrderingTerm.desc(e.completedAt)])
-    ).get();
+  /// Get upcoming exams for user
+  Future<List<ExamEntity>> getUpcomingExamsForUser(String userId) async {
+    final now = DateTime.now();
+    final allExams = await getExamsForUser(userId);
+    return allExams.where((e) => !e.isCompleted && e.date.isAfter(now)).toList();
   }
 
-  /// Obtener exams para una fecha específica
-  Future<List<Exam>> getExamsForDate(String userId, DateTime date) async {
-    final startOfDay = DateTime(date.year, date.month, date.day);
+  /// Get exams for today
+  Future<List<ExamEntity>> getExamsForToday(String userId, DateTime today) async {
+    final startOfDay = DateTime(today.year, today.month, today.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    return await (select(exams)
-      ..where((e) =>
-      e.userId.equals(userId) &
-      e.date.isBetweenValues(startOfDay, endOfDay) &
-      e.isDeleted.equals(false))
-      ..orderBy([(e) => OrderingTerm.asc(e.date)])
-    ).get();
+    final allExams = await getExamsForUser(userId);
+    return allExams.where((e) {
+      return !e.date.isBefore(startOfDay) && e.date.isBefore(endOfDay);
+    }).toList();
   }
 
-  /// Obtener exams de hoy
-  Future<List<Exam>> getExamsToday(String userId, DateTime today) async {
-    return await getExamsForDate(userId, today);
+  /// Get exams for date range
+  Future<List<ExamEntity>> getExamsForDateRange(
+      String userId, DateTime startDate, DateTime endDate) async {
+    final allExams = await getExamsForUser(userId);
+    return allExams.where((e) {
+      return !e.date.isBefore(startDate) && e.date.isBefore(endDate);
+    }).toList();
   }
 
-  /// Obtener exams que necesitan sincronización
-  Future<List<Exam>> getExamsNeedingSync() async {
-    return await (select(exams)
-      ..where((e) => e.needsSync.equals(true))
-    ).get();
+  /// Get graded exams for subject
+  Future<List<ExamEntity>> getGradedExamsForSubject(String subjectId) {
+    return (select(exams)
+          ..where((t) => t.subjectId.equals(subjectId) & t.isGraded.equals(true)))
+        .get();
   }
 
-  // ==================== UPDATE ====================
+  // ==================== CREATE/UPDATE ====================
 
-  /// Actualizar completion status de un exam
-  Future<void> updateExamCompletion(String id, bool isCompleted) async {
-    await (update(exams)..where((e) => e.id.equals(id))).write(
+  /// Insert or update exam
+  Future<void> upsertExam(ExamsCompanion exam) {
+    return into(exams).insertOnConflictUpdate(exam);
+  }
+
+  /// Insert exam
+  Future<void> insertExam(ExamsCompanion exam) {
+    return into(exams).insert(exam, mode: InsertMode.insertOrReplace);
+  }
+
+  /// Update exam
+  Future<bool> updateExam(ExamsCompanion exam) {
+    return (update(exams)..where((t) => t.id.equals(exam.id.value)))
+        .write(exam)
+        .then((rows) => rows > 0);
+  }
+
+  /// Mark as completed
+  Future<void> markAsCompleted(String id, bool completed) {
+    return (update(exams)..where((t) => t.id.equals(id))).write(
       ExamsCompanion(
-        isCompleted: Value(isCompleted),
-        completedAt: isCompleted ? Value(DateTime.now()) : const Value(null),
+        isCompleted: Value(completed),
+        completedAt: completed ? Value(DateTime.now()) : const Value(null),
         updatedAt: Value(DateTime.now()),
-        needsSync: const Value(true),
+        syncStatus: const Value('pending'),
       ),
     );
   }
 
-  /// Actualizar grade de un exam
-  Future<void> updateExamGrade(String id, int grade) async {
-    await (update(exams)..where((e) => e.id.equals(id))).write(
+  /// Update grade
+  Future<void> updateGrade(String id, double? grade, bool isGraded) {
+    return (update(exams)..where((t) => t.id.equals(id))).write(
       ExamsCompanion(
         grade: Value(grade),
-        isGraded: Value(grade > 0),
+        isGraded: Value(isGraded),
         updatedAt: Value(DateTime.now()),
-        needsSync: const Value(true),
+        syncStatus: const Value('pending'),
       ),
     );
   }
 
-  /// Marcar exam como necesitando sincronización
-  Future<void> markForSync(String id) async {
-    await (update(exams)..where((e) => e.id.equals(id))).write(
-      const ExamsCompanion(needsSync: Value(true)),
-    );
-  }
-
-  /// Marcar exam como sincronizado
-  Future<void> markAsSynced(String id) async {
-    await (update(exams)..where((e) => e.id.equals(id))).write(
-      const ExamsCompanion(needsSync: Value(false)),
+  /// Update sync status
+  Future<void> updateSyncStatus(String id, String status) {
+    return (update(exams)..where((t) => t.id.equals(id))).write(
+      ExamsCompanion(
+        syncStatus: Value(status),
+        lastSyncedAt: Value(DateTime.now()),
+      ),
     );
   }
 
   // ==================== DELETE ====================
 
-  /// Soft delete - marcar como eliminado
-  Future<void> softDeleteExam(String id) async {
-    await (update(exams)..where((e) => e.id.equals(id))).write(
+  /// Delete exam by ID
+  Future<int> deleteExam(String id) {
+    return (delete(exams)..where((t) => t.id.equals(id))).go();
+  }
+
+  /// Delete all exams for subject
+  Future<int> deleteExamsForSubject(String subjectId) {
+    return (delete(exams)..where((t) => t.subjectId.equals(subjectId))).go();
+  }
+
+  // ==================== SYNC HELPERS ====================
+
+  /// Get exams that need sync
+  Future<List<ExamEntity>> getExamsNeedingSync() {
+    return (select(exams)..where((t) => t.syncStatus.equals('pending'))).get();
+  }
+
+  /// Mark exam as synced
+  Future<void> markAsSynced(String id) {
+    return (update(exams)..where((t) => t.id.equals(id))).write(
       ExamsCompanion(
-        isDeleted: const Value(true),
-        updatedAt: Value(DateTime.now()),
-        needsSync: const Value(true),
+        syncStatus: const Value('synced'),
+        lastSyncedAt: Value(DateTime.now()),
       ),
     );
   }
 
-  /// Hard delete - eliminar permanentemente
-  Future<void> hardDeleteExam(String id) async {
-    await (delete(exams)..where((e) => e.id.equals(id))).go();
-  }
-
-  /// Eliminar todos los exams de un usuario
-  Future<void> deleteAllExamsForUser(String userId) async {
-    await (delete(exams)..where((e) => e.userId.equals(userId))).go();
-  }
-
-  /// Eliminar exams antiguos (cache cleanup)
-  Future<void> deleteOldCache(Duration maxAge) async {
-    final cutoffDate = DateTime.now().subtract(maxAge);
-    await (delete(exams)..where((e) => e.cachedAt.isSmallerThanValue(cutoffDate))).go();
+  /// Insert multiple exams (batch)
+  Future<void> insertExamsBatch(List<ExamsCompanion> examsList) {
+    return batch((b) {
+      b.insertAllOnConflictUpdate(exams, examsList);
+    });
   }
 }

@@ -4,80 +4,62 @@ import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
-// Importar tablas de Shared
-import 'tables/shared_tables.dart';
-// Importar tablas académicas
-import 'tables/academic_tables.dart';
+// Import tables
+import 'tables/tables.dart';
 
-// Importar DAOs de Shared
-import 'dao/group_dao.dart';
-import 'dao/event_dao.dart';
+// Import DAOs
 import 'dao/user_dao.dart';
-import 'dao/sync_dao.dart';
-import 'dao/settings_dao.dart';
-import 'dao/member_schedule_dao.dart';
-
-// Importar DAOs académicos
+import 'dao/term_dao.dart';
+import 'dao/subject_dao.dart';
 import 'dao/assignment_dao.dart';
+import 'dao/class_dao.dart';
 import 'dao/exam_dao.dart';
-import 'dao/holiday_dao.dart';
 import 'dao/teacher_dao.dart';
-import 'dao/academic_dao.dart';
+import 'dao/holiday_dao.dart';
+import 'dao/settings_dao.dart';
+import 'dao/group_dao.dart';
+import 'dao/sync_dao.dart';
 
-// Esta parte se generará automáticamente
 part 'app_database.g.dart';
 
 @DriftDatabase(
   tables: [
-    // Tablas principales de Shared
-    Groups,
-    GroupMembers,
-    CalendarEvents,
-    FreeBlocks,
-    CachedUsers,
-    // Tablas de infraestructura
-    SyncQueue,
-    AppSettings,
-    // Tablas para calcular free blocks (clases de miembros)
+    Users,
     Terms,
     Subjects,
-    ClassTemplates,
-    // Tablas académicas del usuario
     Assignments,
+    ClassTemplates,
+    ClassExceptions,
     Exams,
-    Holidays,
     Teachers,
-    SubjectDetails,
+    Holidays,
+    Settings,
+    Groups,
+    WeeklyAvailabilities,
+    SyncQueue,
   ],
   daos: [
-    // DAOs para funcionalidad de Shared
-    GroupDao,
-    EventDao,
     UserDao,
-    SyncDao,
-    SettingsDao,
-    MemberScheduleDao, // Para cachear/recuperar horarios de miembros
-    // DAOs para funcionalidad académica
+    TermDao,
+    SubjectDao,
     AssignmentDao,
+    ClassDao,
     ExamDao,
-    HolidayDao,
     TeacherDao,
-    AcademicDao,
+    HolidayDao,
+    SettingsDao,
+    GroupDao,
+    SyncDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  // Singleton pattern
-  static AppDatabase? _instance;
+  AppDatabase() : super(_openConnection());
 
-  AppDatabase._internal() : super(_openConnection());
-
-  factory AppDatabase() {
-    _instance ??= AppDatabase._internal();
-    return _instance!;
-  }
+  // For testing
+  AppDatabase.forTesting(QueryExecutor e) : super(e);
 
   @override
-  int get schemaVersion => 2; // Incrementar versión por nuevas tablas
+  int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration {
@@ -86,70 +68,49 @@ class AppDatabase extends _$AppDatabase {
         await m.createAll();
       },
       onUpgrade: (Migrator m, int from, int to) async {
-        if (from < 2) {
-          // Migración de versión 1 a 2: agregar nuevas tablas académicas
-          await m.createTable(assignments);
-          await m.createTable(exams);
-          await m.createTable(holidays);
-          await m.createTable(teachers);
-          await m.createTable(subjectDetails);
-        }
+        // Handle future migrations here
+      },
+      beforeOpen: (details) async {
+        // Enable foreign keys
+        await customStatement('PRAGMA foreign_keys = ON');
       },
     );
   }
 
-  // Método para limpiar cache antiguo (llamar periódicamente)
-  Future<void> cleanOldCache() async {
-    const maxAge = Duration(days: 30);
-
-    // Limpiar assignments antiguos
-    await assignmentDao.deleteOldCache(maxAge);
-
-    // Limpiar exams antiguos
-    await examDao.deleteOldCache(maxAge);
-
-    // Limpiar holidays antiguos
-    await holidayDao.deleteOldCache(maxAge);
-
-    // Limpiar teachers antiguos
-    await teacherDao.deleteOldCache(maxAge);
-
-    // Limpiar subjects antiguos
-    await academicDao.deleteOldSubjectCache(maxAge);
-
-    // Limpiar member schedules antiguos
-    await memberScheduleDao.clearOldCache(maxAge);
-
-    print('🧹 Old cache cleaned successfully');
+  /// Clear all data from the database
+  Future<void> clearAllData() async {
+    await transaction(() async {
+      for (final table in allTables) {
+        await delete(table).go();
+      }
+    });
   }
 
-  // Método para sincronizar todos los datos pendientes
-  Future<List<Map<String, dynamic>>> getAllPendingSync() async {
-    final pendingAssignments = await assignmentDao.getAssignmentsNeedingSync();
-    final pendingExams = await examDao.getExamsNeedingSync();
-    final pendingHolidays = await holidayDao.getHolidaysNeedingSync();
-    final pendingTeachers = await teacherDao.getTeachersNeedingSync();
-    final pendingSubjects = await academicDao.getSubjectsNeedingSync();
-    final pendingSyncQueue = await syncDao.getAllPendingOperations();
-
-    return [
-      ...pendingAssignments.map((a) => {'type': 'assignment', 'data': a}),
-      ...pendingExams.map((e) => {'type': 'exam', 'data': e}),
-      ...pendingHolidays.map((h) => {'type': 'holiday', 'data': h}),
-      ...pendingTeachers.map((t) => {'type': 'teacher', 'data': t}),
-      ...pendingSubjects.map((s) => {'type': 'subject', 'data': s}),
-      ...pendingSyncQueue.map((sq) => {'type': 'sync_queue', 'data': sq}),
-    ];
+  /// Clear all data for a specific user
+  Future<void> clearUserData(String userId) async {
+    await transaction(() async {
+      // Delete in order to respect foreign key constraints
+      await (delete(syncQueue)).go();
+      await (delete(weeklyAvailabilities)).go();
+      await (delete(groups)..where((t) => t.ownerId.equals(userId))).go();
+      await (delete(settings)..where((t) => t.userId.equals(userId))).go();
+      await (delete(holidays)..where((t) => t.userId.equals(userId))).go();
+      await (delete(teachers)..where((t) => t.userId.equals(userId))).go();
+      await (delete(classExceptions)).go();
+      await (delete(classTemplates)).go();
+      await (delete(exams)).go();
+      await (delete(assignments)).go();
+      await (delete(subjects)).go();
+      await (delete(terms)..where((t) => t.userId.equals(userId))).go();
+      await (delete(users)..where((t) => t.uid.equals(userId))).go();
+    });
   }
 }
 
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'aceup.db'));
-
-    print('📂 Database path: ${file.path}');
-
+    final file = File(p.join(dbFolder.path, 'aceup.sqlite'));
     return NativeDatabase.createInBackground(file);
   });
 }

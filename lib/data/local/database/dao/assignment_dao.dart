@@ -1,176 +1,194 @@
 import 'package:drift/drift.dart';
 import '../app_database.dart';
-import '../tables/academic_tables.dart';
+import '../tables/tables.dart';
 
 part 'assignment_dao.g.dart';
 
-@DriftAccessor(tables: [Assignments])
+@DriftAccessor(tables: [Assignments, Subjects, Terms])
 class AssignmentDao extends DatabaseAccessor<AppDatabase> with _$AssignmentDaoMixin {
   AssignmentDao(AppDatabase db) : super(db);
 
-  // ==================== CREATE ====================
-
-  /// Crear o actualizar assignment
-  Future<void> upsertAssignment(AssignmentsCompanion assignment) async {
-    await into(assignments).insert(
-      assignment,
-      mode: InsertMode.insertOrReplace,
-    );
-  }
-
-  /// Batch insert/update assignments
-  Future<void> upsertAssignmentsBatch(List<AssignmentsCompanion> assignmentsList) async {
-    await batch((batch) {
-      batch.insertAll(
-        assignments,
-        assignmentsList,
-        mode: InsertMode.insertOrReplace,
-      );
-    });
-  }
-
   // ==================== READ ====================
 
-  /// Obtener assignment por ID
-  Future<Assignment?> getAssignmentById(String id) async {
-    return await (select(assignments)
-      ..where((a) => a.id.equals(id) & a.isDeleted.equals(false))
-    ).getSingleOrNull();
+  /// Get assignment by ID
+  Future<AssignmentEntity?> getAssignmentById(String id) {
+    return (select(assignments)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
-  /// Obtener todos los assignments de un usuario (across all terms)
-  Future<List<Assignment>> getAllAssignmentsForUser(String userId) async {
-    return await (select(assignments)
-      ..where((a) => a.userId.equals(userId) & a.isDeleted.equals(false))
-      ..orderBy([(a) => OrderingTerm.asc(a.dueDate)])
-    ).get();
+  /// Watch assignment by ID
+  Stream<AssignmentEntity?> watchAssignmentById(String id) {
+    return (select(assignments)..where((t) => t.id.equals(id))).watchSingleOrNull();
   }
 
-  /// Obtener assignments de un term específico
-  Future<List<Assignment>> getAssignmentsForTerm(String termId) async {
-    return await (select(assignments)
-      ..where((a) => a.termId.equals(termId) & a.isDeleted.equals(false))
-      ..orderBy([(a) => OrderingTerm.asc(a.dueDate)])
-    ).get();
+  /// Get all assignments for subject
+  Future<List<AssignmentEntity>> getAssignmentsForSubject(String subjectId) {
+    return (select(assignments)
+          ..where((t) => t.subjectId.equals(subjectId))
+          ..orderBy([(t) => OrderingTerm.asc(t.dueDate)]))
+        .get();
   }
 
-  /// Obtener assignments de un subject específico
-  Future<List<Assignment>> getAssignmentsForSubject(String subjectId) async {
-    return await (select(assignments)
-      ..where((a) => a.subjectId.equals(subjectId) & a.isDeleted.equals(false))
-      ..orderBy([(a) => OrderingTerm.asc(a.dueDate)])
-    ).get();
+  /// Watch all assignments for subject
+  Stream<List<AssignmentEntity>> watchAssignmentsForSubject(String subjectId) {
+    return (select(assignments)
+          ..where((t) => t.subjectId.equals(subjectId))
+          ..orderBy([(t) => OrderingTerm.asc(t.dueDate)]))
+        .watch();
   }
 
-  /// Obtener assignments pendientes (status = 'Pending')
-  Future<List<Assignment>> getPendingAssignments(String userId) async {
-    return await (select(assignments)
-      ..where((a) =>
-      a.userId.equals(userId) &
-      a.status.equals('Pending') &
-      a.isDeleted.equals(false))
-      ..orderBy([(a) => OrderingTerm.asc(a.dueDate)])
-    ).get();
+  /// Get all assignments for user (across all subjects/terms)
+  Future<List<AssignmentEntity>> getAssignmentsForUser(String userId) async {
+    final userTerms = await (select(terms)..where((t) => t.userId.equals(userId))).get();
+    final termIds = userTerms.map((t) => t.id).toList();
+    if (termIds.isEmpty) return [];
+
+    final userSubjects = await (select(subjects)..where((t) => t.termId.isIn(termIds))).get();
+    final subjectIds = userSubjects.map((s) => s.id).toList();
+    if (subjectIds.isEmpty) return [];
+
+    return (select(assignments)
+          ..where((t) => t.subjectId.isIn(subjectIds))
+          ..orderBy([(t) => OrderingTerm.asc(t.dueDate)]))
+        .get();
   }
 
-  /// Obtener assignments completados
-  Future<List<Assignment>> getCompletedAssignments(String userId) async {
-    return await (select(assignments)
-      ..where((a) =>
-      a.userId.equals(userId) &
-      a.status.equals('Completed') &
-      a.isDeleted.equals(false))
-      ..orderBy([(a) => OrderingTerm.desc(a.completedAt)])
-    ).get();
+  /// Get pending assignments for user
+  Future<List<AssignmentEntity>> getPendingAssignmentsForUser(String userId) async {
+    final allAssignments = await getAssignmentsForUser(userId);
+    return allAssignments.where((a) => !a.isCompleted).toList();
   }
 
-  /// Obtener assignments que vencen hoy
-  Future<List<Assignment>> getAssignmentsDueToday(String userId, DateTime today) async {
+  /// Get completed assignments for user
+  Future<List<AssignmentEntity>> getCompletedAssignmentsForUser(String userId) async {
+    final allAssignments = await getAssignmentsForUser(userId);
+    return allAssignments.where((a) => a.isCompleted).toList();
+  }
+
+  /// Get assignments due today
+  Future<List<AssignmentEntity>> getAssignmentsDueToday(String userId, DateTime today) async {
     final startOfDay = DateTime(today.year, today.month, today.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    return await (select(assignments)
-      ..where((a) =>
-      a.userId.equals(userId) &
-      a.dueDate.isBetweenValues(startOfDay, endOfDay) &
-      a.isDeleted.equals(false))
-      ..orderBy([(a) => OrderingTerm.asc(a.dueDate)])
-    ).get();
+    final allAssignments = await getAssignmentsForUser(userId);
+    return allAssignments.where((a) {
+      return !a.dueDate.isBefore(startOfDay) && a.dueDate.isBefore(endOfDay);
+    }).toList();
   }
 
-  /// Obtener assignments que necesitan sincronización
-  Future<List<Assignment>> getAssignmentsNeedingSync() async {
-    return await (select(assignments)
-      ..where((a) => a.needsSync.equals(true))
-    ).get();
+  /// Get upcoming assignments (next 7 days)
+  Future<List<AssignmentEntity>> getUpcomingAssignments(String userId) async {
+    final now = DateTime.now();
+    final weekFromNow = now.add(const Duration(days: 7));
+
+    final allAssignments = await getAssignmentsForUser(userId);
+    return allAssignments.where((a) {
+      return !a.isCompleted && a.dueDate.isAfter(now) && a.dueDate.isBefore(weekFromNow);
+    }).toList();
   }
 
-  // ==================== UPDATE ====================
+  /// Get overdue assignments
+  Future<List<AssignmentEntity>> getOverdueAssignments(String userId) async {
+    final now = DateTime.now();
 
-  /// Actualizar status de un assignment
-  Future<void> updateAssignmentStatus(String id, String newStatus) async {
-    await (update(assignments)..where((a) => a.id.equals(id))).write(
+    final allAssignments = await getAssignmentsForUser(userId);
+    return allAssignments.where((a) {
+      return !a.isCompleted && a.dueDate.isBefore(now);
+    }).toList();
+  }
+
+  /// Get graded assignments for subject
+  Future<List<AssignmentEntity>> getGradedAssignmentsForSubject(String subjectId) {
+    return (select(assignments)
+          ..where((t) => t.subjectId.equals(subjectId) & t.isGraded.equals(true)))
+        .get();
+  }
+
+  // ==================== CREATE/UPDATE ====================
+
+  /// Insert or update assignment
+  Future<void> upsertAssignment(AssignmentsCompanion assignment) {
+    return into(assignments).insertOnConflictUpdate(assignment);
+  }
+
+  /// Insert assignment
+  Future<void> insertAssignment(AssignmentsCompanion assignment) {
+    return into(assignments).insert(assignment, mode: InsertMode.insertOrReplace);
+  }
+
+  /// Update assignment
+  Future<bool> updateAssignment(AssignmentsCompanion assignment) {
+    return (update(assignments)..where((t) => t.id.equals(assignment.id.value)))
+        .write(assignment)
+        .then((rows) => rows > 0);
+  }
+
+  /// Mark as completed
+  Future<void> markAsCompleted(String id, bool completed) {
+    return (update(assignments)..where((t) => t.id.equals(id))).write(
       AssignmentsCompanion(
-        status: Value(newStatus),
-        completedAt: newStatus == 'Completed' ? Value(DateTime.now()) : const Value(null),
+        isCompleted: Value(completed),
+        completedAt: completed ? Value(DateTime.now()) : const Value(null),
         updatedAt: Value(DateTime.now()),
-        needsSync: const Value(true),
+        syncStatus: const Value('pending'),
       ),
     );
   }
 
-  /// Actualizar grade de un assignment
-  Future<void> updateAssignmentGrade(String id, int grade) async {
-    await (update(assignments)..where((a) => a.id.equals(id))).write(
+  /// Update grade
+  Future<void> updateGrade(String id, double? grade, bool isGraded) {
+    return (update(assignments)..where((t) => t.id.equals(id))).write(
       AssignmentsCompanion(
         grade: Value(grade),
-        isGraded: Value(grade > 0),
+        isGraded: Value(isGraded),
         updatedAt: Value(DateTime.now()),
-        needsSync: const Value(true),
+        syncStatus: const Value('pending'),
       ),
     );
   }
 
-  /// Marcar assignment como necesitando sincronización
-  Future<void> markForSync(String id) async {
-    await (update(assignments)..where((a) => a.id.equals(id))).write(
-      const AssignmentsCompanion(needsSync: Value(true)),
-    );
-  }
-
-  /// Marcar assignment como sincronizado
-  Future<void> markAsSynced(String id) async {
-    await (update(assignments)..where((a) => a.id.equals(id))).write(
-      const AssignmentsCompanion(needsSync: Value(false)),
+  /// Update sync status
+  Future<void> updateSyncStatus(String id, String status) {
+    return (update(assignments)..where((t) => t.id.equals(id))).write(
+      AssignmentsCompanion(
+        syncStatus: Value(status),
+        lastSyncedAt: Value(DateTime.now()),
+      ),
     );
   }
 
   // ==================== DELETE ====================
 
-  /// Soft delete - marcar como eliminado
-  Future<void> softDeleteAssignment(String id) async {
-    await (update(assignments)..where((a) => a.id.equals(id))).write(
+  /// Delete assignment by ID
+  Future<int> deleteAssignment(String id) {
+    return (delete(assignments)..where((t) => t.id.equals(id))).go();
+  }
+
+  /// Delete all assignments for subject
+  Future<int> deleteAssignmentsForSubject(String subjectId) {
+    return (delete(assignments)..where((t) => t.subjectId.equals(subjectId))).go();
+  }
+
+  // ==================== SYNC HELPERS ====================
+
+  /// Get assignments that need sync
+  Future<List<AssignmentEntity>> getAssignmentsNeedingSync() {
+    return (select(assignments)..where((t) => t.syncStatus.equals('pending'))).get();
+  }
+
+  /// Mark assignment as synced
+  Future<void> markAsSynced(String id) {
+    return (update(assignments)..where((t) => t.id.equals(id))).write(
       AssignmentsCompanion(
-        isDeleted: const Value(true),
-        updatedAt: Value(DateTime.now()),
-        needsSync: const Value(true),
+        syncStatus: const Value('synced'),
+        lastSyncedAt: Value(DateTime.now()),
       ),
     );
   }
 
-  /// Hard delete - eliminar permanentemente
-  Future<void> hardDeleteAssignment(String id) async {
-    await (delete(assignments)..where((a) => a.id.equals(id))).go();
-  }
-
-  /// Eliminar todos los assignments de un usuario
-  Future<void> deleteAllAssignmentsForUser(String userId) async {
-    await (delete(assignments)..where((a) => a.userId.equals(userId))).go();
-  }
-
-  /// Eliminar assignments antiguos (cache cleanup)
-  Future<void> deleteOldCache(Duration maxAge) async {
-    final cutoffDate = DateTime.now().subtract(maxAge);
-    await (delete(assignments)..where((a) => a.cachedAt.isSmallerThanValue(cutoffDate))).go();
+  /// Insert multiple assignments (batch)
+  Future<void> insertAssignmentsBatch(List<AssignmentsCompanion> assignmentsList) {
+    return batch((b) {
+      b.insertAllOnConflictUpdate(assignments, assignmentsList);
+    });
   }
 }

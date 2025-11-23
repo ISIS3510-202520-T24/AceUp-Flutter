@@ -4,7 +4,7 @@ import 'dart:developer' as console;
 
 import 'package:flutter/material.dart';
 
-import '../../models/group_model.dart';
+import '../../models/shared/group_model.dart';
 import '../../services/auth/auth_service.dart';
 import '../../data/repositories/shared_repository.dart';
 import '../../core/connectivity/connectivity_manager.dart';

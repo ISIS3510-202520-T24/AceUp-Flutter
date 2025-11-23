@@ -1,579 +1,924 @@
-// lib/data/repositories/academic_repository.dart
-
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:drift/drift.dart';
-import '../../core/connectivity/connectivity_manager.dart';
-import '../local/database/app_database.dart' as db;
-import '../local/database/dao/assignment_dao.dart';
-import '../../models/assignments/assignment_model.dart';
 import 'package:uuid/uuid.dart';
+import '../../core/connectivity/connectivity_manager.dart';
+import '../../models/planner/term_model.dart';
+import '../../models/planner/subject_model.dart';
+import '../../models/assignments/assignment_model.dart';
+import '../../models/planner/class_template_model.dart';
+import '../../models/planner/class_exception_model.dart';
+import '../../models/planner/exam_model.dart';
+import '../../models/helpers/weight_model.dart';
+import '../../models/helpers/alert_model.dart';
+import '../../models/helpers/recurrence_model.dart';
+import '../../core/constants/enums.dart';
+import '../local/database/app_database.dart';
+import '../local/database/tables/tables.dart';
 
-/// Repository that implements offline-first pattern for Academic/Planner functionality
-///
-/// **Offline-First Pattern:**
-/// 1. All reads come from local SQLite database first
-/// 2. All writes go to local SQLite first, marked as needsSync=true
-/// 3. SyncService handles background Firebase sync when online
-/// 4. Firebase is treated as a backup/sync target, not primary source
 class AcademicRepository {
-  final db.AppDatabase _db;
+  final AppDatabase _db;
   final FirebaseFirestore _firestore;
   final ConnectivityManager _connectivity;
   final _uuid = const Uuid();
 
   AcademicRepository({
-    required db.AppDatabase database,
+    required AppDatabase database,
     required FirebaseFirestore firestore,
     required ConnectivityManager connectivity,
   })  : _db = database,
         _firestore = firestore,
         _connectivity = connectivity;
 
-  // ==================== TERMS ====================
+  // ============================================
+  // TERMS
+  // ============================================
 
-  /// Get all terms for user (from local database)
-  Future<List<db.Term>> getAllTermsForUser(String userId) async {
-    print('📖 Reading terms from local database for user $userId');
-    return await _db.academicDao.getAllTermsForUser(userId);
+  /// Get all terms for user
+  Future<List<Term>> getTermsForUser(String userId) async {
+    final entities = await _db.termDao.getTermsForUser(userId);
+    return entities.map(_termEntityToModel).toList();
   }
 
-  /// Get term by ID (from local database)
-  Future<db.Term?> getTermById(String termId) async {
-    print('📖 Reading term $termId from local database');
-    return await _db.academicDao.getTermById(termId);
+  /// Watch terms for user
+  Stream<List<Term>> watchTermsForUser(String userId) {
+    return _db.termDao.watchTermsForUser(userId).map(
+          (entities) => entities.map(_termEntityToModel).toList(),
+        );
   }
 
-  /// Create a new term (offline-first)
-  Future<void> createTerm({
+  /// Get term by ID
+  Future<Term?> getTermById(String id) async {
+    final entity = await _db.termDao.getTermById(id);
+    return entity != null ? _termEntityToModel(entity) : null;
+  }
+
+  /// Get active term for user
+  Future<Term?> getActiveTermForUser(String userId) async {
+    final entity = await _db.termDao.getActiveTermForUser(userId);
+    return entity != null ? _termEntityToModel(entity) : null;
+  }
+
+  /// Create term
+  Future<Term> createTerm({
     required String userId,
     required String name,
     required DateTime startDate,
     required DateTime endDate,
-    String? color,
+    bool isActive = false,
   }) async {
-    final termId = _uuid.v4();
     final now = DateTime.now();
-
-    print('✏️ Creating term "$name" locally (ID: $termId)');
-
-    // 1. Store in local database first
-    await _db.academicDao.upsertTerm(
-      db.TermsCompanion.insert(
-        id: termId,
-        userId: userId,
-        name: name,
-        startDate: startDate,
-        endDate: endDate,
-        color: Value(color ?? '#6200EA'),
-        createdAt: now,
-        updatedAt: now,
-        cachedAt: now,
-        needsSync: const Value(true), // Mark for sync
-        isDeleted: const Value(false),
-      ),
+    final term = Term(
+      id: _uuid.v4(),
+      name: name,
+      startDate: startDate,
+      endDate: endDate,
+      isActive: isActive,
+      createdAt: now,
+      updatedAt: now,
     );
 
-    // 2. Queue sync operation
-    await _queueSyncOperation(
-      entityType: 'term',
-      entityId: termId,
-      operation: 'create',
-      data: {
-        'userId': userId,
-        'name': name,
-        'startDate': Timestamp.fromDate(startDate),
-        'endDate': Timestamp.fromDate(endDate),
-        'color': color ?? '#6200EA',
-        'createdAt': Timestamp.fromDate(now),
-        'updatedAt': Timestamp.fromDate(now),
-      },
-    );
+    // 1. Save locally
+    await _db.termDao.insertTerm(_termModelToCompanion(term, userId));
 
-    print('✅ Term created locally and queued for sync');
-  }
+    // 2. Queue for sync
+    await _queueSync('term', term.id, 'create', term.toJson(),
+        'users/$userId/terms/${term.id}');
 
-  /// Update a term (offline-first)
-  Future<void> updateTerm({
-    required String termId,
-    String? name,
-    DateTime? startDate,
-    DateTime? endDate,
-    String? color,
-  }) async {
-    print('✏️ Updating term $termId locally');
-
-    // Get existing term
-    final existingTerm = await _db.academicDao.getTermById(termId);
-    if (existingTerm == null) {
-      print('❌ Term $termId not found');
-      return;
+    // 3. Sync if online
+    if (_connectivity.isOnline) {
+      await _syncTermToFirestore(userId, term);
     }
 
-    // Update in local database
-    await _db.academicDao.upsertTerm(
-      db.TermsCompanion(
-        id: Value(termId),
-        name: Value(name ?? existingTerm.name),
-        startDate: Value(startDate ?? existingTerm.startDate),
-        endDate: Value(endDate ?? existingTerm.endDate),
-        color: Value(color ?? existingTerm.color),
-        updatedAt: Value(DateTime.now()),
-        needsSync: const Value(true),
-      ),
-    );
-
-    // Queue sync operation
-    await _queueSyncOperation(
-      entityType: 'term',
-      entityId: termId,
-      operation: 'update',
-      data: {
-        'name': name ?? existingTerm.name,
-        'startDate': Timestamp.fromDate(startDate ?? existingTerm.startDate),
-        'endDate': Timestamp.fromDate(endDate ?? existingTerm.endDate),
-        'color': color ?? existingTerm.color,
-        'updatedAt': Timestamp.fromDate(DateTime.now()),
-      },
-    );
-
-    print('✅ Term updated locally and queued for sync');
+    return term;
   }
 
-  /// Delete a term (offline-first soft delete)
-  Future<void> deleteTerm(String termId) async {
-    print('🗑️ Soft deleting term $termId locally');
+  /// Update term
+  Future<void> updateTerm(String userId, Term term) async {
+    final updated = term.copyWith(updatedAt: DateTime.now());
 
-    // Soft delete in local database
-    await _db.academicDao.upsertTerm(
-      db.TermsCompanion(
-        id: Value(termId),
-        isDeleted: const Value(true),
-        updatedAt: Value(DateTime.now()),
-        needsSync: const Value(true),
-      ),
-    );
+    // 1. Update locally
+    await _db.termDao.updateTerm(_termModelToCompanion(updated, userId));
 
-    // Queue sync operation
-    await _queueSyncOperation(
-      entityType: 'term',
-      entityId: termId,
-      operation: 'delete',
-      data: {},
-    );
+    // 2. Queue for sync
+    await _queueSync('term', updated.id, 'update', updated.toJson(),
+        'users/$userId/terms/${updated.id}');
 
-    print('✅ Term soft deleted locally and queued for sync');
+    // 3. Sync if online
+    if (_connectivity.isOnline) {
+      await _syncTermToFirestore(userId, updated);
+    }
   }
 
-  // ==================== SUBJECTS ====================
-
-  /// Get all subjects for a term (from local database)
-  Future<List<db.SubjectDetail>> getSubjectsForTerm(String termId) async {
-    print('📖 Reading subjects for term $termId from local database');
-    return await _db.academicDao.getSubjectsForTerm(termId);
+  /// Set active term
+  Future<void> setActiveTerm(String userId, String termId) async {
+    await _db.termDao.setActiveTerm(userId, termId);
+    
+    // Queue sync for all affected terms
+    final terms = await getTermsForUser(userId);
+    for (final term in terms) {
+      await _queueSync('term', term.id, 'update', term.toJson(),
+          'users/$userId/terms/${term.id}');
+    }
   }
 
-  /// Get subject by ID (from local database)
-  Future<db.SubjectDetail?> getSubjectById(String subjectId) async {
-    print('📖 Reading subject $subjectId from local database');
-    return await _db.academicDao.getSubjectDetailById(subjectId);
+  /// Delete term
+  Future<void> deleteTerm(String userId, String termId) async {
+    // 1. Delete locally (cascade deletes subjects, assignments, etc.)
+    await _db.termDao.deleteTerm(termId);
+
+    // 2. Queue for sync
+    await _queueSync('term', termId, 'delete', '{}',
+        'users/$userId/terms/$termId');
+
+    // 3. Sync if online
+    if (_connectivity.isOnline) {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('terms')
+          .doc(termId)
+          .delete();
+    }
   }
 
-  /// Create a new subject (offline-first)
-  Future<void> createSubject({
+  // ============================================
+  // SUBJECTS
+  // ============================================
+
+  /// Get subjects for term
+  Future<List<Subject>> getSubjectsForTerm(String termId) async {
+    final entities = await _db.subjectDao.getSubjectsForTerm(termId);
+    return entities.map(_subjectEntityToModel).toList();
+  }
+
+  /// Watch subjects for term
+  Stream<List<Subject>> watchSubjectsForTerm(String termId) {
+    return _db.subjectDao.watchSubjectsForTerm(termId).map(
+          (entities) => entities.map(_subjectEntityToModel).toList(),
+        );
+  }
+
+  /// Get subject by ID
+  Future<Subject?> getSubjectById(String id) async {
+    final entity = await _db.subjectDao.getSubjectById(id);
+    return entity != null ? _subjectEntityToModel(entity) : null;
+  }
+
+  /// Create subject
+  Future<Subject> createSubject({
     required String userId,
     required String termId,
     required String name,
-    String? code,
-    required int credits,
-    String? color,
+    required String color,
+    required double credits,
+    List<Weight> weights = const [],
   }) async {
-    final subjectId = _uuid.v4();
     final now = DateTime.now();
-
-    print('✏️ Creating subject "$name" locally (ID: $subjectId)');
-
-    // Store in local database
-    await _db.academicDao.upsertSubjectDetail(
-      db.SubjectDetailsCompanion.insert(
-        id: subjectId,
-        userId: userId,
-        termId: termId,
-        name: name,
-        code: Value(code),
-        color: color ?? '#2196F3',
-        credits: credits,
-        useFinalGradeOverride: const Value(false),
-        isCompleted: const Value(false),
-        createdAt: now,
-        updatedAt: now,
-        cachedAt: now,
-        needsSync: const Value(true),
-        isDeleted: const Value(false),
-      ),
+    final subject = Subject(
+      id: _uuid.v4(),
+      name: name,
+      color: color,
+      credits: credits,
+      weights: weights,
+      createdAt: now,
+      updatedAt: now,
     );
 
-    // Queue sync operation
-    await _queueSyncOperation(
-      entityType: 'subject',
-      entityId: subjectId,
-      operation: 'create',
-      data: {
-        'userId': userId,
-        'termId': termId,
-        'name': name,
-        'code': code,
-        'color': color ?? '#2196F3',
-        'credits': credits,
-        'useFinalGradeOverride': false,
-        'createdAt': Timestamp.fromDate(now),
-        'updatedAt': Timestamp.fromDate(now),
-      },
-    );
+    // 1. Save locally
+    await _db.subjectDao.insertSubject(_subjectModelToCompanion(subject, termId));
 
-    print('✅ Subject created locally and queued for sync');
-  }
+    // 2. Queue for sync
+    await _queueSync('subject', subject.id, 'create', subject.toJson(),
+        'users/$userId/terms/$termId/subjects/${subject.id}');
 
-  /// Update a subject (offline-first)
-  Future<void> updateSubject({
-    required String subjectId,
-    String? name,
-    String? code,
-    int? credits,
-    String? color,
-    bool? useFinalGradeOverride,
-    double? finalGrade,
-  }) async {
-    print('✏️ Updating subject $subjectId locally');
-
-    // Get existing subject
-    final existingSubject = await _db.academicDao.getSubjectDetailById(subjectId);
-    if (existingSubject == null) {
-      print('❌ Subject $subjectId not found');
-      return;
+    // 3. Sync if online
+    if (_connectivity.isOnline) {
+      await _syncSubjectToFirestore(userId, termId, subject);
     }
 
-    // Update in local database
-    await _db.academicDao.upsertSubjectDetail(
-      db.SubjectDetailsCompanion(
-        id: Value(subjectId),
-        name: Value(name ?? existingSubject.name),
-        code: Value(code ?? existingSubject.code),
-        credits: Value(credits ?? existingSubject.credits),
-        color: Value(color ?? existingSubject.color),
-        useFinalGradeOverride: Value(useFinalGradeOverride ?? existingSubject.useFinalGradeOverride),
-        finalGrade: Value(finalGrade ?? existingSubject.finalGrade),
-        updatedAt: Value(DateTime.now()),
-        needsSync: const Value(true),
-      ),
-    );
-
-    // Queue sync operation
-    await _queueSyncOperation(
-      entityType: 'subject',
-      entityId: subjectId,
-      operation: 'update',
-      data: {
-        'name': name ?? existingSubject.name,
-        'code': code ?? existingSubject.code,
-        'credits': credits ?? existingSubject.credits,
-        'color': color ?? existingSubject.color,
-        'useFinalGradeOverride': useFinalGradeOverride ?? existingSubject.useFinalGradeOverride,
-        'finalGrade': finalGrade ?? existingSubject.finalGrade,
-        'updatedAt': Timestamp.fromDate(DateTime.now()),
-      },
-    );
-
-    print('✅ Subject updated locally and queued for sync');
+    return subject;
   }
 
-  /// Delete a subject (offline-first soft delete)
-  Future<void> deleteSubject(String subjectId) async {
-    print('🗑️ Soft deleting subject $subjectId locally');
+  /// Update subject
+  Future<void> updateSubject(String userId, String termId, Subject subject) async {
+    final updated = subject.copyWith(updatedAt: DateTime.now());
 
-    // Soft delete in local database
-    await _db.academicDao.softDeleteSubject(subjectId);
+    // 1. Update locally
+    await _db.subjectDao.updateSubject(_subjectModelToCompanion(updated, termId));
 
-    // Queue sync operation
-    await _queueSyncOperation(
-      entityType: 'subject',
-      entityId: subjectId,
-      operation: 'delete',
-      data: {},
-    );
+    // 2. Queue for sync
+    await _queueSync('subject', updated.id, 'update', updated.toJson(),
+        'users/$userId/terms/$termId/subjects/${updated.id}');
 
-    print('✅ Subject soft deleted locally and queued for sync');
-  }
-
-  // ==================== ASSIGNMENTS ====================
-
-  /// Get all assignments for user (offline-first)
-  Future<List<Assignment>> getAllAssignmentsForUser(
-    String userId, {
-    bool skipFirestore = false,
-  }) async {
-    // Load from local cache first (with subject names via join)
-    final localAssignments = await _db.assignmentDao.getAllAssignmentsForUser(userId);
-
-    if (skipFirestore || !_connectivity.isOnline) {
-      print('📦 Loaded ${localAssignments.length} assignments from cache');
-      return localAssignments.map(_assignmentWithSubjectToModel).toList();
+    // 3. Sync if online
+    if (_connectivity.isOnline) {
+      await _syncSubjectToFirestore(userId, termId, updated);
     }
-
-    // Return cached (background sync handled by InitialLoadService)
-    return localAssignments.map(_assignmentWithSubjectToModel).toList();
   }
 
-  /// Get assignments for a specific term
-  Future<List<Assignment>> getAssignmentsForTerm(
-    String userId,
-    String termId, {
-    bool skipFirestore = false,
-  }) async {
-    final localAssignments = await _db.assignmentDao.getAssignmentsForTerm(termId);
+  /// Delete subject
+  Future<void> deleteSubject(String userId, String termId, String subjectId) async {
+    await _db.subjectDao.deleteSubject(subjectId);
+    await _queueSync('subject', subjectId, 'delete', '{}',
+        'users/$userId/terms/$termId/subjects/$subjectId');
 
-    if (skipFirestore || !_connectivity.isOnline) {
-      print('📦 Loaded ${localAssignments.length} assignments for term from cache');
-      return localAssignments.map(_assignmentWithSubjectToModel).toList();
+    if (_connectivity.isOnline) {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('terms')
+          .doc(termId)
+          .collection('subjects')
+          .doc(subjectId)
+          .delete();
     }
-
-    // Return cached (background sync handled by InitialLoadService)
-    return localAssignments.map(_assignmentWithSubjectToModel).toList();
   }
 
-  /// Get assignments for a specific subject
-  Future<List<Assignment>> getAssignmentsForSubject(
-    String subjectId, {
-    bool skipFirestore = false,
-  }) async {
-    final localAssignments = await _db.assignmentDao.getAssignmentsForSubject(subjectId);
+  // ============================================
+  // ASSIGNMENTS
+  // ============================================
 
-    if (skipFirestore || !_connectivity.isOnline) {
-      print('📦 Loaded ${localAssignments.length} assignments for subject from cache');
-      return localAssignments.map(_assignmentWithSubjectToModel).toList();
-    }
+  /// Get assignments for subject
+  Future<List<Assignment>> getAssignmentsForSubject(String subjectId) async {
+    final entities = await _db.assignmentDao.getAssignmentsForSubject(subjectId);
+    return entities.map(_assignmentEntityToModel).toList();
+  }
 
-    // Return cached (background sync handled by InitialLoadService)
-    return localAssignments.map(_assignmentWithSubjectToModel).toList();
+  /// Watch assignments for subject
+  Stream<List<Assignment>> watchAssignmentsForSubject(String subjectId) {
+    return _db.assignmentDao.watchAssignmentsForSubject(subjectId).map(
+          (entities) => entities.map(_assignmentEntityToModel).toList(),
+        );
+  }
+
+  /// Get all assignments for user
+  Future<List<Assignment>> getAssignmentsForUser(String userId) async {
+    final entities = await _db.assignmentDao.getAssignmentsForUser(userId);
+    return entities.map(_assignmentEntityToModel).toList();
   }
 
   /// Get pending assignments
-  Future<List<Assignment>> getPendingAssignments(String userId) async {
-    final localAssignments = await _db.assignmentDao.getPendingAssignments(userId);
-    print('📦 Loaded ${localAssignments.length} pending assignments from cache');
-    return localAssignments.map(_assignmentWithSubjectToModel).toList();
-  }
-
-  /// Get completed assignments
-  Future<List<Assignment>> getCompletedAssignments(String userId) async {
-    final localAssignments = await _db.assignmentDao.getCompletedAssignments(userId);
-    print('📦 Loaded ${localAssignments.length} completed assignments from cache');
-    return localAssignments.map(_assignmentWithSubjectToModel).toList();
+  Future<List<Assignment>> getPendingAssignmentsForUser(String userId) async {
+    final entities = await _db.assignmentDao.getPendingAssignmentsForUser(userId);
+    return entities.map(_assignmentEntityToModel).toList();
   }
 
   /// Get assignments due today
   Future<List<Assignment>> getAssignmentsDueToday(String userId, DateTime today) async {
-    final localAssignments = await _db.assignmentDao.getAssignmentsDueToday(userId, today);
-    print('📦 Loaded ${localAssignments.length} assignments due today from cache');
-    return localAssignments.map(_assignmentWithSubjectToModel).toList();
+    final entities = await _db.assignmentDao.getAssignmentsDueToday(userId, today);
+    return entities.map(_assignmentEntityToModel).toList();
   }
 
-  /// Create or update assignment (offline-first)
-  Future<void> saveAssignment(Assignment assignment) async {
-    print('✏️ Saving assignment "${assignment.title}" locally');
-
-    // 1. Save to local database immediately
-    await _db.assignmentDao.upsertAssignment(_assignmentToDb(assignment, needsSync: true));
-
-    // 2. Queue sync operation
-    await _queueSyncOperation(
-      entityType: 'assignment',
-      entityId: assignment.id,
-      operation: 'create',
-      data: {
-        'userId': assignment.userId,
-        'termId': assignment.termId,
-        'subjectId': assignment.subjectId,
-        'title': assignment.title,
-        'description': assignment.description,
-        'dueDate': Timestamp.fromDate(assignment.dueDate),
-        'priority': assignment.priority,
-        'weightId': '', // Will be mapped to weight category
-        'isCompleted': assignment.status == 'Completed',
-        'isGraded': assignment.grade > 0,
-        'grade': assignment.grade,
-        'createdAt': Timestamp.fromDate(DateTime.now()),
-        'updatedAt': Timestamp.fromDate(DateTime.now()),
-      },
-    );
-
-    print('✅ Assignment saved locally and queued for sync');
+  /// Get upcoming assignments
+  Future<List<Assignment>> getUpcomingAssignments(String userId) async {
+    final entities = await _db.assignmentDao.getUpcomingAssignments(userId);
+    return entities.map(_assignmentEntityToModel).toList();
   }
 
-  /// Update assignment status (offline-first)
-  Future<void> updateAssignmentStatus(String id, String newStatus) async {
-    print('✏️ Updating assignment status to $newStatus');
-    
-    await _db.assignmentDao.updateAssignmentStatus(id, newStatus);
-
-    // Queue sync operation
-    final assignment = await _db.assignmentDao.getAssignmentById(id);
-    if (assignment != null) {
-      await _queueSyncOperation(
-        entityType: 'assignment',
-        entityId: id,
-        operation: 'update',
-        data: {
-          'status': newStatus,
-          'completedAt': newStatus == 'Completed' ? Timestamp.now() : null,
-          'updatedAt': Timestamp.now(),
-        },
-      );
-    }
-
-    print('✅ Assignment status updated and queued for sync');
-  }
-
-  /// Update assignment grade (offline-first)
-  Future<void> updateAssignmentGrade(String id, int grade) async {
-    print('✏️ Updating assignment grade to $grade');
-    
-    await _db.assignmentDao.updateAssignmentGrade(id, grade);
-
-    // Queue sync operation
-    await _queueSyncOperation(
-      entityType: 'assignment',
-      entityId: id,
-      operation: 'update',
-      data: {
-        'grade': grade,
-        'isGraded': grade > 0,
-        'updatedAt': Timestamp.now(),
-      },
-    );
-
-    print('✅ Assignment grade updated and queued for sync');
-  }
-
-  /// Delete assignment (offline-first soft delete)
-  Future<void> deleteAssignment(String id) async {
-    print('🗑️ Soft deleting assignment $id');
-    
-    await _db.assignmentDao.softDeleteAssignment(id);
-
-    // Queue sync operation
-    await _queueSyncOperation(
-      entityType: 'assignment',
-      entityId: id,
-      operation: 'delete',
-      data: {},
-    );
-
-    print('✅ Assignment deleted and queued for sync');
-  }
-
-  // ==================== EXAMS ====================
-
-  /// Get all exams for user (offline-first)
-  Future<List<Map<String, dynamic>>> getAllExamsForUser(
-    String userId, {
-    bool skipFirestore = false,
+  /// Create assignment
+  Future<Assignment> createAssignment({
+    required String userId,
+    required String termId,
+    required String subjectId,
+    required String title,
+    String? description,
+    required DateTime dueDate,
+    String? dueTime,
+    String? weightId,
+    Priority priority = Priority.medium,
+    List<Alert> alerts = const [],
   }) async {
-    final localExams = await _db.examDao.getAllExamsForUser(userId);
+    final now = DateTime.now();
+    final assignment = Assignment(
+      id: _uuid.v4(),
+      title: title,
+      description: description,
+      dueDate: dueDate,
+      dueTime: dueTime,
+      weightId: weightId,
+      priority: priority,
+      alerts: alerts,
+      createdAt: now,
+      updatedAt: now,
+    );
 
-    if (skipFirestore || !_connectivity.isOnline) {
-      print('📦 Loaded ${localExams.length} exams from cache');
-      return localExams.map((e) => _examToMap(e)).toList();
+    // 1. Save locally
+    await _db.assignmentDao.insertAssignment(
+        _assignmentModelToCompanion(assignment, subjectId));
+
+    // 2. Queue for sync
+    await _queueSync('assignment', assignment.id, 'create', assignment.toJson(),
+        'users/$userId/terms/$termId/subjects/$subjectId/assignments/${assignment.id}');
+
+    // 3. Sync if online
+    if (_connectivity.isOnline) {
+      await _syncAssignmentToFirestore(userId, termId, subjectId, assignment);
     }
 
-    // Return cached (background sync handled by InitialLoadService)
-    return localExams.map((e) => _examToMap(e)).toList();
+    return assignment;
   }
 
-  // ==================== PRIVATE HELPERS ====================
+  /// Update assignment
+  Future<void> updateAssignment(String userId, String termId, String subjectId,
+      Assignment assignment) async {
+    final updated = assignment.copyWith(updatedAt: DateTime.now());
 
-  /// Queue an operation for background sync to Firebase
-  Future<void> _queueSyncOperation({
-    required String entityType,
-    required String entityId,
-    required String operation,
-    required Map<String, dynamic> data,
+    await _db.assignmentDao.updateAssignment(
+        _assignmentModelToCompanion(updated, subjectId));
+
+    await _queueSync('assignment', updated.id, 'update', updated.toJson(),
+        'users/$userId/terms/$termId/subjects/$subjectId/assignments/${updated.id}');
+
+    if (_connectivity.isOnline) {
+      await _syncAssignmentToFirestore(userId, termId, subjectId, updated);
+    }
+  }
+
+  /// Mark assignment as completed
+  Future<void> markAssignmentCompleted(String assignmentId, bool completed) async {
+    await _db.assignmentDao.markAsCompleted(assignmentId, completed);
+  }
+
+  /// Update assignment grade
+  Future<void> updateAssignmentGrade(String assignmentId, double? grade, bool isGraded) async {
+    await _db.assignmentDao.updateGrade(assignmentId, grade, isGraded);
+  }
+
+  /// Delete assignment
+  Future<void> deleteAssignment(
+      String userId, String termId, String subjectId, String assignmentId) async {
+    await _db.assignmentDao.deleteAssignment(assignmentId);
+    await _queueSync('assignment', assignmentId, 'delete', '{}',
+        'users/$userId/terms/$termId/subjects/$subjectId/assignments/$assignmentId');
+
+    if (_connectivity.isOnline) {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('terms')
+          .doc(termId)
+          .collection('subjects')
+          .doc(subjectId)
+          .collection('assignments')
+          .doc(assignmentId)
+          .delete();
+    }
+  }
+
+  // ============================================
+  // CLASS TEMPLATES
+  // ============================================
+
+  /// Get class templates for subject
+  Future<List<ClassTemplate>> getClassTemplatesForSubject(String subjectId) async {
+    final entities = await _db.classDao.getClassTemplatesForSubject(subjectId);
+    return entities.map(_classTemplateEntityToModel).toList();
+  }
+
+  /// Get class templates for active term
+  Future<List<ClassTemplate>> getClassTemplatesForActiveTerm(String userId) async {
+    final entities = await _db.classDao.getClassTemplatesForActiveTerm(userId);
+    return entities.map(_classTemplateEntityToModel).toList();
+  }
+
+  /// Create class template
+  Future<ClassTemplate> createClassTemplate({
+    required String userId,
+    required String termId,
+    required String subjectId,
+    required String name,
+    required String icon,
+    required DateTime startDate,
+    required DateTime endDate,
+    required String startTime,
+    required String endTime,
+    required Recurrence recurrence,
+    String? building,
+    String? room,
+    String? teacherId,
   }) async {
-    try {
-      await _db.syncDao.addSyncItem(
-        db.SyncQueueCompanion.insert(
-          entityType: entityType,
-          entityId: entityId,
-          operation: operation,
-          data: db.Value(data.isNotEmpty ? data : null),
-          createdAt: DateTime.now(),
-        ),
-      );
-      print('📤 Queued sync: $operation $entityType $entityId');
-    } catch (e) {
-      print('❌ Error queuing sync operation: $e');
+    final now = DateTime.now();
+    final template = ClassTemplate(
+      id: _uuid.v4(),
+      name: name,
+      icon: icon,
+      startDate: startDate,
+      endDate: endDate,
+      startTime: startTime,
+      endTime: endTime,
+      recurrence: recurrence,
+      building: building,
+      room: room,
+      teacherId: teacherId,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    await _db.classDao.insertClassTemplate(
+        _classTemplateModelToCompanion(template, subjectId));
+
+    await _queueSync('classTemplate', template.id, 'create', template.toJson(),
+        'users/$userId/terms/$termId/subjects/$subjectId/classTemplates/${template.id}');
+
+    if (_connectivity.isOnline) {
+      await _syncClassTemplateToFirestore(userId, termId, subjectId, template);
+    }
+
+    return template;
+  }
+
+  /// Delete class template
+  Future<void> deleteClassTemplate(
+      String userId, String termId, String subjectId, String templateId) async {
+    await _db.classDao.deleteClassTemplate(templateId);
+    await _db.classDao.deleteExceptionsForTemplate(templateId);
+
+    if (_connectivity.isOnline) {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('terms')
+          .doc(termId)
+          .collection('subjects')
+          .doc(subjectId)
+          .collection('classTemplates')
+          .doc(templateId)
+          .delete();
     }
   }
 
-  /// Convert Assignment model to Drift companion for database storage
-  db.AssignmentsCompanion _assignmentToDb(Assignment assignment, {bool needsSync = false}) {
-    return db.AssignmentsCompanion.insert(
-      id: assignment.id,
-      userId: assignment.userId ?? '',
-      termId: assignment.termId ?? '',
-      subjectId: assignment.subjectId ?? '',
-      title: assignment.title,
-      description: db.Value(assignment.description),
-      dueDate: assignment.dueDate,
-      priority: db.Value(assignment.priority),
-      weight: db.Value(assignment.weight),
-      grade: db.Value(assignment.grade),
-      status: db.Value(assignment.status),
-      isGraded: db.Value(assignment.grade > 0),
-      completedAt: assignment.status == 'Completed'
-          ? db.Value(DateTime.now())
-          : const db.Value(null),
-      createdAt: db.Value(DateTime.now()),
-      updatedAt: db.Value(DateTime.now()),
-      cachedAt: db.Value(DateTime.now()),
-      needsSync: db.Value(needsSync),
-      isDeleted: const db.Value(false),
+  // ============================================
+  // CLASS EXCEPTIONS
+  // ============================================
+
+  /// Get exceptions for class template
+  Future<List<ClassException>> getExceptionsForTemplate(String classTemplateId) async {
+    final entities = await _db.classDao.getExceptionsForTemplate(classTemplateId);
+    return entities.map(_classExceptionEntityToModel).toList();
+  }
+
+  /// Cancel class on date
+  Future<ClassException> cancelClass({
+    required String userId,
+    required String termId,
+    required String subjectId,
+    required String classTemplateId,
+    required DateTime date,
+  }) async {
+    final now = DateTime.now();
+    final exception = ClassException(
+      id: _uuid.v4(),
+      classTemplateId: classTemplateId,
+      date: date,
+      isCancelled: true,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    await _db.classDao.cancelClass(classTemplateId, date, exception.id);
+
+    await _queueSync('classException', exception.id, 'create', exception.toJson(),
+        'users/$userId/terms/$termId/subjects/$subjectId/classExceptions/${exception.id}');
+
+    return exception;
+  }
+
+  /// Add notes to class
+  Future<ClassException> addClassNotes({
+    required String userId,
+    required String termId,
+    required String subjectId,
+    required String classTemplateId,
+    required DateTime date,
+    required String notes,
+  }) async {
+    final now = DateTime.now();
+    final exception = ClassException(
+      id: _uuid.v4(),
+      classTemplateId: classTemplateId,
+      date: date,
+      isCancelled: false,
+      notes: notes,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    await _db.classDao.addClassNotes(classTemplateId, date, exception.id, notes);
+
+    return exception;
+  }
+
+  // ============================================
+  // EXAMS
+  // ============================================
+
+  /// Get exams for subject
+  Future<List<Exam>> getExamsForSubject(String subjectId) async {
+    final entities = await _db.examDao.getExamsForSubject(subjectId);
+    return entities.map(_examEntityToModel).toList();
+  }
+
+  /// Watch exams for subject
+  Stream<List<Exam>> watchExamsForSubject(String subjectId) {
+    return _db.examDao.watchExamsForSubject(subjectId).map(
+          (entities) => entities.map(_examEntityToModel).toList(),
+        );
+  }
+
+  /// Get all exams for user
+  Future<List<Exam>> getExamsForUser(String userId) async {
+    final entities = await _db.examDao.getExamsForUser(userId);
+    return entities.map(_examEntityToModel).toList();
+  }
+
+  /// Get upcoming exams
+  Future<List<Exam>> getUpcomingExamsForUser(String userId) async {
+    final entities = await _db.examDao.getUpcomingExamsForUser(userId);
+    return entities.map(_examEntityToModel).toList();
+  }
+
+  /// Get exams for today
+  Future<List<Exam>> getExamsForToday(String userId, DateTime today) async {
+    final entities = await _db.examDao.getExamsForToday(userId, today);
+    return entities.map(_examEntityToModel).toList();
+  }
+
+  /// Create exam
+  Future<Exam> createExam({
+    required String userId,
+    required String termId,
+    required String subjectId,
+    required String name,
+    required DateTime date,
+    required String startTime,
+    required String endTime,
+    String? weightId,
+    String? building,
+    String? room,
+    String? teacherId,
+  }) async {
+    final now = DateTime.now();
+    final exam = Exam(
+      id: _uuid.v4(),
+      name: name,
+      date: date,
+      startTime: startTime,
+      endTime: endTime,
+      weightId: weightId,
+      building: building,
+      room: room,
+      teacherId: teacherId,
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    await _db.examDao.insertExam(_examModelToCompanion(exam, subjectId));
+
+    await _queueSync('exam', exam.id, 'create', exam.toJson(),
+        'users/$userId/terms/$termId/subjects/$subjectId/exams/${exam.id}');
+
+    if (_connectivity.isOnline) {
+      await _syncExamToFirestore(userId, termId, subjectId, exam);
+    }
+
+    return exam;
+  }
+
+  /// Update exam
+  Future<void> updateExam(String userId, String termId, String subjectId, Exam exam) async {
+    final updated = exam.copyWith(updatedAt: DateTime.now());
+
+    await _db.examDao.updateExam(_examModelToCompanion(updated, subjectId));
+
+    await _queueSync('exam', updated.id, 'update', updated.toJson(),
+        'users/$userId/terms/$termId/subjects/$subjectId/exams/${updated.id}');
+
+    if (_connectivity.isOnline) {
+      await _syncExamToFirestore(userId, termId, subjectId, updated);
+    }
+  }
+
+  /// Mark exam as completed
+  Future<void> markExamCompleted(String examId, bool completed) async {
+    await _db.examDao.markAsCompleted(examId, completed);
+  }
+
+  /// Update exam grade
+  Future<void> updateExamGrade(String examId, double? grade, bool isGraded) async {
+    await _db.examDao.updateGrade(examId, grade, isGraded);
+  }
+
+  /// Delete exam
+  Future<void> deleteExam(
+      String userId, String termId, String subjectId, String examId) async {
+    await _db.examDao.deleteExam(examId);
+
+    if (_connectivity.isOnline) {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('terms')
+          .doc(termId)
+          .collection('subjects')
+          .doc(subjectId)
+          .collection('exams')
+          .doc(examId)
+          .delete();
+    }
+  }
+
+  // ============================================
+  // CONVERSION HELPERS
+  // ============================================
+
+  Term _termEntityToModel(TermEntity entity) {
+    return Term(
+      id: entity.id,
+      name: entity.name,
+      startDate: entity.startDate,
+      endDate: entity.endDate,
+      isActive: entity.isActive,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
     );
   }
 
-  /// Convert AssignmentWithSubject from DAO to Assignment model
-  Assignment _assignmentWithSubjectToModel(AssignmentWithSubject aws) {
+  TermsCompanion _termModelToCompanion(Term term, String userId) {
+    return TermsCompanion(
+      id: Value(term.id),
+      userId: Value(userId),
+      name: Value(term.name),
+      startDate: Value(term.startDate),
+      endDate: Value(term.endDate),
+      isActive: Value(term.isActive),
+      createdAt: Value(term.createdAt),
+      updatedAt: Value(term.updatedAt),
+      syncStatus: const Value('pending'),
+    );
+  }
+
+  Subject _subjectEntityToModel(SubjectEntity entity) {
+    return Subject(
+      id: entity.id,
+      name: entity.name,
+      color: entity.color,
+      credits: entity.credits,
+      finalGrade: entity.finalGrade,
+      useFinalGradeOverride: entity.useFinalGradeOverride,
+      weights: Weight.fromJsonString(entity.weightsJson),
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    );
+  }
+
+  SubjectsCompanion _subjectModelToCompanion(Subject subject, String termId) {
+    return SubjectsCompanion(
+      id: Value(subject.id),
+      termId: Value(termId),
+      name: Value(subject.name),
+      color: Value(subject.color),
+      credits: Value(subject.credits),
+      finalGrade: Value(subject.finalGrade),
+      useFinalGradeOverride: Value(subject.useFinalGradeOverride),
+      weightsJson: Value(Weight.toJsonString(subject.weights)),
+      createdAt: Value(subject.createdAt),
+      updatedAt: Value(subject.updatedAt),
+      syncStatus: const Value('pending'),
+    );
+  }
+
+  Assignment _assignmentEntityToModel(AssignmentEntity entity) {
     return Assignment(
-      id: aws.assignment.id,
-      title: aws.assignment.title,
-      description: aws.assignment.description,
-      dueDate: aws.assignment.dueDate,
-      priority: aws.assignment.priority,
-      weight: aws.assignment.weight,
-      grade: aws.assignment.grade,
-      status: aws.assignment.status,
-      subjectName: aws.subjectName,
-      termId: aws.assignment.termId,
-      subjectId: aws.assignment.subjectId,
-      userId: aws.assignment.userId,
+      id: entity.id,
+      title: entity.title,
+      description: entity.description,
+      dueDate: entity.dueDate,
+      dueTime: entity.dueTime,
+      weightId: entity.weightId,
+      priority: Priority.fromString(entity.priority),
+      isCompleted: entity.isCompleted,
+      completedAt: entity.completedAt,
+      isGraded: entity.isGraded,
+      grade: entity.grade,
+      alerts: Alert.fromJsonString(entity.alertsJson),
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
     );
   }
 
-  /// Convert Exam from Drift to Map
-  Map<String, dynamic> _examToMap(db.Exam exam) {
-    return {
-      'id': exam.id,
-      'userId': exam.userId,
-      'termId': exam.termId,
-      'subjectId': exam.subjectId,
-      'title': exam.title,
-      'description': exam.description,
-      'date': exam.date,
-      'startTime': exam.startTime,
-      'endTime': exam.endTime,
-      'location': exam.location,
-      'weight': exam.weight,
-      'grade': exam.grade,
-      'status': exam.isCompleted,
-    };
+  AssignmentsCompanion _assignmentModelToCompanion(Assignment assignment, String subjectId) {
+    return AssignmentsCompanion(
+      id: Value(assignment.id),
+      subjectId: Value(subjectId),
+      title: Value(assignment.title),
+      description: Value(assignment.description),
+      dueDate: Value(assignment.dueDate),
+      dueTime: Value(assignment.dueTime),
+      weightId: Value(assignment.weightId),
+      priority: Value(assignment.priority.value),
+      isCompleted: Value(assignment.isCompleted),
+      completedAt: Value(assignment.completedAt),
+      isGraded: Value(assignment.isGraded),
+      grade: Value(assignment.grade),
+      alertsJson: Value(Alert.toJsonString(assignment.alerts)),
+      createdAt: Value(assignment.createdAt),
+      updatedAt: Value(assignment.updatedAt),
+      syncStatus: const Value('pending'),
+    );
+  }
+
+  ClassTemplate _classTemplateEntityToModel(ClassTemplateEntity entity) {
+    return ClassTemplate(
+      id: entity.id,
+      name: entity.name,
+      icon: entity.icon,
+      startDate: entity.startDate,
+      endDate: entity.endDate,
+      startTime: entity.startTime,
+      endTime: entity.endTime,
+      recurrence: Recurrence.fromJsonString(entity.recurrenceJson),
+      building: entity.building,
+      room: entity.room,
+      teacherId: entity.teacherId,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    );
+  }
+
+  ClassTemplatesCompanion _classTemplateModelToCompanion(ClassTemplate template, String subjectId) {
+    return ClassTemplatesCompanion(
+      id: Value(template.id),
+      subjectId: Value(subjectId),
+      name: Value(template.name),
+      icon: Value(template.icon),
+      startDate: Value(template.startDate),
+      endDate: Value(template.endDate),
+      startTime: Value(template.startTime),
+      endTime: Value(template.endTime),
+      recurrenceJson: Value(template.recurrence.toJsonString()),
+      building: Value(template.building),
+      room: Value(template.room),
+      teacherId: Value(template.teacherId),
+      createdAt: Value(template.createdAt),
+      updatedAt: Value(template.updatedAt),
+      syncStatus: const Value('pending'),
+    );
+  }
+
+  ClassException _classExceptionEntityToModel(ClassExceptionEntity entity) {
+    return ClassException(
+      id: entity.id,
+      classTemplateId: entity.classTemplateId,
+      date: entity.date,
+      isCancelled: entity.isCancelled,
+      notes: entity.notes,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    );
+  }
+
+  Exam _examEntityToModel(ExamEntity entity) {
+    return Exam(
+      id: entity.id,
+      name: entity.name,
+      date: entity.date,
+      startTime: entity.startTime,
+      endTime: entity.endTime,
+      weightId: entity.weightId,
+      building: entity.building,
+      room: entity.room,
+      teacherId: entity.teacherId,
+      isCompleted: entity.isCompleted,
+      completedAt: entity.completedAt,
+      isGraded: entity.isGraded,
+      grade: entity.grade,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    );
+  }
+
+  ExamsCompanion _examModelToCompanion(Exam exam, String subjectId) {
+    return ExamsCompanion(
+      id: Value(exam.id),
+      subjectId: Value(subjectId),
+      name: Value(exam.name),
+      date: Value(exam.date),
+      startTime: Value(exam.startTime),
+      endTime: Value(exam.endTime),
+      weightId: Value(exam.weightId),
+      building: Value(exam.building),
+      room: Value(exam.room),
+      teacherId: Value(exam.teacherId),
+      isCompleted: Value(exam.isCompleted),
+      completedAt: Value(exam.completedAt),
+      isGraded: Value(exam.isGraded),
+      grade: Value(exam.grade),
+      createdAt: Value(exam.createdAt),
+      updatedAt: Value(exam.updatedAt),
+      syncStatus: const Value('pending'),
+    );
+  }
+
+  // ============================================
+  // SYNC HELPERS
+  // ============================================
+
+  Future<void> _queueSync(String entityType, String entityId, String operation,
+      Map<String, dynamic> data, String documentPath) async {
+    await _db.syncDao.queueSync(
+      entityType: entityType,
+      entityId: entityId,
+      operation: operation,
+      dataJson: jsonEncode(data),
+      documentPath: documentPath,
+    );
+  }
+
+  Future<void> _syncTermToFirestore(String userId, Term term) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('terms')
+          .doc(term.id)
+          .set(term.toFirestore(), SetOptions(merge: true));
+      await _db.termDao.markAsSynced(term.id);
+    } catch (e) {
+      print('Error syncing term: $e');
+    }
+  }
+
+  Future<void> _syncSubjectToFirestore(String userId, String termId, Subject subject) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('terms')
+          .doc(termId)
+          .collection('subjects')
+          .doc(subject.id)
+          .set(subject.toFirestore(), SetOptions(merge: true));
+      await _db.subjectDao.markAsSynced(subject.id);
+    } catch (e) {
+      print('Error syncing subject: $e');
+    }
+  }
+
+  Future<void> _syncAssignmentToFirestore(
+      String userId, String termId, String subjectId, Assignment assignment) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('terms')
+          .doc(termId)
+          .collection('subjects')
+          .doc(subjectId)
+          .collection('assignments')
+          .doc(assignment.id)
+          .set(assignment.toFirestore(), SetOptions(merge: true));
+      await _db.assignmentDao.markAsSynced(assignment.id);
+    } catch (e) {
+      print('Error syncing assignment: $e');
+    }
+  }
+
+  Future<void> _syncClassTemplateToFirestore(
+      String userId, String termId, String subjectId, ClassTemplate template) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('terms')
+          .doc(termId)
+          .collection('subjects')
+          .doc(subjectId)
+          .collection('classTemplates')
+          .doc(template.id)
+          .set(template.toFirestore(), SetOptions(merge: true));
+      await _db.classDao.markClassTemplateAsSynced(template.id);
+    } catch (e) {
+      print('Error syncing class template: $e');
+    }
+  }
+
+  Future<void> _syncExamToFirestore(
+      String userId, String termId, String subjectId, Exam exam) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('terms')
+          .doc(termId)
+          .collection('subjects')
+          .doc(subjectId)
+          .collection('exams')
+          .doc(exam.id)
+          .set(exam.toFirestore(), SetOptions(merge: true));
+      await _db.examDao.markAsSynced(exam.id);
+    } catch (e) {
+      print('Error syncing exam: $e');
+    }
   }
 }

@@ -60,7 +60,7 @@ class TodayViewModel extends ChangeNotifier {
     try {
       final today = DateTime.now();
 
-      _assignmentsDueToday = await _repository.getAssignmentsDueToday(userId, today);
+      _assignmentsDueToday = await _repository.getAssignmentsDueToday(userId);
       _assignmentsDueToday.sort((a, b) {
         if (a.isPending && b.isCompleted) return -1;
         if (a.isCompleted && b.isPending) return 1;

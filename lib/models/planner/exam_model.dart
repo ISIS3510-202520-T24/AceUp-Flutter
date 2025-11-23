@@ -1,84 +1,80 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../core/constants/enums.dart';
-import '../helpers/alert_model.dart';
 
-class Assignment {
+class Exam {
   final String id;
-  final String title;
-  final String? description;
-  final DateTime dueDate;
-  final String? dueTime; // HH:mm format
-  final String? weightId; // Reference to weight/subweight
-  final Priority priority;
+  final String name;
+  final DateTime date;
+  final String startTime; // HH:mm format
+  final String endTime; // HH:mm format
+  final String? weightId;
+  final String? building;
+  final String? room;
+  final String? teacherId;
   final bool isCompleted;
   final DateTime? completedAt;
   final bool isGraded;
   final double? grade;
-  final List<Alert> alerts;
   final DateTime createdAt;
   final DateTime updatedAt;
 
-  Assignment({
+  Exam({
     required this.id,
-    required this.title,
-    this.description,
-    required this.dueDate,
-    this.dueTime,
+    required this.name,
+    required this.date,
+    required this.startTime,
+    required this.endTime,
     this.weightId,
-    this.priority = Priority.medium,
+    this.building,
+    this.room,
+    this.teacherId,
     this.isCompleted = false,
     this.completedAt,
     this.isGraded = false,
     this.grade,
-    this.alerts = const [],
     required this.createdAt,
     required this.updatedAt,
   });
 
-  factory Assignment.fromFirestore(DocumentSnapshot doc) {
+  factory Exam.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    return Assignment(
+    return Exam(
       id: doc.id,
-      title: data['title'] ?? '',
-      description: data['description'],
-      dueDate: (data['dueDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      dueTime: data['dueTime'],
+      name: data['name'] ?? '',
+      date: (data['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      startTime: data['startTime'] ?? '09:00',
+      endTime: data['endTime'] ?? '10:00',
       weightId: data['weightId'],
-      priority: Priority.fromString(data['priority'] ?? 'medium'),
+      building: data['building'],
+      room: data['room'],
+      teacherId: data['teacherId'],
       isCompleted: data['isCompleted'] ?? false,
       completedAt: (data['completedAt'] as Timestamp?)?.toDate(),
       isGraded: data['isGraded'] ?? false,
       grade: data['grade']?.toDouble(),
-      alerts: (data['alerts'] as List<dynamic>?)
-              ?.map((e) => Alert.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
-  factory Assignment.fromJson(Map<String, dynamic> json) {
-    return Assignment(
+  factory Exam.fromJson(Map<String, dynamic> json) {
+    return Exam(
       id: json['id'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'],
-      dueDate: json['dueDate'] is Timestamp
-          ? (json['dueDate'] as Timestamp).toDate()
-          : DateTime.tryParse(json['dueDate']?.toString() ?? '') ?? DateTime.now(),
-      dueTime: json['dueTime'],
+      name: json['name'] ?? '',
+      date: json['date'] is Timestamp
+          ? (json['date'] as Timestamp).toDate()
+          : DateTime.tryParse(json['date']?.toString() ?? '') ?? DateTime.now(),
+      startTime: json['startTime'] ?? '09:00',
+      endTime: json['endTime'] ?? '10:00',
       weightId: json['weightId'],
-      priority: Priority.fromString(json['priority'] ?? 'medium'),
+      building: json['building'],
+      room: json['room'],
+      teacherId: json['teacherId'],
       isCompleted: json['isCompleted'] ?? false,
       completedAt: json['completedAt'] is Timestamp
           ? (json['completedAt'] as Timestamp).toDate()
           : DateTime.tryParse(json['completedAt']?.toString() ?? ''),
       isGraded: json['isGraded'] ?? false,
       grade: json['grade']?.toDouble(),
-      alerts: (json['alerts'] as List<dynamic>?)
-              ?.map((e) => Alert.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
       createdAt: json['createdAt'] is Timestamp
           ? (json['createdAt'] as Timestamp).toDate()
           : DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
@@ -90,17 +86,18 @@ class Assignment {
 
   Map<String, dynamic> toFirestore() {
     return {
-      'title': title,
-      if (description != null) 'description': description,
-      'dueDate': Timestamp.fromDate(dueDate),
-      if (dueTime != null) 'dueTime': dueTime,
+      'name': name,
+      'date': Timestamp.fromDate(date),
+      'startTime': startTime,
+      'endTime': endTime,
       if (weightId != null) 'weightId': weightId,
-      'priority': priority.value,
+      if (building != null) 'building': building,
+      if (room != null) 'room': room,
+      if (teacherId != null) 'teacherId': teacherId,
       'isCompleted': isCompleted,
       if (completedAt != null) 'completedAt': Timestamp.fromDate(completedAt!),
       'isGraded': isGraded,
       if (grade != null) 'grade': grade,
-      'alerts': alerts.map((e) => e.toJson()).toList(),
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
@@ -109,79 +106,88 @@ class Assignment {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'title': title,
-      if (description != null) 'description': description,
-      'dueDate': dueDate.toIso8601String(),
-      if (dueTime != null) 'dueTime': dueTime,
+      'name': name,
+      'date': date.toIso8601String(),
+      'startTime': startTime,
+      'endTime': endTime,
       if (weightId != null) 'weightId': weightId,
-      'priority': priority.value,
+      if (building != null) 'building': building,
+      if (room != null) 'room': room,
+      if (teacherId != null) 'teacherId': teacherId,
       'isCompleted': isCompleted,
       if (completedAt != null) 'completedAt': completedAt!.toIso8601String(),
       'isGraded': isGraded,
       if (grade != null) 'grade': grade,
-      'alerts': alerts.map((e) => e.toJson()).toList(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
   }
 
-  Assignment copyWith({
+  Exam copyWith({
     String? id,
-    String? title,
-    String? description,
-    DateTime? dueDate,
-    String? dueTime,
+    String? name,
+    DateTime? date,
+    String? startTime,
+    String? endTime,
     String? weightId,
-    Priority? priority,
+    String? building,
+    String? room,
+    String? teacherId,
     bool? isCompleted,
     DateTime? completedAt,
     bool? isGraded,
     double? grade,
-    List<Alert>? alerts,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
-    return Assignment(
+    return Exam(
       id: id ?? this.id,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      dueDate: dueDate ?? this.dueDate,
-      dueTime: dueTime ?? this.dueTime,
+      name: name ?? this.name,
+      date: date ?? this.date,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
       weightId: weightId ?? this.weightId,
-      priority: priority ?? this.priority,
+      building: building ?? this.building,
+      room: room ?? this.room,
+      teacherId: teacherId ?? this.teacherId,
       isCompleted: isCompleted ?? this.isCompleted,
       completedAt: completedAt ?? this.completedAt,
       isGraded: isGraded ?? this.isGraded,
       grade: grade ?? this.grade,
-      alerts: alerts ?? this.alerts,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
-  /// Check if assignment is due today
-  bool isDueToday(DateTime today) {
-    return dueDate.year == today.year &&
-        dueDate.month == today.month &&
-        dueDate.day == today.day;
+  /// Get location string
+  String get location {
+    if (building != null && room != null) {
+      return '$building - $room';
+    } else if (building != null) {
+      return building!;
+    } else if (room != null) {
+      return room!;
+    }
+    return '';
   }
 
-  /// Check if assignment is overdue
-  bool get isOverdue {
-    if (isCompleted) return false;
-    return DateTime.now().isAfter(dueDate);
+  /// Check if exam is today
+  bool isToday(DateTime today) {
+    return date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day;
   }
 
-  /// Days until due (negative if overdue)
-  int get daysUntilDue {
+  /// Days until exam (negative if past)
+  int get daysUntil {
     final now = DateTime.now();
-    final dueOnly = DateTime(dueDate.year, dueDate.month, dueDate.day);
+    final examOnly = DateTime(date.year, date.month, date.day);
     final nowOnly = DateTime(now.year, now.month, now.day);
-    return dueOnly.difference(nowOnly).inDays;
+    return examOnly.difference(nowOnly).inDays;
   }
 
   @override
   String toString() {
-    return 'Assignment(id: $id, title: $title, dueDate: $dueDate, isCompleted: $isCompleted)';
+    return 'Exam(id: $id, name: $name, date: $date, isCompleted: $isCompleted)';
   }
 }

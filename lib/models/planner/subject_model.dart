@@ -1,138 +1,126 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../helpers/weight_model.dart';
 
-/// Subject (Materia académica) con soporte para cálculo de GPA
-/// 
-/// **Business Question 3.1**: Este modelo soporta el tracking de completitud
-/// de datos necesarios para el cálculo automático de GPA.
-/// 
-/// Campos requeridos para GPA:
-/// - `credits`: Créditos de la materia (1-9)
-/// - Assignments con weights que sumen 100%
 class Subject {
   final String id;
   final String name;
-  final String? code;
-  final int credits; // ✅ NUEVO: Requerido para GPA ponderado
-  final String termId;
-  final String userId;
+  final String color; // Hex color code
+  final double credits;
+  final double? finalGrade;
+  final bool useFinalGradeOverride;
+  final List<Weight> weights;
   final DateTime createdAt;
-  final DateTime? updatedAt;
-  
-  // Metadata para análisis (BQ 3.1)
-  final bool hasCompleteDataForGPA; // Calculado en el cliente
-  final DateTime? dataCompletedAt; // Cuando se completaron todos los campos
+  final DateTime updatedAt;
 
   Subject({
     required this.id,
     required this.name,
-    this.code,
+    required this.color,
     required this.credits,
-    required this.termId,
-    required this.userId,
+    this.finalGrade,
+    this.useFinalGradeOverride = false,
+    this.weights = const [],
     required this.createdAt,
-    this.updatedAt,
-    this.hasCompleteDataForGPA = false,
-    this.dataCompletedAt,
+    required this.updatedAt,
   });
 
-  /// Factory desde Firestore
   factory Subject.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    
-    final credits = data['credits'] as int? ?? 0;
-    final hasCompleteData = data['hasCompleteDataForGPA'] as bool? ?? false;
-    
+    final data = doc.data() as Map<String, dynamic>;
     return Subject(
       id: doc.id,
-      name: data['name'] ?? 'Unnamed Subject',
-      code: data['code'],
-      credits: credits,
-      termId: data['termId'] ?? '',
-      userId: data['userId'] ?? '',
+      name: data['name'] ?? '',
+      color: data['color'] ?? '#6B7280',
+      credits: (data['credits'] ?? 0).toDouble(),
+      finalGrade: data['finalGrade']?.toDouble(),
+      useFinalGradeOverride: data['useFinalGradeOverride'] ?? false,
+      weights: (data['weights'] as List<dynamic>?)
+              ?.map((e) => Weight.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate(),
-      hasCompleteDataForGPA: hasCompleteData,
-      dataCompletedAt: (data['dataCompletedAt'] as Timestamp?)?.toDate(),
+      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 
-  /// Convertir a Firestore
+  factory Subject.fromJson(Map<String, dynamic> json) {
+    return Subject(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      color: json['color'] ?? '#6B7280',
+      credits: (json['credits'] ?? 0).toDouble(),
+      finalGrade: json['finalGrade']?.toDouble(),
+      useFinalGradeOverride: json['useFinalGradeOverride'] ?? false,
+      weights: (json['weights'] as List<dynamic>?)
+              ?.map((e) => Weight.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      createdAt: json['createdAt'] is Timestamp
+          ? (json['createdAt'] as Timestamp).toDate()
+          : DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
+      updatedAt: json['updatedAt'] is Timestamp
+          ? (json['updatedAt'] as Timestamp).toDate()
+          : DateTime.tryParse(json['updatedAt']?.toString() ?? '') ?? DateTime.now(),
+    );
+  }
+
   Map<String, dynamic> toFirestore() {
     return {
       'name': name,
-      'code': code,
+      'color': color,
       'credits': credits,
-      'termId': termId,
-      'userId': userId,
+      if (finalGrade != null) 'finalGrade': finalGrade,
+      'useFinalGradeOverride': useFinalGradeOverride,
+      'weights': weights.map((e) => e.toJson()).toList(),
       'createdAt': Timestamp.fromDate(createdAt),
-      'updatedAt': Timestamp.fromDate(DateTime.now()),
-      'hasCompleteDataForGPA': hasCompleteDataForGPA,
-      'dataCompletedAt': dataCompletedAt != null 
-        ? Timestamp.fromDate(dataCompletedAt!) 
-        : null,
+      'updatedAt': Timestamp.fromDate(updatedAt),
     };
   }
 
-  /// Verifica si el subject tiene los datos mínimos para GPA
-  /// 
-  /// Criterios:
-  /// 1. Credits > 0 (definidos)
-  /// 2. Al menos 1 assignment con grade y weight
-  bool get isReadyForGPA => credits > 0;
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'color': color,
+      'credits': credits,
+      if (finalGrade != null) 'finalGrade': finalGrade,
+      'useFinalGradeOverride': useFinalGradeOverride,
+      'weights': weights.map((e) => e.toJson()).toList(),
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
+    };
+  }
 
-  /// Copia con modificaciones
   Subject copyWith({
     String? id,
     String? name,
-    String? code,
-    int? credits,
-    String? termId,
-    String? userId,
+    String? color,
+    double? credits,
+    double? finalGrade,
+    bool? useFinalGradeOverride,
+    List<Weight>? weights,
     DateTime? createdAt,
     DateTime? updatedAt,
-    bool? hasCompleteDataForGPA,
-    DateTime? dataCompletedAt,
   }) {
     return Subject(
       id: id ?? this.id,
       name: name ?? this.name,
-      code: code ?? this.code,
+      color: color ?? this.color,
       credits: credits ?? this.credits,
-      termId: termId ?? this.termId,
-      userId: userId ?? this.userId,
+      finalGrade: finalGrade ?? this.finalGrade,
+      useFinalGradeOverride: useFinalGradeOverride ?? this.useFinalGradeOverride,
+      weights: weights ?? this.weights,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      hasCompleteDataForGPA: hasCompleteDataForGPA ?? this.hasCompleteDataForGPA,
-      dataCompletedAt: dataCompletedAt ?? this.dataCompletedAt,
     );
+  }
+
+  /// Get total weight percentage (should be 100)
+  double get totalWeightPercentage {
+    return weights.fold(0.0, (sum, w) => sum + w.percentage);
   }
 
   @override
   String toString() {
-    return 'Subject(id: $id, name: $name, code: $code, credits: $credits, '
-           'hasCompleteDataForGPA: $hasCompleteDataForGPA)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-  
-    return other is Subject &&
-      other.id == id &&
-      other.name == name &&
-      other.code == code &&
-      other.credits == credits &&
-      other.termId == termId &&
-      other.userId == userId;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-      name.hashCode ^
-      code.hashCode ^
-      credits.hashCode ^
-      termId.hashCode ^
-      userId.hashCode;
+    return 'Subject(id: $id, name: $name, credits: $credits)';
   }
 }

@@ -2,7 +2,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../../models/group_model.dart';
+import '../../models/shared/group_model.dart';
 import '../../models/user_model.dart';
 import '../../models/calendar_event_model.dart';
 import '../../models/free_block_model.dart';
