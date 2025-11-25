@@ -1,7 +1,3 @@
 {
-    "java.configuration.updateBuildConfiguration": "interactive",
-    "cSpell.words": [
-        "viewmodel",
-        "viewmodels"
-    ]
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
