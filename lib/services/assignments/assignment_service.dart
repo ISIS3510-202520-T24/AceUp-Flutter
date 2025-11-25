@@ -76,8 +76,8 @@ class AssignmentService {
         isCompleted: assignmentData['isCompleted'] as bool? ?? false,
       );
 
-      // Save via repository (offline-first)
-      await _repository.saveAssignment(assignment);
+      // Save via repository (offline-first with nested paths)
+      await _repository.saveAssignment(assignment, userId, termId, subjectId);
 
       // Re-evaluar completitud del subject después de guardar
       await _subjectService.reevaluateSubjectCompleteness(userId, termId, subjectId);
@@ -115,8 +115,8 @@ class AssignmentService {
       String assignmentId,
       ) async {
     try {
-      // Delete via repository (offline-first soft delete)
-      await _repository.deleteAssignment(assignmentId);
+      // Delete via repository (offline-first with nested paths)
+      await _repository.deleteAssignment(assignmentId, userId, termId, subjectId);
 
       // Re-evaluar completitud del subject después de borrar
       await _subjectService.reevaluateSubjectCompleteness(userId, termId, subjectId);

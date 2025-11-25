@@ -46,7 +46,7 @@ class User {
 
   Map<String, dynamic> toFirestore() {
     return {
-      'uid': uid,
+      // Note: uid is the document ID, not stored as a field
       'email': email,
       'nickname': nickname,
       if (avatar != null) 'avatar': avatar,

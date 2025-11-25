@@ -132,14 +132,14 @@ class SyncService extends ChangeNotifier {
         try {
           print('🔄 Syncing ${item.operation} ${item.entityType} ${item.entityId}...');
           await _syncItem(item);
-          await _db.syncDao.removeFromSyncQueue(item.id);
+          await _db.syncDao.deleteSyncItem(item.id);
           successCount++;
           _pendingOperationsCount--;
           print('✅ Synced ${item.operation} ${item.entityType} ${item.entityId}');
           notifyListeners();
         } catch (e) {
           print('❌ Sync failed for ${item.entityType} ${item.entityId}: $e');
-          await _db.syncDao.updateSyncError(item.id, e.toString(), item.retryCount);
+          await _db.syncDao.incrementRetryCount(item.id, e.toString());
           failCount++;
         }
       }
@@ -147,8 +147,8 @@ class SyncService extends ChangeNotifier {
       print('✅ ========== SYNC COMPLETE ==========');
       print('✅ Success: $successCount | Failed: $failCount');
 
-      // Clean up items with too many failures
-      await _db.syncDao.clearFailedSyncItems();
+      // Clean up items with too many failures (max 3 retries)
+      await _db.syncDao.deleteFailedItems(maxRetries: 3);
       
       await _updatePendingCount();
       
@@ -174,25 +174,92 @@ class SyncService extends ChangeNotifier {
   }
 
   /// Sync a single item to Firestore
-  Future<void> _syncItem(SyncQueueData item) async {
-    final dataMap = item.dataJson != null ? _parseJson(item.dataJson!) : null;
+  Future<void> _syncItem(SyncQueueEntity item) async {
+    final dataMap = _parseJson(item.dataJson);
 
     switch (item.entityType) {
+      // Academic entities
+      case 'term':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+      case 'subject':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+      case 'assignment':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+      case 'exam':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+      case 'class_template':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+      case 'class_exception':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+
+      // User entities
+      case 'user':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+      case 'settings':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+
+      // Teacher entities
+      case 'teacher':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+
+      // Holiday entities
+      case 'holiday':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+
+      // Group entities (existing)
       case 'group':
         await _syncGroup(item.entityId, item.operation, dataMap);
         break;
       case 'group_member':
         await _syncGroupMember(item.entityId, item.operation, dataMap);
         break;
+      case 'weekly_availability':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+
+      // Calendar events (existing)
       case 'calendar_event':
         await _syncCalendarEvent(item.entityId, item.operation, dataMap);
         break;
+
       default:
         print('⚠️  Unknown entity type: ${item.entityType}');
     }
   }
 
   // ==================== SYNC HANDLERS ====================
+
+  /// Generic sync handler that uses document path
+  Future<void> _syncByPath(String documentPath, String operation, Map<String, dynamic> data) async {
+    // Parse document path to get collection and document references
+    final pathParts = documentPath.split('/');
+
+    DocumentReference ref = _firestore.doc(documentPath);
+
+    switch (operation) {
+      case 'create':
+      case 'update':
+        if (data.isNotEmpty) {
+          await ref.set(data, SetOptions(merge: true));
+          print('✅ Synced $documentPath');
+        }
+        break;
+      case 'delete':
+        await ref.delete();
+        print('✅ Deleted $documentPath');
+        break;
+    }
+  }
 
   Future<void> _syncGroup(String groupId, String operation, Map<String, dynamic>? data) async {
     final groupRef = _firestore.collection('groups').doc(groupId);
@@ -283,12 +350,10 @@ class SyncService extends ChangeNotifier {
 
   /// Get sync statistics
   Future<Map<String, dynamic>> getSyncStats() async {
-    final pendingCount = await _db.syncDao.countPendingItems();
-    final itemsByType = await _db.syncDao.countItemsByType();
-    
+    final pendingCount = await _db.syncDao.getPendingSyncCount();
+
     return {
       'pendingCount': pendingCount,
-      'itemsByType': itemsByType,
       'isOnline': _connectivity.isOnline,
       'isSyncing': _isSyncing,
     };

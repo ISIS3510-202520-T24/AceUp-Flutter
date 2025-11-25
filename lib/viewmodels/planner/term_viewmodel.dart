@@ -4,13 +4,13 @@ import '../../models/planner/subject_model.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/grades/gpa_calculation_service.dart';
 import '../../services/cache/memory_cache_service.dart';
-import '../../data/local/database/app_database.dart' hide Term, Subject;
+import '../../data/repositories/academic_repository.dart';
 
 enum TermViewState { idle, loading, error }
 
 class TermViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
-  final AppDatabase _db;
+  final AcademicRepository _repository;
   final GpaCalculationService _gpaService;
   final MemoryCacheService _cache = MemoryCacheService();
   final String termId;
@@ -35,9 +35,9 @@ class TermViewModel extends ChangeNotifier {
 
   TermViewModel({
     required this.termId,
-    required AppDatabase database,
+    required AcademicRepository repository,
     required GpaCalculationService gpaService,
-  })  : _db = database,
+  })  : _repository = repository,
         _gpaService = gpaService {
     _loadTerm();
   }
@@ -59,27 +59,16 @@ class TermViewModel extends ChangeNotifier {
 
     try {
       print('📊 Loading term $termId from local database...');
-      
-      // Load term from local database
-      final termData = await _db.academicDao.getTermById(termId);
 
-      if (termData == null) {
+      // Load term from repository
+      _term = await _repository.getTermById(termId);
+
+      if (_term == null) {
         _errorMessage = 'Term not found';
         _state = TermViewState.error;
         notifyListeners();
         return;
       }
-
-      // Convert to model
-      _term = Term(
-        id: termData.id,
-        userId: termData.userId,
-        name: termData.name,
-        startDate: termData.startDate,
-        endDate: termData.endDate,
-        createdAt: termData.createdAt,
-        updatedAt: termData.updatedAt,
-      );
 
       print('✅ Loaded term: ${_term!.name}');
 
@@ -97,25 +86,13 @@ class TermViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Load subjects from local database
+  /// Load subjects from repository
   Future<void> _loadSubjects() async {
     try {
       print('📚 Loading subjects for term $termId...');
-      
-      // Load from local database
-      final subjectsData = await _db.academicDao.getSubjectsForTerm(termId);
 
-      // Convert to models
-      _subjects = subjectsData.map((subjectData) => Subject(
-        id: subjectData.id,
-        name: subjectData.name,
-        code: subjectData.code,
-        credits: subjectData.credits,
-        termId: subjectData.termId,
-        userId: subjectData.userId,
-        createdAt: subjectData.createdAt,
-        updatedAt: subjectData.updatedAt,
-      )).toList();
+      // Load from repository
+      _subjects = await _repository.getSubjectsForTerm(termId);
 
       print('✅ Loaded ${_subjects.length} subjects');
 
@@ -181,12 +158,15 @@ class TermViewModel extends ChangeNotifier {
     await _loadTerm();
   }
 
-  /// Delete a subject (soft delete in database)
+  /// Delete a subject
   Future<void> deleteSubject(String subjectId) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) return;
+
     try {
-      // Soft delete in local database
-      await _db.academicDao.softDeleteSubject(subjectId);
-      
+      // Delete via repository (requires termId for nested Firestore path)
+      await _repository.deleteSubject(subjectId, userId, termId);
+
       // Invalidate cache
       _cache.invalidateSubjectCache(subjectId);
       _cache.invalidateTermCache(termId);

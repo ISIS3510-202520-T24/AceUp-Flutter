@@ -4,13 +4,13 @@ import '../../models/planner/subject_model.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/grades/gpa_calculation_service.dart';
 import '../../services/cache/memory_cache_service.dart';
-import '../../data/local/database/app_database.dart' hide Term, Subject;
+import '../../data/repositories/academic_repository.dart';
 
 enum PlannerViewState { idle, loading, error }
 
 class PlannerViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
-  final AppDatabase _db;
+  final AcademicRepository _repository;
   final GpaCalculationService _gpaService;
   final MemoryCacheService _cache = MemoryCacheService();
 
@@ -22,7 +22,7 @@ class PlannerViewModel extends ChangeNotifier {
 
   // Map of termId -> subjects for that term
   final Map<String, List<Subject>> _termSubjects = {};
-  
+
   // Cached GPA values (computed at runtime)
   final Map<String, double?> _termGPAs = {};
   final Map<String, int> _termCredits = {};
@@ -37,9 +37,9 @@ class PlannerViewModel extends ChangeNotifier {
   int get totalCredits => _totalCredits;
 
   PlannerViewModel({
-    required AppDatabase database,
+    required AcademicRepository repository,
     required GpaCalculationService gpaService,
-  })  : _db = database,
+  })  : _repository = repository,
         _gpaService = gpaService {
     _loadTerms();
   }
@@ -61,20 +61,9 @@ class PlannerViewModel extends ChangeNotifier {
 
     try {
       print('📊 Loading terms from local database...');
-      
-      // Load terms from local Drift database
-      final termsData = await _db.academicDao.getAllTermsForUser(userId);
-      
-      // Convert Drift Term objects to model Term objects
-      _terms = termsData.map((termData) => Term(
-        id: termData.id,
-        userId: termData.userId,
-        name: termData.name,
-        startDate: termData.startDate,
-        endDate: termData.endDate,
-        createdAt: termData.createdAt,
-        updatedAt: termData.updatedAt,
-      )).toList();
+
+      // Load terms from repository
+      _terms = await _repository.getTermsForUser(userId);
 
       print('✅ Loaded ${_terms.length} terms from local database');
 
@@ -85,7 +74,7 @@ class PlannerViewModel extends ChangeNotifier {
 
       // Calculate overall GPA and credits
       await _calculateOverallGPA(userId);
-      
+
       _state = PlannerViewState.idle;
       _errorMessage = null;
     } catch (e) {
@@ -97,30 +86,19 @@ class PlannerViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Load subjects for a specific term from local database
+  /// Load subjects for a specific term from repository
   Future<void> _loadTermSubjects(String termId) async {
     try {
       print('📚 Loading subjects for term $termId...');
-      
-      // Load subjects from local database
-      final subjectsData = await _db.academicDao.getSubjectsForTerm(termId);
-      
-      // Convert to model objects
-      final subjects = subjectsData.map((subjectData) => Subject(
-        id: subjectData.id,
-        name: subjectData.name,
-        credits: subjectData.credits,
-        termId: subjectData.termId,
-        userId: subjectData.userId,
-        createdAt: subjectData.createdAt,
-        updatedAt: subjectData.updatedAt,
-      )).toList();
+
+      // Load subjects from repository
+      final subjects = await _repository.getSubjectsForTerm(termId);
 
       _termSubjects[termId] = subjects;
 
       // Calculate term stats (GPA and credits)
       await _calculateTermStats(termId, subjects);
-      
+
       print('✅ Loaded ${subjects.length} subjects for term $termId');
     } catch (e) {
       print('❌ Error loading subjects for term $termId: $e');
@@ -226,15 +204,15 @@ class PlannerViewModel extends ChangeNotifier {
     await _loadTerms();
   }
 
-  /// Delete a term (soft delete in database, triggers sync)
+  /// Delete a term
   Future<void> deleteTerm(String termId) async {
     final userId = _authService.currentUser?.uid;
     if (userId == null) return;
 
     try {
-      // Soft delete in local database (will be synced to Firebase)
-      await _db.academicDao.deleteTerm(termId);
-      
+      // Delete via repository
+      await _repository.deleteTerm(termId, userId);
+
       // Invalidate cache
       _cache.invalidateTermCache(termId);
       _cache.invalidateUserGpaCache(userId);
