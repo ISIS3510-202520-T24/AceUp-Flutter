@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart'; // ignore: uri_does_not_exist
 import '../../models/assignments/assignment_model.dart';
-import '../../data/repositories/academic_repository.dart';
 import '../../services/auth/auth_service.dart';
 
 // ignore_for_file: creation_with_non_type
@@ -10,7 +9,6 @@ import '../../services/auth/auth_service.dart';
 enum EditAssignmentViewState { idle, loading, saving, error }
 
 class EditAssignmentViewModel extends ChangeNotifier {
-  final AcademicRepository _repository;
   final AuthService _authService = AuthService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final _uuid = const Uuid();
@@ -70,10 +68,8 @@ class EditAssignmentViewModel extends ChangeNotifier {
   final List<int> weights = List.generate(20, (index) => (index + 1) * 5); // 5, 10, 15, ..., 100
 
   EditAssignmentViewModel({
-    required AcademicRepository repository,
     Assignment? assignment,
-  })  : _repository = repository,
-        _assignment = assignment {
+  })  : _assignment = assignment {
     _initializeControllers();
     _loadSubjects();
   }

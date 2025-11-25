@@ -1,17 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/assignments/assignment_model.dart';
-import '../../data/repositories/academic_repository.dart';
 import '../subjects/subject_service.dart';
 import '../analytics/analytics_service.dart';
 
 class AssignmentService {
-  final AcademicRepository _repository;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final SubjectService _subjectService = SubjectService();
   final AnalyticsService _analytics = AnalyticsService();
 
-  AssignmentService({required AcademicRepository repository})
-      : _repository = repository;
 
   /// Gets all assignments for a user (using offline-first repository)
   Future<List<Assignment>> getAllAssignmentsForUser(String userId) async {
@@ -73,17 +69,11 @@ class AssignmentService {
       // Create Assignment model
       final assignment = Assignment(
         id: assignmentId,
-        title: assignmentData['title'] ?? '',
-        description: assignmentData['description'] ?? '',
-        dueDate: (assignmentData['dueDate'] as Timestamp).toDate(),
-        priority: assignmentData['priority'] ?? 'Medium',
-        weight: newWeight,
-        grade: assignmentData['grade'] ?? 0,
-        status: assignmentData['status'] ?? 'Pending',
-        subjectName: '', // Will be populated from cache if needed
-        termId: termId,
         subjectId: subjectId,
-        userId: userId,
+        title: assignmentData['title'] as String,
+        description: assignmentData['description'] as String?,
+        dueDate: assignmentData['dueDate'] as DateTime,
+        isCompleted: assignmentData['isCompleted'] as bool? ?? false,
       );
 
       // Save via repository (offline-first)

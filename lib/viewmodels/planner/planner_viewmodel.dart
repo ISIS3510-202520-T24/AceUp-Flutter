@@ -109,7 +109,6 @@ class PlannerViewModel extends ChangeNotifier {
       final subjects = subjectsData.map((subjectData) => Subject(
         id: subjectData.id,
         name: subjectData.name,
-        code: subjectData.code,
         credits: subjectData.credits,
         termId: subjectData.termId,
         userId: subjectData.userId,

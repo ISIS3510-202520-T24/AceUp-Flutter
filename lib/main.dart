@@ -45,8 +45,6 @@ import 'core/connectivity/connectivity_manager.dart';
 
 // Data
 import 'data/local/database/app_database.dart';
-import 'data/repositories/shared_repository.dart';
-import 'data/repositories/academic_repository.dart';
 
 // Tema
 import 'themes/app_theme.dart';
@@ -80,19 +78,6 @@ Future<void> main() async {
   final connectivity = ConnectivityManager();
   await connectivity.initialize();
   
-  // 5) Initialize SharedRepository
-  final sharedRepository = SharedRepository(
-    database: database,
-    firestore: FirebaseFirestore.instance,
-    connectivity: connectivity,
-  );
-
-  final academicRepository = AcademicRepository(
-    database: database,
-    firestore: FirebaseFirestore.instance,
-    connectivity: connectivity,
-  );
-  
   // 6) Start background sync service
   final syncService = SyncService(
     database: database,
@@ -118,8 +103,6 @@ Future<void> main() async {
   final registry = VmRegistry()
     ..put<AuthService>(authService)
     ..put<BiometricService>(bioService)
-    ..put<SharedRepository>(sharedRepository)
-    ..put<AcademicRepository>(academicRepository)
     ..put<ConnectivityManager>(connectivity)
     ..put<SyncService>(syncService)
     ..put<LoginViewModel>(loginVM);
@@ -150,8 +133,6 @@ Future<void> main() async {
           // Exponer servicios para pantallas que hacen context.read<AuthService>()
           Provider<AuthService>.value(value: authService),
           Provider<BiometricService>.value(value: bioService),
-          Provider<SharedRepository>.value(value: sharedRepository),
-          Provider<AcademicRepository>.value(value: academicRepository),
           Provider<ConnectivityManager>.value(value: connectivity),
           
           // SyncService es ChangeNotifier, debe usar ChangeNotifierProvider
