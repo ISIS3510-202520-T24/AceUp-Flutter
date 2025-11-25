@@ -1,20 +1,21 @@
+// lib/services/shared/sync_service.dart
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../../data/local/database/app_database.dart';
-import '../../data/remote/firestore_paths.dart';
 import '../../core/connectivity/connectivity_manager.dart';
+import '../../data/local/database/app_database.dart';
 
+/// Service that handles background synchronization of local changes to Firestore
 class SyncService extends ChangeNotifier {
   final AppDatabase _db;
   final FirebaseFirestore _firestore;
   final ConnectivityManager _connectivity;
   
-  Timer? _periodicSyncTimer;
+  Timer? _syncTimer;
   bool _isSyncing = false;
   int _pendingOperationsCount = 0;
-  StreamSubscription? _connectivitySubscription;
 
   bool get isSyncing => _isSyncing;
   int get pendingOperationsCount => _pendingOperationsCount;
@@ -25,397 +26,275 @@ class SyncService extends ChangeNotifier {
     required ConnectivityManager connectivity,
   })  : _db = database,
         _firestore = firestore,
-        _connectivity = connectivity;
-
-  /// Start periodic sync (call this from main.dart)
-  void startPeriodicSync({Duration interval = const Duration(minutes: 5)}) {
-    print('🔄 [SyncService] Starting periodic sync service');
+        _connectivity = connectivity {
+    // Initialize and check for pending operations
+    _initializeSync();
     
-    // Subscribe to connectivity changes
-    _connectivitySubscription = _connectivity.onConnectivityChanged.listen((isOnline) {
+    // Listen for connectivity changes and sync when coming back online
+    _connectivity.onConnectivityChanged.listen((isOnline) {
+      print('📡 Connectivity changed: ${isOnline ? "ONLINE" : "OFFLINE"}');
       if (isOnline) {
-        print('🌐 [SyncService] Connection restored - triggering sync');
+        // When connection is restored, wait a bit and then sync
+        Future.delayed(const Duration(seconds: 2), () {
+          if (_connectivity.isOnline && !_isSyncing) {
+            _updatePendingCount().then((_) {
+              if (_pendingOperationsCount > 0) {
+                print('� Connection restored with $_pendingOperationsCount pending items, triggering sync...');
+                syncPendingOperations();
+              }
+            });
+          }
+        });
+      }
+    });
+  }
+
+  /// Initialize sync service and check for pending operations
+  Future<void> _initializeSync() async {
+    await _updatePendingCount();
+    
+    // Check connectivity status
+    await _connectivity.checkConnectivity();
+    
+    // If we have pending items and we're online, sync immediately
+    if (_pendingOperationsCount > 0 && _connectivity.isOnline) {
+      print('📦 Found $_pendingOperationsCount pending items on startup, syncing in 2 seconds...');
+      // Wait a bit for the app to fully initialize
+      await Future.delayed(const Duration(seconds: 2));
+      if (_connectivity.isOnline && !_isSyncing) {
+        syncPendingOperations();
+      }
+    }
+  }
+
+  /// Start periodic sync (every 30 seconds when online)
+  void startPeriodicSync({Duration interval = const Duration(seconds: 30)}) {
+    _syncTimer?.cancel();
+    
+    _syncTimer = Timer.periodic(interval, (_) async {
+      // Re-check connectivity status manually before each sync attempt
+      await _connectivity.checkConnectivity();
+      
+      if (_connectivity.isOnline && !_isSyncing && _pendingOperationsCount > 0) {
+        print('⏰ Periodic sync triggered (${_pendingOperationsCount} pending)');
         syncPendingOperations();
       }
     });
     
-    // Start periodic timer
-    _periodicSyncTimer = Timer.periodic(interval, (_) {
-      if (_connectivity.isOnline) {
-        syncPendingOperations();
-      }
-    });
-    
-    // Initial sync check
-    _updatePendingCount();
+    // Trigger immediate sync if online and have pending items
+    if (_connectivity.isOnline && !_isSyncing && _pendingOperationsCount > 0) {
+      print('🚀 Starting immediate sync on service start');
+      syncPendingOperations();
+    }
   }
 
   /// Stop periodic sync
   void stopPeriodicSync() {
-    print('🛑 [SyncService] Stopping periodic sync service');
-    _periodicSyncTimer?.cancel();
-    _periodicSyncTimer = null;
-    _connectivitySubscription?.cancel();
-    _connectivitySubscription = null;
+    _syncTimer?.cancel();
+    _syncTimer = null;
   }
 
-  /// Process all pending sync operations
+  /// Manually trigger sync of pending operations
   Future<void> syncPendingOperations() async {
     if (_isSyncing) {
-      print('⏳ [SyncService] Sync already in progress, skipping');
+      print('⚠️  Sync already in progress, skipping...');
       return;
     }
     
     if (!_connectivity.isOnline) {
-      print('📴 [SyncService] Offline - cannot sync');
+      print('⚠️  Cannot sync: Device is offline');
       return;
     }
-    
+
     _isSyncing = true;
     notifyListeners();
-    
-    print('🚀 [SyncService] Starting sync of pending operations');
-    final stopwatch = Stopwatch()..start();
-    
+    print('🔄 ========== STARTING SYNC ==========');
+    print('🔄 Online: ${_connectivity.isOnline}');
+
     try {
-      final pendingOps = await _db.syncDao.getPendingOperations();
-      print('📋 [SyncService] Found ${pendingOps.length} pending operations');
+      final pendingItems = await _db.syncDao.getPendingSyncItems();
+      
+      if (pendingItems.isEmpty) {
+        print('✅ No pending items to sync');
+        return;
+      }
+
+      print('📤 Syncing ${pendingItems.length} pending items...');
+      for (var i = 0; i < pendingItems.length; i++) {
+        final item = pendingItems[i];
+        print('📤 [$i/${pendingItems.length}] ${item.operation} ${item.entityType} (${item.entityId})');
+      }
       
       int successCount = 0;
       int failCount = 0;
-      
-      for (final op in pendingOps) {
+
+      for (final item in pendingItems) {
         try {
-          await _processSyncOperation(op);
-          await _db.syncDao.markOperationComplete(op.id);
+          print('🔄 Syncing ${item.operation} ${item.entityType} ${item.entityId}...');
+          await _syncItem(item);
+          await _db.syncDao.removeFromSyncQueue(item.id);
           successCount++;
+          _pendingOperationsCount--;
+          print('✅ Synced ${item.operation} ${item.entityType} ${item.entityId}');
+          notifyListeners();
         } catch (e) {
-          print('❌ [SyncService] Failed to sync operation ${op.id}: $e');
-          await _db.syncDao.incrementRetryCount(op.id);
+          print('❌ Sync failed for ${item.entityType} ${item.entityId}: $e');
+          await _db.syncDao.updateSyncError(item.id, e.toString(), item.retryCount);
           failCount++;
         }
       }
+
+      print('✅ ========== SYNC COMPLETE ==========');
+      print('✅ Success: $successCount | Failed: $failCount');
+
+      // Clean up items with too many failures
+      await _db.syncDao.clearFailedSyncItems();
       
-      stopwatch.stop();
-      print('✅ [SyncService] Sync complete: $successCount success, $failCount failed');
-      print('⏱️ [SyncService] Total time: ${stopwatch.elapsedMilliseconds}ms');
+      await _updatePendingCount();
       
     } catch (e) {
-      print('❌ [SyncService] Sync failed: $e');
+      print('❌ Sync error: $e');
     } finally {
       _isSyncing = false;
-      await _updatePendingCount();
       notifyListeners();
     }
   }
 
-  /// Process a single sync operation
-  Future<void> _processSyncOperation(SyncQueueTableData op) async {
-    print('🔄 [SyncService] Processing: ${op.operation} ${op.entityType} ${op.entityId}');
-    
-    final data = op.data != null ? jsonDecode(op.data!) as Map<String, dynamic> : null;
-    
-    switch (op.entityType) {
-      case 'user':
-        await _syncUser(op.operation, op.entityId, data);
-        break;
-      case 'term':
-        await _syncTerm(op.operation, op.entityId, data);
-        break;
-      case 'subject':
-        await _syncSubject(op.operation, op.entityId, data);
-        break;
-      case 'assignment':
-        await _syncAssignment(op.operation, op.entityId, data);
-        break;
-      case 'class_template':
-        await _syncClassTemplate(op.operation, op.entityId, data);
-        break;
-      case 'class_exception':
-        await _syncClassException(op.operation, op.entityId, data);
-        break;
-      case 'exam':
-        await _syncExam(op.operation, op.entityId, data);
-        break;
-      case 'teacher':
-        await _syncTeacher(op.operation, op.entityId, data);
-        break;
-      case 'holiday':
-        await _syncHoliday(op.operation, op.entityId, data);
-        break;
-      case 'settings':
-        await _syncSettings(op.operation, op.entityId, data);
-        break;
+  /// Update pending operations count
+  Future<void> _updatePendingCount() async {
+    final items = await _db.syncDao.getPendingSyncItems();
+    _pendingOperationsCount = items.length;
+    print('📊 [SYNC] Pending operations count: $_pendingOperationsCount');
+    if (_pendingOperationsCount > 0) {
+      for (final item in items) {
+        print('   - ${item.entityType} ${item.entityId} (${item.operation})');
+      }
+    }
+    notifyListeners();
+  }
+
+  /// Sync a single item to Firestore
+  Future<void> _syncItem(SyncQueueData item) async {
+    final dataMap = item.dataJson != null ? _parseJson(item.dataJson!) : null;
+
+    switch (item.entityType) {
       case 'group':
-        await _syncGroup(op.operation, op.entityId, data);
+        await _syncGroup(item.entityId, item.operation, dataMap);
         break;
       case 'group_member':
-        await _syncGroupMember(op.operation, op.entityId, data);
+        await _syncGroupMember(item.entityId, item.operation, dataMap);
+        break;
+      case 'calendar_event':
+        await _syncCalendarEvent(item.entityId, item.operation, dataMap);
         break;
       default:
-        print('⚠️ [SyncService] Unknown entity type: ${op.entityType}');
+        print('⚠️  Unknown entity type: ${item.entityType}');
     }
   }
 
-  // ==================== ENTITY SYNC HANDLERS ====================
+  // ==================== SYNC HANDLERS ====================
 
-  Future<void> _syncUser(String operation, String entityId, Map<String, dynamic>? data) async {
-    final path = FirestorePaths.user(entityId);
-    
+  Future<void> _syncGroup(String groupId, String operation, Map<String, dynamic>? data) async {
+    final groupRef = _firestore.collection('groups').doc(groupId);
+
     switch (operation) {
       case 'create':
       case 'update':
         if (data != null) {
-          await _firestore.doc(path).set(data, SetOptions(merge: true));
+          await groupRef.set(data, SetOptions(merge: true));
+          print('✅ Synced group $groupId');
         }
         break;
       case 'delete':
-        await _firestore.doc(path).delete();
+        await groupRef.delete();
+        print('✅ Deleted group $groupId');
         break;
     }
   }
 
-  Future<void> _syncTerm(String operation, String entityId, Map<String, dynamic>? data) async {
-    // entityId format: "userId:termId"
-    final parts = entityId.split(':');
-    if (parts.length != 2) {
-      throw Exception('Invalid term entityId format: $entityId');
-    }
+  Future<void> _syncGroupMember(String memberId, String operation, Map<String, dynamic>? data) async {
+    if (data == null) return;
     
-    final path = FirestorePaths.term(parts[0], parts[1]);
-    
+    final groupId = data['groupId'] as String?;
+    if (groupId == null) return;
+
+    final memberRef = _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('members')
+        .doc(memberId);
+
     switch (operation) {
       case 'create':
       case 'update':
-        if (data != null) {
-          await _firestore.doc(path).set(data, SetOptions(merge: true));
-        }
+        await memberRef.set(data, SetOptions(merge: true));
+        print('✅ Synced member $memberId');
         break;
       case 'delete':
-        await _firestore.doc(path).delete();
+        await memberRef.delete();
+        print('✅ Deleted member $memberId');
         break;
     }
   }
 
-  Future<void> _syncSubject(String operation, String entityId, Map<String, dynamic>? data) async {
-    // entityId format: "userId:termId:subjectId"
-    final parts = entityId.split(':');
-    if (parts.length != 3) {
-      throw Exception('Invalid subject entityId format: $entityId');
-    }
+  Future<void> _syncCalendarEvent(String eventId, String operation, Map<String, dynamic>? data) async {
+    if (data == null) return;
     
-    final path = FirestorePaths.subject(parts[0], parts[1], parts[2]);
-    
+    final ownerId = data['ownerId'] as String?;
+    if (ownerId == null) return;
+
+    final eventRef = _firestore
+        .collection('users')
+        .doc(ownerId)
+        .collection('calendar_events')
+        .doc(eventId);
+
     switch (operation) {
       case 'create':
       case 'update':
-        if (data != null) {
-          await _firestore.doc(path).set(data, SetOptions(merge: true));
-        }
+        await eventRef.set(data, SetOptions(merge: true));
+        print('✅ Synced event $eventId');
         break;
       case 'delete':
-        await _firestore.doc(path).delete();
-        break;
-    }
-  }
-
-  Future<void> _syncAssignment(String operation, String entityId, Map<String, dynamic>? data) async {
-    // entityId format: "userId:termId:subjectId:assignmentId"
-    final parts = entityId.split(':');
-    if (parts.length != 4) {
-      throw Exception('Invalid assignment entityId format: $entityId');
-    }
-    
-    final path = FirestorePaths.assignment(parts[0], parts[1], parts[2], parts[3]);
-    
-    switch (operation) {
-      case 'create':
-      case 'update':
-        if (data != null) {
-          await _firestore.doc(path).set(data, SetOptions(merge: true));
-        }
-        break;
-      case 'delete':
-        await _firestore.doc(path).delete();
-        break;
-    }
-  }
-
-  Future<void> _syncClassTemplate(String operation, String entityId, Map<String, dynamic>? data) async {
-    // entityId format: "userId:termId:subjectId:templateId"
-    final parts = entityId.split(':');
-    if (parts.length != 4) {
-      throw Exception('Invalid class template entityId format: $entityId');
-    }
-    
-    final path = FirestorePaths.classTemplate(parts[0], parts[1], parts[2], parts[3]);
-    
-    switch (operation) {
-      case 'create':
-      case 'update':
-        if (data != null) {
-          await _firestore.doc(path).set(data, SetOptions(merge: true));
-        }
-        break;
-      case 'delete':
-        await _firestore.doc(path).delete();
-        break;
-    }
-  }
-
-  Future<void> _syncClassException(String operation, String entityId, Map<String, dynamic>? data) async {
-    // entityId format: "userId:termId:subjectId:exceptionId"
-    final parts = entityId.split(':');
-    if (parts.length != 4) {
-      throw Exception('Invalid class exception entityId format: $entityId');
-    }
-    
-    final path = FirestorePaths.classException(parts[0], parts[1], parts[2], parts[3]);
-    
-    switch (operation) {
-      case 'create':
-      case 'update':
-        if (data != null) {
-          await _firestore.doc(path).set(data, SetOptions(merge: true));
-        }
-        break;
-      case 'delete':
-        await _firestore.doc(path).delete();
-        break;
-    }
-  }
-
-  Future<void> _syncExam(String operation, String entityId, Map<String, dynamic>? data) async {
-    // entityId format: "userId:termId:subjectId:examId"
-    final parts = entityId.split(':');
-    if (parts.length != 4) {
-      throw Exception('Invalid exam entityId format: $entityId');
-    }
-    
-    final path = FirestorePaths.exam(parts[0], parts[1], parts[2], parts[3]);
-    
-    switch (operation) {
-      case 'create':
-      case 'update':
-        if (data != null) {
-          await _firestore.doc(path).set(data, SetOptions(merge: true));
-        }
-        break;
-      case 'delete':
-        await _firestore.doc(path).delete();
-        break;
-    }
-  }
-
-  Future<void> _syncTeacher(String operation, String entityId, Map<String, dynamic>? data) async {
-    // entityId format: "userId:teacherId"
-    final parts = entityId.split(':');
-    if (parts.length != 2) {
-      throw Exception('Invalid teacher entityId format: $entityId');
-    }
-    
-    final path = FirestorePaths.teacher(parts[0], parts[1]);
-    
-    switch (operation) {
-      case 'create':
-      case 'update':
-        if (data != null) {
-          await _firestore.doc(path).set(data, SetOptions(merge: true));
-        }
-        break;
-      case 'delete':
-        await _firestore.doc(path).delete();
-        break;
-    }
-  }
-
-  Future<void> _syncHoliday(String operation, String entityId, Map<String, dynamic>? data) async {
-    // entityId format: "userId:holidayId"
-    final parts = entityId.split(':');
-    if (parts.length != 2) {
-      throw Exception('Invalid holiday entityId format: $entityId');
-    }
-    
-    final path = FirestorePaths.holiday(parts[0], parts[1]);
-    
-    switch (operation) {
-      case 'create':
-      case 'update':
-        if (data != null) {
-          await _firestore.doc(path).set(data, SetOptions(merge: true));
-        }
-        break;
-      case 'delete':
-        await _firestore.doc(path).delete();
-        break;
-    }
-  }
-
-  Future<void> _syncSettings(String operation, String entityId, Map<String, dynamic>? data) async {
-    // entityId is just userId (settings document is always "preferences")
-    final path = FirestorePaths.preferences(entityId);
-    
-    switch (operation) {
-      case 'create':
-      case 'update':
-        if (data != null) {
-          await _firestore.doc(path).set(data, SetOptions(merge: true));
-        }
-        break;
-    }
-  }
-
-  Future<void> _syncGroup(String operation, String entityId, Map<String, dynamic>? data) async {
-    final path = FirestorePaths.group(entityId);
-    
-    switch (operation) {
-      case 'create':
-      case 'update':
-        if (data != null) {
-          await _firestore.doc(path).set(data, SetOptions(merge: true));
-        }
-        break;
-      case 'delete':
-        await _firestore.doc(path).delete();
-        break;
-    }
-  }
-
-  Future<void> _syncGroupMember(String operation, String entityId, Map<String, dynamic>? data) async {
-    // entityId format: "groupId:userId"
-    final parts = entityId.split(':');
-    if (parts.length != 2) {
-      throw Exception('Invalid group member entityId format: $entityId');
-    }
-    
-    final groupPath = FirestorePaths.group(parts[0]);
-    
-    switch (operation) {
-      case 'leave':
-        // Remove member from group's members array
-        final groupDoc = await _firestore.doc(groupPath).get();
-        if (groupDoc.exists) {
-          final members = List<Map<String, dynamic>>.from(
-            groupDoc.data()?['members'] ?? [],
-          );
-          members.removeWhere((m) => m['userId'] == parts[1]);
-          await _firestore.doc(groupPath).update({
-            'members': members,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-        }
+        await eventRef.delete();
+        print('✅ Deleted event $eventId');
         break;
     }
   }
 
   // ==================== HELPERS ====================
 
-  Future<void> _updatePendingCount() async {
-    final count = await _db.syncDao.getPendingOperationsCount();
-    _pendingOperationsCount = count;
-    notifyListeners();
+  Map<String, dynamic> _parseJson(String jsonStr) {
+    try {
+      final decoded = jsonDecode(jsonStr);
+      if (decoded is Map<String, dynamic>) {
+        print('📋 [PARSE] Parsed JSON: $decoded');
+        return decoded;
+      } else {
+        print('⚠️  [PARSE] Decoded JSON is not a Map: $decoded');
+        return {};
+      }
+    } catch (e) {
+      print('❌ [PARSE] Error parsing JSON: $e');
+      print('   Raw JSON: $jsonStr');
+      return {};
+    }
   }
 
+  /// Get sync statistics
+  Future<Map<String, dynamic>> getSyncStats() async {
+    final pendingCount = await _db.syncDao.countPendingItems();
+    final itemsByType = await _db.syncDao.countItemsByType();
+    
+    return {
+      'pendingCount': pendingCount,
+      'itemsByType': itemsByType,
+      'isOnline': _connectivity.isOnline,
+      'isSyncing': _isSyncing,
+    };
+  }
+
+  /// Dispose resources
   @override
   void dispose() {
     stopPeriodicSync();
