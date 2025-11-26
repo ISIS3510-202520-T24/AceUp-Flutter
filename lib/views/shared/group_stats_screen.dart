@@ -8,7 +8,8 @@ import '../../services/storage/app_preferences.dart';
 import '../../themes/app_typography.dart';
 import '../../widgets/top_bar.dart';
 import '../../models/visited_group_history.dart';
-import '../../data/repositories/shared_repository.dart';
+import '../../data/repositories/group_repository.dart';
+import '../../data/repositories/user_repository.dart';
 import '../../core/connectivity/connectivity_manager.dart';
 import '../../viewmodels/shared/group_detail_viewmodel.dart';
 
@@ -443,11 +444,13 @@ class _GroupStatsScreenState extends State<GroupStatsScreen> {
 
     // Crear ViewModel temporalmente para hacer la llamada
     // Obtenemos las dependencias desde Provider
-    final repository = Provider.of<SharedRepository>(context, listen: false);
+    final groupRepository = Provider.of<GroupRepository>(context, listen: false);
+    final userRepository = Provider.of<UserRepository>(context, listen: false);
     final connectivity = Provider.of<ConnectivityManager>(context, listen: false);
     final viewModel = GroupDetailViewModel(
       groupId: groupId,
-      repository: repository,
+      groupRepository: groupRepository,
+      userRepository: userRepository,
       connectivity: connectivity,
     );
 
@@ -509,7 +512,7 @@ class _GroupStatsScreenState extends State<GroupStatsScreen> {
             const SizedBox(height: 10),
             _buildStatRow('Events', '${stats['eventCount'] ?? 0}', colors),
             const SizedBox(height: 10),
-            _buildStatRow('Has Image', stats['hasImage'] == true ? 'Yes' : 'No', colors),
+            _buildStatRow('Has Invite Code', stats['hasInviteCode'] == true ? 'Yes' : 'No', colors),
             const SizedBox(height: 10),
             Text(
               'Loaded at: ${stats['timestamp']}',

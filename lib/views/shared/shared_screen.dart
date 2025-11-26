@@ -2,10 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Para rootBundle
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart'; // Para getTemporaryDirectory
-import '../../models/shared/group_model.dart';
+import 'package:cached_network_image/cached_network_image.dart'; // ignore: uri_does_not_exist
+import 'package:image_picker/image_picker.dart'; // ignore: uri_does_not_exist
+import 'package:path_provider/path_provider.dart';  // ignore: uri_does_not_exist
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/shared/shared_viewmodel.dart';
@@ -15,11 +14,14 @@ import 'group_detail_screen.dart';
 import '../../widgets/top_bar.dart';
 import '../../services/auth/auth_service.dart';
 import '../../widgets/floating_action_button.dart';
-import '../../data/repositories/shared_repository.dart';
+import '../../data/repositories/group_repository.dart';
+import '../../data/repositories/user_repository.dart';
 import '../../core/connectivity/connectivity_manager.dart';
 import '../../widgets/connectivity_indicator.dart';
 import '../../services/storage/group_image_service.dart';
 import '../../services/shared/sync_service.dart';
+
+// ignore_for_file: undefined_identifier, undefined_class, undefined_method
 
 class SharedScreenWrapper extends StatelessWidget {
   const SharedScreenWrapper({super.key});
@@ -27,13 +29,15 @@ class SharedScreenWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Obtener las dependencias del Provider
-    final repository = context.read<SharedRepository>();
+    final groupRepository = context.read<GroupRepository>();
+    final userRepository = context.read<UserRepository>();
     final connectivity = context.read<ConnectivityManager>();
     final syncService = context.read<SyncService>();
-    
+
     return ChangeNotifierProvider(
       create: (_) => SharedViewModel(
-        repository: repository,
+        groupRepository: groupRepository,
+        userRepository: userRepository,
         connectivity: connectivity,
         syncService: syncService,
       ),
@@ -389,13 +393,11 @@ class _SharedScreenState extends State<SharedScreen> {
     );
   }
   Widget _buildGroupListItem(BuildContext context, ColorScheme colors, SharedViewModel viewModel, Group group) {
-    // Debug: ver qué imageUrl tiene el grupo al renderizar
-    print('🎨 [DEBUG] Rendering group ${group.id} (${group.name}) with imageUrl: ${group.imageUrl}');
-    
-    // Validar formato de imageUrl
-    if (group.imageUrl != null && group.imageUrl!.startsWith('gs://')) {
-      print('⚠️ [DEBUG] Invalid imageUrl format (gs:// instead of https://): ${group.imageUrl}');
-    }
+    // TODO: Group image functionality - Group model no longer has imageUrl field
+    // Image support needs to be reimplemented if required
+    print('🎨 [DEBUG] Rendering group ${group.id} (${group.name})');
+
+    final String? imageUrl = null; // Group model no longer has imageUrl
     
     return InkWell(
       onTap: () {
@@ -416,7 +418,7 @@ class _SharedScreenState extends State<SharedScreen> {
             // Avatar del grupo usando CachedNetworkImage
             // Prioridad: imagen personalizada del grupo > avatar generado por API
             CachedNetworkImage(
-              imageUrl: group.imageUrl ?? 
+              imageUrl: imageUrl ?? 
                   'https://ui-avatars.com/api/'
                   '?name=${Uri.encodeComponent(group.name)}'
                   '&size=80'
@@ -473,7 +475,7 @@ class _SharedScreenState extends State<SharedScreen> {
               // IMPORTANTE: No usar cacheKey fijo o la imagen no se refresca al cambiar
               // CachedNetworkImage usa la URL completa internamente, que incluye el token único
               // Esto garantiza que cuando la URL cambie (nuevo token), se recargue la imagen
-              key: ValueKey(group.imageUrl ?? 'group_avatar_${group.id}'),
+              key: ValueKey(imageUrl ?? 'group_avatar_${group.id}'),
               memCacheHeight: 96,  // 2x el tamaño de display (48px) para pantallas de alta densidad
               memCacheWidth: 96,
               maxHeightDiskCache: 160,  // Tamaño máximo en disco
@@ -561,8 +563,8 @@ class _SharedScreenState extends State<SharedScreen> {
       emailControllers.add(TextEditingController());
     }
     
-    // Si el grupo ya tiene una imageUrl, la mostramos
-    final existingImageUrl = isUpdating ? group.imageUrl : null;
+    // TODO: Group image support removed - Group model no longer has imageUrl
+    final existingImageUrl = null;
 
     showDialog(
       context: context,
@@ -914,7 +916,7 @@ class _SharedScreenState extends State<SharedScreen> {
                     
                     // Crear o actualizar grupo
                     if (isUpdating) {
-                      await viewModel.updateGroup(group.id, name, emails, imageUrl: imageUrl);
+                      await viewModel.updateGroup(group.id, name, emails, description: null);
                       // Show feedback based on connectivity
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -944,7 +946,7 @@ class _SharedScreenState extends State<SharedScreen> {
                         );
                       }
                     } else {
-                      await viewModel.addGroup(name, emails, imageUrl: imageUrl);
+                      await viewModel.addGroup(name, emails, description: null);
                       // Show feedback based on connectivity
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(

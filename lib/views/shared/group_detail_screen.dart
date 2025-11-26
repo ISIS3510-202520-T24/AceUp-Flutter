@@ -11,7 +11,8 @@ import '../../viewmodels/shared/group_detail_viewmodel.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/top_bar.dart';
 import '../../themes/app_typography.dart';
-import '../../data/repositories/shared_repository.dart';
+import '../../data/repositories/group_repository.dart';
+import '../../data/repositories/user_repository.dart';
 import '../../core/connectivity/connectivity_manager.dart';
 import '../../widgets/connectivity_indicator.dart';
 
@@ -25,13 +26,15 @@ class GroupDetailScreenWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Obtener las dependencias del Provider
-    final repository = context.read<SharedRepository>();
+    final groupRepository = context.read<GroupRepository>();
+    final userRepository = context.read<UserRepository>();
     final connectivity = context.read<ConnectivityManager>();
-    
+
     return ChangeNotifierProvider(
       create: (_) => GroupDetailViewModel(
         groupId: groupId,
-        repository: repository,
+        groupRepository: groupRepository,
+        userRepository: userRepository,
         connectivity: connectivity,
       ),
       child: GroupDetailScreen(groupName: groupName),
