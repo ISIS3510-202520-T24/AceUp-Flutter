@@ -79,7 +79,7 @@ class AcademicRepository {
       entityType: 'term',
       entityId: term.id,
       operation: 'update',
-      data: term.toFirestore(),
+      data: term.toJson(),
       documentPath: 'users/$userId/terms/${term.id}',
     );
   }
@@ -187,7 +187,7 @@ class AcademicRepository {
       entityType: 'subject',
       entityId: subject.id,
       operation: 'update',
-      data: subject.toFirestore(),
+      data: subject.toJson(),
       documentPath: 'users/$userId/terms/$termId/subjects/${subject.id}',
     );
   }
@@ -300,7 +300,7 @@ class AcademicRepository {
       entityType: 'assignment',
       entityId: assignment.id,
       operation: 'update',
-      data: assignment.toFirestore(),
+      data: assignment.toJson(),
       documentPath: 'users/$userId/terms/$termId/subjects/$subjectId/assignments/${assignment.id}',
     );
   }
@@ -315,7 +315,7 @@ class AcademicRepository {
       operation: 'update',
       data: {
         'isCompleted': completed,
-        'completedAt': completed ? Timestamp.fromDate(DateTime.now()) : null,
+        'completedAt': completed ? DateTime.now().toIso8601String() : null,
       },
       documentPath: 'users/$userId/terms/$termId/subjects/$subjectId/assignments/$assignmentId',
     );
@@ -437,7 +437,7 @@ class AcademicRepository {
       entityType: 'exam',
       entityId: exam.id,
       operation: 'update',
-      data: exam.toFirestore(),
+      data: exam.toJson(),
       documentPath: 'users/$userId/terms/$termId/subjects/$subjectId/exams/${exam.id}',
     );
   }
@@ -516,7 +516,7 @@ class AcademicRepository {
       entityType: 'classTemplate',
       entityId: template.id,
       operation: 'update',
-      data: template.toFirestore(),
+      data: template.toJson(),
       documentPath: 'users/$userId/terms/$termId/subjects/$subjectId/classTemplates/${template.id}',
     );
   }
@@ -595,7 +595,7 @@ class AcademicRepository {
       entityType: 'classException',
       entityId: exception.id,
       operation: 'update',
-      data: exception.toFirestore(),
+      data: exception.toJson(),
       documentPath: 'users/$userId/terms/$termId/subjects/$subjectId/classExceptions/${exception.id}',
     );
   }

@@ -57,7 +57,7 @@ class TeacherRepository {
     await _queueSync(
       entityId: teacher.id,
       operation: 'update',
-      data: teacher.toFirestore(),
+      data: teacher.toJson(),
       documentPath: 'users/$userId/teachers/${teacher.id}',
     );
   }

@@ -51,7 +51,7 @@ class UserRepository {
     await _queueSync(
       entityId: user.uid,
       operation: 'update',
-      data: user.toFirestore(),
+      data: user.toJson(),
       documentPath: 'users/${user.uid}',
     );
   }
@@ -65,7 +65,7 @@ class UserRepository {
     await _queueSync(
       entityId: uid,
       operation: 'update',
-      data: {'lastLogin': Timestamp.fromDate(now)},
+      data: {'lastLogin': now.toIso8601String()},
       documentPath: 'users/$uid',
     );
   }

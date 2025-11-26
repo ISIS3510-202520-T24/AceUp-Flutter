@@ -63,7 +63,7 @@ class HolidayRepository {
       await _queueSync(
         entityId: holiday.id,
         operation: 'update',
-        data: holiday.toFirestore(),
+        data: holiday.toJson(),
         documentPath: 'users/$userId/holidays/${holiday.id}',
       );
     }

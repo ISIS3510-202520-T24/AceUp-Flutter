@@ -337,7 +337,8 @@ class SyncService extends ChangeNotifier {
       final decoded = jsonDecode(jsonStr);
       if (decoded is Map<String, dynamic>) {
         print('📋 [PARSE] Parsed JSON: $decoded');
-        return decoded;
+        // Convert ISO8601 date strings back to Timestamps for Firestore
+        return _convertDatesToTimestamps(decoded);
       } else {
         print('⚠️  [PARSE] Decoded JSON is not a Map: $decoded');
         return {};
@@ -347,6 +348,47 @@ class SyncService extends ChangeNotifier {
       print('   Raw JSON: $jsonStr');
       return {};
     }
+  }
+
+  /// Recursively convert ISO8601 date strings to Firestore Timestamps
+  Map<String, dynamic> _convertDatesToTimestamps(Map<String, dynamic> data) {
+    final result = <String, dynamic>{};
+
+    data.forEach((key, value) {
+      if (value is String && _isIso8601Date(value)) {
+        // Convert ISO8601 string to Timestamp
+        try {
+          final dateTime = DateTime.parse(value);
+          result[key] = Timestamp.fromDate(dateTime);
+        } catch (e) {
+          result[key] = value;
+        }
+      } else if (value is Map<String, dynamic>) {
+        // Recursively process nested maps
+        result[key] = _convertDatesToTimestamps(value);
+      } else if (value is List) {
+        // Process lists
+        result[key] = value.map((item) {
+          if (item is Map<String, dynamic>) {
+            return _convertDatesToTimestamps(item);
+          }
+          return item;
+        }).toList();
+      } else {
+        result[key] = value;
+      }
+    });
+
+    return result;
+  }
+
+  /// Check if a string is an ISO8601 date format
+  bool _isIso8601Date(String value) {
+    // ISO8601 format: YYYY-MM-DDTHH:MM:SS.SSSZ or variations
+    final iso8601Pattern = RegExp(
+      r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}',
+    );
+    return iso8601Pattern.hasMatch(value);
   }
 
   /// Get sync statistics

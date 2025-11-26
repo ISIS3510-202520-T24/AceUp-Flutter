@@ -76,7 +76,7 @@ class GroupRepository {
       entityType: 'group',
       entityId: group.id,
       operation: 'update',
-      data: group.toFirestore(),
+      data: group.toJson(),
       documentPath: 'groups/${group.id}',
     );
   }
@@ -238,7 +238,7 @@ class GroupRepository {
       entityType: 'weekly_availability',
       entityId: availability.id,
       operation: 'update',
-      data: availability.toFirestore(),
+      data: availability.toJson(),
       documentPath: 'groups/$groupId/weeklyAvailability/${availability.id}',
     );
   }

@@ -55,7 +55,7 @@ class SettingsRepository {
     await _queueSync(
       entityId: userId,
       operation: 'update',
-      data: settings.toFirestore(),
+      data: settings.toJson(),
       documentPath: 'users/$userId/settings/preferences',
     );
   }
