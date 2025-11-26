@@ -164,7 +164,7 @@ class HolidaysScreenContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    holiday.displayName,
+                    holiday.name,
                     style: AppTypography.bodyM.copyWith(color: colors.onSurface),
                   ),
                   const SizedBox(height: 4),
