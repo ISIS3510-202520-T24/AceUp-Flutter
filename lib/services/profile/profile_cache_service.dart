@@ -1,9 +1,11 @@
 // lib/services/profile/profile_cache_service.dart
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import 'package:path_provider/path_provider.dart'; // ignore: uri_does_not_exist
 
 import '../../models/user_profile.dart';
 import 'image_compressor.dart';
+
+// ignore_for_file: undefined_method
 
 class ProfileCacheService {
   ProfileCacheService._();

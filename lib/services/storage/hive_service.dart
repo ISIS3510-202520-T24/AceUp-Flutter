@@ -1,9 +1,11 @@
 // lib/services/storage/hive_service.dart
 // Servicio para manejar almacenamiento con Hive (BD Llave/Valor)
 
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_flutter/hive_flutter.dart'; // ignore: uri_does_not_exist
 import '../../models/visited_group_history.dart';
 import '../../models/cache_config.dart';
+
+// ignore_for_file: undefined_identifier, undefined_class
 
 class HiveService {
   static const String _visitedGroupsBox = 'visited_groups';

@@ -98,12 +98,17 @@ class InitialLoadService extends ChangeNotifier {
       _progress = completedSteps / totalSteps;
       notifyListeners();
 
-      // 4. Load subjects
+      // 4. Load subjects (for each term)
       _currentStep = 'Loading subjects...';
       notifyListeners();
       try {
-        final subjects = await _academicRepository.fetchSubjectsFromFirebase(userId);
-        print('✅ Loaded ${subjects.length} subjects');
+        final terms = await _academicRepository.getTermsForUser(userId);
+        var totalSubjects = 0;
+        for (final term in terms) {
+          final subjects = await _academicRepository.fetchSubjectsFromFirebase(userId, term.id);
+          totalSubjects += subjects.length;
+        }
+        print('✅ Loaded $totalSubjects subjects across ${terms.length} terms');
       } catch (e) {
         print('⚠️  Error loading subjects: $e');
       }
@@ -111,12 +116,20 @@ class InitialLoadService extends ChangeNotifier {
       _progress = completedSteps / totalSteps;
       notifyListeners();
 
-      // 5. Load assignments
+      // 5. Load assignments (for each subject in each term)
       _currentStep = 'Loading assignments...';
       notifyListeners();
       try {
-        final assignments = await _academicRepository.fetchAssignmentsFromFirebase(userId);
-        print('✅ Loaded ${assignments.length} assignments');
+        final terms = await _academicRepository.getTermsForUser(userId);
+        var totalAssignments = 0;
+        for (final term in terms) {
+          final subjects = await _academicRepository.getSubjectsForTerm(term.id);
+          for (final subject in subjects) {
+            final assignments = await _academicRepository.fetchAssignmentsFromFirebase(userId, term.id, subject.id);
+            totalAssignments += assignments.length;
+          }
+        }
+        print('✅ Loaded $totalAssignments assignments');
       } catch (e) {
         print('⚠️  Error loading assignments: $e');
       }
@@ -214,11 +227,19 @@ class InitialLoadService extends ChangeNotifier {
     print('🔄 Loading remaining data in background...');
 
     try {
-      // Load subjects
-      await _academicRepository.fetchSubjectsFromFirebase(userId);
+      // Load subjects (for each term)
+      final terms = await _academicRepository.getTermsForUser(userId);
+      for (final term in terms) {
+        await _academicRepository.fetchSubjectsFromFirebase(userId, term.id);
+      }
 
-      // Load assignments
-      await _academicRepository.fetchAssignmentsFromFirebase(userId);
+      // Load assignments (for each subject in each term)
+      for (final term in terms) {
+        final subjects = await _academicRepository.getSubjectsForTerm(term.id);
+        for (final subject in subjects) {
+          await _academicRepository.fetchAssignmentsFromFirebase(userId, term.id, subject.id);
+        }
+      }
 
       // Load teachers
       await _teacherRepository.fetchTeachersFromFirebase(userId);

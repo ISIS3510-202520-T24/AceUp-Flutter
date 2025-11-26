@@ -52,7 +52,7 @@ class HolidayService {
         getHolidaysForCountry(countryCode, nextYear),
       ]);
       final allHolidays = [...results[0], ...results[1]];
-      allHolidays.sort((a, b) => a.date.compareTo(b.date));
+      allHolidays.sort((a, b) => a.startDate.compareTo(b.startDate));
 
       return allHolidays;
     } catch (e) {
@@ -65,9 +65,9 @@ class HolidayService {
       final holidays = await getHolidaysForCountry(countryCode, date.year);
 
       return holidays.any((holiday) =>
-      holiday.date.year == date.year &&
-          holiday.date.month == date.month &&
-          holiday.date.day == date.day
+      holiday.startDate.year == date.year &&
+          holiday.startDate.month == date.month &&
+          holiday.startDate.day == date.day
       );
     } catch (e) {
       throw Exception('Error checking if date is holiday: $e');
@@ -84,7 +84,7 @@ class HolidayService {
       final holidays = await getHolidaysForCountry(countryCode, currentYear);
 
       // Filter upcoming holidays
-      final upcoming = holidays.where((h) => h.date.isAfter(now)).toList();
+      final upcoming = holidays.where((h) => h.startDate.isAfter(now)).toList();
 
       // If less than 5, get some from next year
       if (upcoming.length < 5) {

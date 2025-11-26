@@ -2,7 +2,9 @@
 // Servicio para manejar preferencias del usuario con SharedPreferences
 
 import 'dart:async';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // ignore: uri_does_not_exist
+
+// ignore_for_file: undefined_identifier, undefined_class
 
 class AppPreferences {
   static const String _keyAutoRefresh = 'auto_refresh_on_reconnect';

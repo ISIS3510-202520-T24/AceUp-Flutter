@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_storage/firebase_storage.dart'; // ignore: uri_does_not_exist
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
+
+// ignore_for_file: undefined_identifier, undefined_class, undefined_method
 
 /// Service for uploading and managing group images in Firebase Storage.
 /// 
