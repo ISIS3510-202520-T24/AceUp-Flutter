@@ -163,7 +163,7 @@ class SubjectViewModel extends ChangeNotifier {
 
   Future<void> toggleAssignmentStatus(Assignment assignment) async {
     try {
-      final newStatus = assignment.isCompleted ? 'Pending' : 'Completed';
+      final newStatus = assignment.isCompleted ? false : true;
       await _repository.updateAssignmentStatus(assignment.id, newStatus);
       await _loadSubjectAssignments();
     } catch (e) {

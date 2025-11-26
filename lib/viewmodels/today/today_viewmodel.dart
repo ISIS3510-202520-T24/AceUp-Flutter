@@ -60,10 +60,10 @@ class TodayViewModel extends ChangeNotifier {
     try {
       final today = DateTime.now();
 
-      _assignmentsDueToday = await _repository.getAssignmentsDueToday(userId);
+      _assignmentsDueToday = await _repository.getAssignmentsDueToday(userId, today);
       _assignmentsDueToday.sort((a, b) {
-        if (a.isPending && b.isCompleted) return -1;
-        if (a.isCompleted && b.isPending) return 1;
+        if (!a.isCompleted && b.isCompleted) return -1;
+        if (a.isCompleted && !b.isCompleted) return 1;
         return 0;
       });
 
@@ -85,7 +85,7 @@ class TodayViewModel extends ChangeNotifier {
     }
 
     try {
-      final newStatus = assignment.isPending ? 'Completed' : 'Pending';
+      final newStatus = assignment.isCompleted ? false : true;
 
       await _repository.updateAssignmentStatus(assignment.id, newStatus);
 
@@ -99,7 +99,7 @@ class TodayViewModel extends ChangeNotifier {
 
   int get pendingCount =>
       _assignmentsDueToday
-          .where((a) => a.isPending)
+          .where((a) => !a.isCompleted)
           .length;
 
   int get completedCount =>

@@ -18,6 +18,11 @@ class Assignment {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // Navigation fields (not persisted, populated from document path or joins)
+  final String? termId;
+  final String? subjectId;
+  final String? subjectName;
+
   Assignment({
     required this.id,
     required this.title,
@@ -33,10 +38,28 @@ class Assignment {
     this.alerts = const [],
     required this.createdAt,
     required this.updatedAt,
+    this.termId,
+    this.subjectId,
+    this.subjectName,
   });
 
   factory Assignment.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // Extract parent IDs from document reference path
+    // Path format: users/{userId}/terms/{termId}/subjects/{subjectId}/assignments/{assignmentId}
+    String? termId;
+    String? subjectId;
+    try {
+      final pathSegments = doc.reference.path.split('/');
+      if (pathSegments.length >= 8) {
+        termId = pathSegments[3]; // terms/{termId}
+        subjectId = pathSegments[5]; // subjects/{subjectId}
+      }
+    } catch (e) {
+      print('Warning: Could not extract parent IDs from path: ${doc.reference.path}');
+    }
+
     return Assignment(
       id: doc.id,
       title: data['title'] ?? '',
@@ -55,6 +78,9 @@ class Assignment {
           [],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      termId: termId,
+      subjectId: subjectId,
+      subjectName: null, // Must be populated separately via join
     );
   }
 
@@ -140,6 +166,9 @@ class Assignment {
     List<Alert>? alerts,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? termId,
+    String? subjectId,
+    String? subjectName,
   }) {
     return Assignment(
       id: id ?? this.id,
@@ -156,6 +185,9 @@ class Assignment {
       alerts: alerts ?? this.alerts,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      termId: termId ?? this.termId,
+      subjectId: subjectId ?? this.subjectId,
+      subjectName: subjectName ?? this.subjectName,
     );
   }
 

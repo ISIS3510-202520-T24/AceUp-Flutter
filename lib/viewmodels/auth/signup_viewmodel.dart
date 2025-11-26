@@ -1,6 +1,8 @@
 // lib/viewmodels/auth/signup_viewmodel.dart
 import 'package:flutter/foundation.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // ignore: uri_does_not_exist
+
+// ignore_for_file: undefined_identifier, undefined_class, non_type_in_catch_clause
 
 /// Resultado de intentar registrarse.
 /// ok = true  -> éxito

@@ -69,8 +69,8 @@ class EditTermViewModel extends ChangeNotifier {
       if (termDoc.exists) {
         _term = Term.fromFirestore(termDoc);
         nameController.text = _term!.name;
-        _startDate = _term!.startDate ?? DateTime.now();
-        _endDate = _term!.endDate ?? DateTime.now().add(const Duration(days: 90));
+        _startDate = _term!.startDate;
+        _endDate = _term!.endDate;
         
         _state = EditTermViewState.idle;
         _errorMessage = null;

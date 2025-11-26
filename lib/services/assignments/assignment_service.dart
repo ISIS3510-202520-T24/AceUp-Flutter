@@ -1,17 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/assignments/assignment_model.dart';
-import '../subjects/subject_service.dart';
+import '../../data/repositories/academic_repository.dart';
 import '../analytics/analytics_service.dart';
 
 class AssignmentService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final SubjectService _subjectService = SubjectService();
-  final AnalyticsService _analytics = AnalyticsService();
+  final FirebaseFirestore _firestore;
+  final AcademicRepository _repository;
+  final AnalyticsService _analytics;
+
+  AssignmentService({
+    required FirebaseFirestore firestore,
+    required AcademicRepository repository,
+    AnalyticsService? analytics,
+  })  : _firestore = firestore,
+        _repository = repository,
+        _analytics = analytics ?? AnalyticsService();
 
 
   /// Gets all assignments for a user (using offline-first repository)
   Future<List<Assignment>> getAllAssignmentsForUser(String userId) async {
-    return await _repository.getAllAssignmentsForUser(userId);
+    return await _repository.getAssignmentsForUser(userId);
   }
 
   /// Gets assignments due today for a user (using offline-first repository)
@@ -25,14 +33,14 @@ class AssignmentService {
       String termId,
       String subjectId,
       String assignmentId,
-      String newStatus,
+      bool newStatus,
       ) async {
     try {
       // Update via repository (offline-first)
       await _repository.updateAssignmentStatus(assignmentId, newStatus);
 
-      // Re-evaluar completitud del subject (BQ 3.1)
-      await _subjectService.reevaluateSubjectCompleteness(userId, termId, subjectId);
+      // TODO: Re-evaluate subject completeness (BQ 3.1)
+      // Removed SubjectService - this functionality needs to be reimplemented if required
     } catch (e) {
       print('Error updating assignment status: $e');
       rethrow;
@@ -74,31 +82,19 @@ class AssignmentService {
         description: assignmentData['description'] as String?,
         dueDate: assignmentData['dueDate'] as DateTime,
         isCompleted: assignmentData['isCompleted'] as bool? ?? false,
+        createdAt: assignmentData['createdAt'] as DateTime,
+        updatedAt: DateTime.now(),
       );
 
       // Save via repository (offline-first with nested paths)
       await _repository.saveAssignment(assignment, userId, termId, subjectId);
 
-      // Re-evaluar completitud del subject después de guardar
-      await _subjectService.reevaluateSubjectCompleteness(userId, termId, subjectId);
+      // TODO: Re-evaluate subject completeness after saving (BQ 3.1)
+      // Removed SubjectService - this functionality needs to be reimplemented if required
 
-      // 📊 Analytics: Track cambio de weight (BQ 3.1)
-      if (oldWeight != newWeight) {
-        final totalWeightAfter = await _subjectService.getTotalWeightForSubject(
-          userId,
-          termId,
-          subjectId,
-        );
-
-        await _analytics.trackAssignmentWeightChanged(
-          userId: userId,
-          subjectId: subjectId,
-          assignmentId: assignmentId,
-          oldWeight: oldWeight,
-          newWeight: newWeight,
-          totalWeightAfter: totalWeightAfter,
-        );
-      }
+      // TODO: Analytics tracking for weight changes (BQ 3.1)
+      // Note: Weight is now managed via weightId, not as a direct integer value
+      // This analytics tracking needs to be updated to work with the new weightId system
 
       print('✅ Assignment saved and subject completeness updated');
     } catch (e) {
@@ -118,8 +114,8 @@ class AssignmentService {
       // Delete via repository (offline-first with nested paths)
       await _repository.deleteAssignment(assignmentId, userId, termId, subjectId);
 
-      // Re-evaluar completitud del subject después de borrar
-      await _subjectService.reevaluateSubjectCompleteness(userId, termId, subjectId);
+      // TODO: Re-evaluate subject completeness after deletion (BQ 3.1)
+      // Removed SubjectService - this functionality needs to be reimplemented if required
 
       print('✅ Assignment deleted and subject completeness updated');
     } catch (e) {

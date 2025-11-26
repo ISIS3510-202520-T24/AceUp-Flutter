@@ -2,16 +2,32 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart'; // ignore: uri_does_not_exist
 import '../../models/assignments/assignment_model.dart';
+import '../../models/planner/subject_model.dart';
+import '../../models/helpers/weight_model.dart';
+import '../../models/helpers/subweight_model.dart';
+import '../../data/repositories/academic_repository.dart';
 import '../../services/auth/auth_service.dart';
+import '../../core/constants/enums.dart';
 
 // ignore_for_file: creation_with_non_type
 
 enum EditAssignmentViewState { idle, loading, saving, error }
 
 class EditAssignmentViewModel extends ChangeNotifier {
-  final AuthService _authService = AuthService();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final AuthService _authService;
+  final AcademicRepository _repository;
   final _uuid = const Uuid();
+
+  EditAssignmentViewModel({
+    Assignment? assignment,
+    AuthService? authService,
+    required AcademicRepository repository,
+  })  : _assignment = assignment,
+        _authService = authService ?? AuthService(),
+        _repository = repository {
+    _initializeControllers();
+    _loadSubjects();
+  }
 
   EditAssignmentViewState _state = EditAssignmentViewState.idle;
   EditAssignmentViewState get state => _state;
@@ -48,8 +64,15 @@ class EditAssignmentViewModel extends ChangeNotifier {
   TimeOfDay? _selectedReminderTime;
   TimeOfDay? get selectedReminderTime => _selectedReminderTime;
 
-  int _selectedWeight = 10;
-  int get selectedWeight => _selectedWeight;
+  String? _selectedWeightId;
+  String? get selectedWeightId => _selectedWeightId;
+
+  /// Get the display name of the currently selected weight
+  String? get selectedWeightDisplayName {
+    if (_selectedWeightId == null) return null;
+    final option = _weightOptions.where((w) => w.id == _selectedWeightId).firstOrNull;
+    return option?.displayName;
+  }
 
   String _selectedPriority = 'Medium';
   String get selectedPriority => _selectedPriority;
@@ -64,15 +87,11 @@ class EditAssignmentViewModel extends ChangeNotifier {
   List<SubjectOption> _subjects = [];
   List<SubjectOption> get subjects => _subjects;
 
-  final List<String> priorities = ['High', 'Medium', 'Low'];
-  final List<int> weights = List.generate(20, (index) => (index + 1) * 5); // 5, 10, 15, ..., 100
+  List<WeightOption> _weightOptions = [];
+  List<WeightOption> get weightOptions => _weightOptions;
 
-  EditAssignmentViewModel({
-    Assignment? assignment,
-  })  : _assignment = assignment {
-    _initializeControllers();
-    _loadSubjects();
-  }
+  final List<String> priorities = ['High', 'Medium', 'Low'];
+
 
   void _initializeControllers() {
     if (_assignment != null) {
@@ -80,17 +99,22 @@ class EditAssignmentViewModel extends ChangeNotifier {
       titleController = TextEditingController(text: _assignment!.title);
       descriptionController = TextEditingController(text: _assignment!.description);
       gradeController = TextEditingController(
-          text: _assignment!.grade > 0 ? _assignment!.grade.toString() : '');
+          text: _assignment!.grade != null && _assignment!.grade! > 0 ? _assignment!.grade.toString() : '');
 
       _selectedSubject = _assignment!.subjectName;
       _selectedTermId = _assignment!.termId;
       _selectedSubjectId = _assignment!.subjectId;
-      _isCompleted = _assignment!.status == 'Completed';
+      _isCompleted = _assignment!.isCompleted;
       _selectedDueDate = _assignment!.dueDate;
       _selectedDueTime = TimeOfDay.fromDateTime(_assignment!.dueDate);
-      _selectedWeight = _assignment!.weight;
-      _selectedPriority = _assignment!.priority;
-      _isGraded = _assignment!.grade > 0;
+      _selectedWeightId = _assignment!.weightId;
+      _selectedPriority = _assignment!.priority.value;
+      _isGraded = _assignment!.grade != null && _assignment!.grade! > 0;
+
+      // Load weight options for the assignment's subject (if we have the subject info)
+      if (_selectedSubjectId != null) {
+        _loadWeightOptionsForSubject(_selectedSubjectId!);
+      }
     } else {
       // Create mode - empty controllers
       titleController = TextEditingController();
@@ -109,23 +133,17 @@ class EditAssignmentViewModel extends ChangeNotifier {
     if (userId == null) return;
 
     try {
-      final termsSnapshot = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .get();
+      // Use repository to load terms and subjects (offline-first)
+      final terms = await _repository.getTermsForUser(userId);
 
       List<SubjectOption> subjectOptions = [];
-      for (var termDoc in termsSnapshot.docs) {
-        final subjectsSnapshot = await termDoc.reference.collection('subjects').get();
-        for (var subjectDoc in subjectsSnapshot.docs) {
-          final subjectData = subjectDoc.data();
-          final subjectName = subjectData['name'] ?? 'Unknown Subject';
-
+      for (var term in terms) {
+        final subjects = await _repository.getSubjectsForTerm(term.id);
+        for (var subject in subjects) {
           subjectOptions.add(SubjectOption(
-            name: subjectName,
-            termId: termDoc.id,
-            subjectId: subjectDoc.id,
+            name: subject.name,
+            termId: term.id,
+            subjectId: subject.id,
           ));
         }
       }
@@ -144,7 +162,7 @@ class EditAssignmentViewModel extends ChangeNotifier {
     }
   }
 
-  void setSubject(String? subjectName) {
+  void setSubject(String? subjectName) async {
     if (subjectName != null) {
       _selectedSubject = subjectName;
 
@@ -157,7 +175,52 @@ class EditAssignmentViewModel extends ChangeNotifier {
       _selectedTermId = subject.termId;
       _selectedSubjectId = subject.subjectId;
 
+      // Load weight options for the selected subject
+      await _loadWeightOptionsForSubject(subject.subjectId);
+
       notifyListeners();
+    }
+  }
+
+  /// Load weight options from the selected subject
+  Future<void> _loadWeightOptionsForSubject(String subjectId) async {
+    try {
+      final subject = await _repository.getSubjectById(subjectId);
+      if (subject == null) {
+        _weightOptions = [];
+        return;
+      }
+
+      // Build weight options from subject's weights and subweights
+      final options = <WeightOption>[];
+
+      for (final weight in subject.weights) {
+        // Add the weight itself
+        options.add(WeightOption(
+          id: weight.id,
+          name: weight.name,
+          displayName: weight.name,
+          percentage: weight.percentage,
+          isSubweight: false,
+        ));
+
+        // Add all subweights
+        for (final subweight in weight.subweights) {
+          options.add(WeightOption(
+            id: subweight.id,
+            name: subweight.name,
+            displayName: '${weight.name} > ${subweight.name}',
+            percentage: subweight.percentage,
+            isSubweight: true,
+            parentWeightName: weight.name,
+          ));
+        }
+      }
+
+      _weightOptions = options;
+    } catch (e) {
+      print('Error loading weight options: $e');
+      _weightOptions = [];
     }
   }
 
@@ -181,8 +244,19 @@ class EditAssignmentViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setWeight(int weight) {
-    _selectedWeight = weight;
+  void setWeightId(String? weightId) {
+    _selectedWeightId = weightId;
+    notifyListeners();
+  }
+
+  /// Set weight by display name (for UI dropdown binding)
+  void setWeightByDisplayName(String? displayName) {
+    if (displayName == null) {
+      _selectedWeightId = null;
+    } else {
+      final option = _weightOptions.where((w) => w.displayName == displayName).firstOrNull;
+      _selectedWeightId = option?.id;
+    }
     notifyListeners();
   }
 
@@ -268,52 +342,58 @@ class EditAssignmentViewModel extends ChangeNotifier {
   }
 
   Future<void> _createAssignment(String userId) async {
-    final assignmentData = {
-      'title': titleController.text.trim(),
-      'description': descriptionController.text.trim(),
-      'dueDate': Timestamp.fromDate(combinedDueDateTime),
-      'priority': _selectedPriority,
-      'weight': _selectedWeight,
-      'grade': 0,
-      'status': 'Pending',
-      'createdAt': Timestamp.now(),
-      'updatedAt': Timestamp.now(),
-    };
+    final now = DateTime.now();
+    final assignmentId = _uuid.v4();
 
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('terms')
-        .doc(_selectedTermId)
-        .collection('subjects')
-        .doc(_selectedSubjectId)
-        .collection('assignments')
-        .add(assignmentData);
+    final newAssignment = Assignment(
+      id: assignmentId,
+      title: titleController.text.trim(),
+      description: descriptionController.text.trim(),
+      dueDate: combinedDueDateTime,
+      weightId: _selectedWeightId,
+      priority: Priority.fromString(_selectedPriority.toLowerCase()),
+      isCompleted: false,
+      isGraded: false,
+      createdAt: now,
+      updatedAt: now,
+      termId: _selectedTermId,
+      subjectId: _selectedSubjectId,
+    );
+
+    // Save via repository (offline-first with proper nested paths)
+    await _repository.saveAssignment(
+      newAssignment,
+      userId,
+      _selectedTermId!,
+      _selectedSubjectId!,
+    );
   }
 
   Future<void> _updateAssignment(String userId) async {
-    final updatedData = {
-      'title': titleController.text.trim(),
-      'description': descriptionController.text.trim(),
-      'dueDate': Timestamp.fromDate(combinedDueDateTime),
-      'priority': _selectedPriority,
-      'weight': _selectedWeight,
-      'grade': _isGraded && gradeController.text.isNotEmpty
-          ? int.tryParse(gradeController.text) ?? 0
-          : 0,
-      'updatedAt': Timestamp.now(),
-    };
+    if (_assignment == null || _assignment!.termId == null || _assignment!.subjectId == null) {
+      throw Exception('Cannot update assignment: missing termId or subjectId');
+    }
 
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('terms')
-        .doc(_assignment!.termId)
-        .collection('subjects')
-        .doc(_assignment!.subjectId)
-        .collection('assignments')
-        .doc(_assignment!.id)
-        .update(updatedData);
+    final updatedAssignment = _assignment!.copyWith(
+      title: titleController.text.trim(),
+      description: descriptionController.text.trim(),
+      dueDate: combinedDueDateTime,
+      weightId: _selectedWeightId,
+      priority: Priority.fromString(_selectedPriority.toLowerCase()),
+      grade: _isGraded && gradeController.text.isNotEmpty
+          ? double.tryParse(gradeController.text)
+          : null,
+      isGraded: _isGraded,
+      updatedAt: DateTime.now(),
+    );
+
+    // Save via repository (offline-first with proper nested paths)
+    await _repository.saveAssignment(
+      updatedAssignment,
+      userId,
+      _assignment!.termId!,
+      _assignment!.subjectId!,
+    );
   }
 
   bool _validateForm() {
@@ -354,5 +434,23 @@ class SubjectOption {
     required this.name,
     required this.termId,
     required this.subjectId,
+  });
+}
+
+class WeightOption {
+  final String id;
+  final String name;
+  final String displayName; // For UI display (e.g., "Exams > Midterm")
+  final double percentage;
+  final bool isSubweight;
+  final String? parentWeightName;
+
+  WeightOption({
+    required this.id,
+    required this.name,
+    required this.displayName,
+    required this.percentage,
+    required this.isSubweight,
+    this.parentWeightName,
   });
 }

@@ -320,9 +320,9 @@ class AcademicRepository {
     );
   }
 
-  /// Update assignment status (legacy method for compatibility)
-  Future<void> updateAssignmentStatus(String assignmentId, String status) async {
-    final isCompleted = status.toLowerCase() == 'completed';
+  /// Update assignment status
+  Future<void> updateAssignmentStatus(String assignmentId, bool newStatus) async {
+    final isCompleted = newStatus;
     final entity = await _db.assignmentDao.getAssignmentById(assignmentId);
     if (entity == null) return;
 

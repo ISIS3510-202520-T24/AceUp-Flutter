@@ -12,6 +12,9 @@ class Subject {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // Navigation field (not persisted, populated from document path)
+  final String? termId;
+
   Subject({
     required this.id,
     required this.name,
@@ -22,10 +25,24 @@ class Subject {
     this.weights = const [],
     required this.createdAt,
     required this.updatedAt,
+    this.termId,
   });
 
   factory Subject.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // Extract termId from document reference path
+    // Path format: users/{userId}/terms/{termId}/subjects/{subjectId}
+    String? termId;
+    try {
+      final pathSegments = doc.reference.path.split('/');
+      if (pathSegments.length >= 6) {
+        termId = pathSegments[3]; // terms/{termId}
+      }
+    } catch (e) {
+      print('Warning: Could not extract termId from path: ${doc.reference.path}');
+    }
+
     return Subject(
       id: doc.id,
       name: data['name'] ?? '',
@@ -39,6 +56,7 @@ class Subject {
           [],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      termId: termId,
     );
   }
 
@@ -100,6 +118,7 @@ class Subject {
     List<Weight>? weights,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? termId,
   }) {
     return Subject(
       id: id ?? this.id,
@@ -111,6 +130,7 @@ class Subject {
       weights: weights ?? this.weights,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      termId: termId ?? this.termId,
     );
   }
 

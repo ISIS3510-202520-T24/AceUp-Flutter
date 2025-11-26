@@ -206,7 +206,7 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
 
     // Separate pending and completed assignments
     final pending = viewModel.subjectAssignments
-        .where((a) => a.isPending)
+        .where((a) => !a.isCompleted)
         .toList();
     final completed = viewModel.subjectAssignments
         .where((a) => a.isCompleted)

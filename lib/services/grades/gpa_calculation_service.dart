@@ -36,7 +36,7 @@ class GpaCalculationService {
       // Note: In a real implementation, you'd parse weightCategoriesJson
       // For now, calculate simple weighted average
       double totalWeightedGrade = 0.0;
-      int totalWeight = 0;
+      double totalWeight = 0.0;
 
       for (final assignment in gradedAssignments) {
         totalWeightedGrade += assignment.grade * assignment.weight;

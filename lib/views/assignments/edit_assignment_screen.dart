@@ -155,13 +155,11 @@ class _EditAssignmentContent extends StatelessWidget {
                   color: colors.outline,
                 ),
                 Expanded(
-                  child: AppDropdownField<int>(
-                    value: viewModel.selectedWeight,
-                    items: viewModel.weights,
+                  child: AppDropdownField<String>(
+                    value: viewModel.selectedWeightDisplayName ,
+                    items: viewModel.weightOptions.map((w) => w.displayName).toList(),
                     getLabel: (weight) => '$weight%',
-                    onChanged: (value) {
-                      if (value != null) viewModel.setWeight(value);
-                    },
+                    onChanged: (value) => viewModel.setWeightByDisplayName(value),
                   ),
                 ),
                 const SizedBox(width: 12),

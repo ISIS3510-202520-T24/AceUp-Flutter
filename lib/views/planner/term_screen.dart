@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../data/local/database/app_database.dart';
+import '../../data/repositories/academic_repository.dart';
 import '../../services/grades/gpa_calculation_service.dart';
 import '../../viewmodels/planner/term_viewmodel.dart';
 import '../../themes/app_typography.dart';
@@ -23,7 +23,7 @@ class TermScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => TermViewModel(
         termId: termId,
-        database: context.read<AppDatabase>(),
+        repository: context.read<AcademicRepository>(),
         gpaService: context.read<GpaCalculationService>(),
         ),
       child: _TermContent(termId: termId),

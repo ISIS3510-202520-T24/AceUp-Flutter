@@ -18,11 +18,11 @@ enum Priority {
 enum RecurrenceUnit {
   weeks,
   days,
-  working_days,
-  odd_days,
-  even_days,
-  odd_working_days,
-  even_working_days;
+  workingDays,
+  oddDays,
+  evenDays,
+  oddWorkingDays,
+  evenWorkingDays;
 
   String get value => name;
 

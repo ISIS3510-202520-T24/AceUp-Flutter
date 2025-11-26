@@ -178,11 +178,8 @@ class PlannerViewModel extends ChangeNotifier {
   List<Subject> getTermSubjects(String termId) => _termSubjects[termId] ?? [];
 
   String getTermDateRange(Term term) {
-    if (term.startDate == null || term.endDate == null) {
-      return '';
-    }
-    final start = _formatDate(term.startDate!);
-    final end = _formatDate(term.endDate!);
+    final start = _formatDate(term.startDate);
+    final end = _formatDate(term.endDate);
     return '$start - $end';
   }
 

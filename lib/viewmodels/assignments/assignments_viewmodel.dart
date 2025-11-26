@@ -81,7 +81,7 @@ class AssignmentsViewModel extends ChangeNotifier {
     }
 
     try {
-      final newStatus = assignment.isPending ? 'Completed' : 'Pending';
+      final newStatus = assignment.isCompleted ? false : true;
 
       await _repository.updateAssignmentStatus(assignment.id, newStatus);
 
