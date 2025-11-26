@@ -52,6 +52,19 @@ class HolidayDao extends DatabaseAccessor<AppDatabase> with _$HolidayDaoMixin {
         .get();
   }
 
+  /// Get holidays for specific year
+  Future<List<HolidayEntity>> getHolidaysForYear(String userId, int year) {
+    final startOfYear = DateTime(year, 1, 1);
+    final endOfYear = DateTime(year, 12, 31, 23, 59, 59);
+    return (select(holidays)
+          ..where((t) =>
+              t.userId.equals(userId) &
+              t.startDate.isBiggerOrEqualValue(startOfYear) &
+              t.startDate.isSmallerOrEqualValue(endOfYear))
+          ..orderBy([(t) => OrderingTerm.asc(t.startDate)]))
+        .get();
+  }
+
   /// Get holidays for date range
   Future<List<HolidayEntity>> getHolidaysForDateRange(
       String userId, DateTime startDate, DateTime endDate) {
@@ -136,6 +149,19 @@ class HolidayDao extends DatabaseAccessor<AppDatabase> with _$HolidayDaoMixin {
   Future<int> deleteApiHolidaysForUser(String userId) {
     return (delete(holidays)
           ..where((t) => t.userId.equals(userId) & t.source.equals('api')))
+        .go();
+  }
+
+  /// Delete API holidays for specific year
+  Future<int> deleteApiHolidaysForYear(String userId, int year) {
+    final startOfYear = DateTime(year, 1, 1);
+    final endOfYear = DateTime(year, 12, 31, 23, 59, 59);
+    return (delete(holidays)
+          ..where((t) =>
+              t.userId.equals(userId) &
+              t.source.equals('api') &
+              t.startDate.isBiggerOrEqualValue(startOfYear) &
+              t.startDate.isSmallerOrEqualValue(endOfYear)))
         .go();
   }
 

@@ -9,6 +9,7 @@ import '../../models/planner/class_template_model.dart' as model;
 import '../../models/planner/class_exception_model.dart' as model;
 import '../../models/helpers/weight_model.dart';
 import '../../models/helpers/alert_model.dart';
+import '../../models/helpers/recurrence_model.dart';
 import '../../core/constants/enums.dart';
 import '../local/database/app_database.dart';
 
@@ -552,7 +553,7 @@ class AcademicRepository {
       for (final template in templates) {
         final companion = _classTemplateModelToCompanion(template, subjectId);
         await _db.classDao.upsertClassTemplate(companion);
-        await _db.classDao.markClassTemplateSynced(template.id);
+        await _db.classDao.markClassTemplateAsSynced(template.id);
       }
 
       return templates;
@@ -566,13 +567,13 @@ class AcademicRepository {
 
   /// Get class exceptions for template
   Future<List<model.ClassException>> getClassExceptionsForTemplate(String templateId) async {
-    final entities = await _db.classDao.getClassExceptionsForTemplate(templateId);
+    final entities = await _db.classDao.getExceptionsForTemplate(templateId);
     return entities.map(_classExceptionEntityToModel).toList();
   }
 
   /// Watch class exceptions for template (stream)
   Stream<List<model.ClassException>> watchClassExceptionsForTemplate(String templateId) {
-    return _db.classDao.watchClassExceptionsForTemplate(templateId).map(
+    return _db.classDao.watchExceptionsForTemplate(templateId).map(
           (entities) => entities.map(_classExceptionEntityToModel).toList(),
         );
   }
@@ -631,7 +632,7 @@ class AcademicRepository {
       for (final exception in exceptions) {
         final companion = _classExceptionModelToCompanion(exception);
         await _db.classDao.upsertClassException(companion);
-        await _db.classDao.markClassExceptionSynced(exception.id);
+        await _db.classDao.markClassExceptionAsSynced(exception.id);
       }
 
       return exceptions;

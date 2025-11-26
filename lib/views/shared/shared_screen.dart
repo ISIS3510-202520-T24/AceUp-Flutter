@@ -20,6 +20,7 @@ import '../../core/connectivity/connectivity_manager.dart';
 import '../../widgets/connectivity_indicator.dart';
 import '../../services/storage/group_image_service.dart';
 import '../../services/shared/sync_service.dart';
+import '../../models/shared/group_model.dart';
 
 // ignore_for_file: undefined_identifier, undefined_class, undefined_method
 
