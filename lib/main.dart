@@ -127,7 +127,7 @@ Future<void> main() async {
           ),
 
           ProxyProvider<AppDatabase, GpaCalculationService>(
-            update: (_, db, __) => GpaCalculationService(database: db), 
+            update: (_, db, _) => GpaCalculationService(database: db), 
           ),
 
           // Exponer servicios para pantallas que hacen context.read<AuthService>()

@@ -162,8 +162,8 @@ class SubjectDao extends DatabaseAccessor<AppDatabase> with _$SubjectDaoMixin {
   // ==================== STATISTICS ====================
 
   /// Get total credits for term
-  Future<double> getTotalCreditsForTerm(String termId) async {
+  Future<int> getTotalCreditsForTerm(String termId) async {
     final termSubjects = await getSubjectsForTerm(termId);
-    return termSubjects.fold(0.0, (sum, s) => sum + s.credits);
+    return termSubjects.fold(0, (sum, s) => sum + s.credits);
   }
 }

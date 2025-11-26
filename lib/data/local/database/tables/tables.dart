@@ -54,7 +54,7 @@ class Subjects extends Table {
   TextColumn get termId => text()();
   TextColumn get name => text()();
   TextColumn get color => text()();
-  RealColumn get credits => real()();
+  IntColumn get credits => integer().withDefault(const Constant(0))();
   RealColumn get finalGrade => real().nullable()();
   BoolColumn get useFinalGradeOverride => boolean().withDefault(const Constant(false))();
   TextColumn get weightsJson => text().withDefault(const Constant('[]'))(); // JSON array

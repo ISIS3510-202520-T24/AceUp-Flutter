@@ -5,7 +5,7 @@ class Subject {
   final String id;
   final String name;
   final String color; // Hex color code
-  final double credits;
+  final int credits;
   final double? finalGrade;
   final bool useFinalGradeOverride;
   final List<Weight> weights;
@@ -112,7 +112,7 @@ class Subject {
     String? id,
     String? name,
     String? color,
-    double? credits,
+    int? credits,
     double? finalGrade,
     bool? useFinalGradeOverride,
     List<Weight>? weights,
