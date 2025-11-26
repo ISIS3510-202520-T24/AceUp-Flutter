@@ -200,8 +200,6 @@ class LoginViewModel extends ChangeNotifier {
       await _auth.reloadUser();
 
       if (!_auth.isEmailVerified) {
-        // si NO está verificado el correo, fallamos con needsEmailVerification
-        await _auth.signOut();
         final ar = AuthResult.verifyNeeded(
           'Please verify your email to continue',
         );
@@ -304,8 +302,10 @@ class LoginViewModel extends ChangeNotifier {
   Future<void> resendVerificationEmail() async {
     try {
       await _auth.sendEmailVerification();
-    } catch (_) {
-      // opcional: podrías _setError, pero no es obligatorio para compilar
+      await _auth.signOut();
+    } catch (e) {
+      await _auth.signOut();
+      debugPrint('Failed to resend verification email: $e');
     }
   }
 
@@ -349,7 +349,6 @@ class LoginViewModel extends ChangeNotifier {
       await _auth.reloadUser();
 
       if (!_auth.isEmailVerified) {
-        await _auth.signOut();
         final ar = AuthResult.verifyNeeded(
           'Please verify your email to continue',
         );

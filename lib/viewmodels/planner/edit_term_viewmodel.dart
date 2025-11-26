@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart'; // ignore: uri_does_not_exist
 import '../../models/planner/term_model.dart';
 import '../../services/auth/auth_service.dart';
+import '../../data/repositories/academic_repository.dart';
 
 // ignore_for_file: creation_with_non_type
 
 enum EditTermViewState { idle, loading, saving, error }
 
 class EditTermViewModel extends ChangeNotifier {
-  final AuthService _authService = AuthService();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final AuthService _authService;
+  final AcademicRepository _repository;
   final _uuid = const Uuid();
   final String? termId;
 
@@ -33,7 +33,12 @@ class EditTermViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  EditTermViewModel({this.termId}) {
+  EditTermViewModel({
+    this.termId,
+    AuthService? authService,
+    required AcademicRepository repository,
+  })  : _authService = authService ?? AuthService(),
+        _repository = repository {
     _initializeControllers();
     if (isEditMode) {
       _loadExistingTerm();
@@ -59,19 +64,14 @@ class EditTermViewModel extends ChangeNotifier {
     }
 
     try {
-      final termDoc = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .doc(termId)
-          .get();
+      // Load from repository (local database)
+      _term = await _repository.getTermById(termId!);
 
-      if (termDoc.exists) {
-        _term = Term.fromFirestore(termDoc);
+      if (_term != null) {
         nameController.text = _term!.name;
         _startDate = _term!.startDate;
         _endDate = _term!.endDate;
-        
+
         _state = EditTermViewState.idle;
         _errorMessage = null;
       } else {
@@ -122,21 +122,19 @@ class EditTermViewModel extends ChangeNotifier {
       final id = termId ?? _uuid.v4();
       final now = DateTime.now();
 
-      final termData = {
-        'userId': userId,
-        'name': nameController.text.trim(),
-        'startDate': Timestamp.fromDate(_startDate),
-        'endDate': Timestamp.fromDate(_endDate),
-        'createdAt': Timestamp.fromDate(_term?.createdAt ?? now),
-        'updatedAt': Timestamp.fromDate(now),
-      };
+      // Create Term model
+      final term = Term(
+        id: id,
+        name: nameController.text.trim(),
+        startDate: _startDate,
+        endDate: _endDate,
+        isActive: _term?.isActive ?? false,
+        createdAt: _term?.createdAt ?? now,
+        updatedAt: now,
+      );
 
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .doc(id)
-          .set(termData, SetOptions(merge: true));
+      // Save via repository (saves to local DB + queues Firebase sync)
+      await _repository.saveTerm(term, userId);
 
       _state = EditTermViewState.idle;
       _errorMessage = null;

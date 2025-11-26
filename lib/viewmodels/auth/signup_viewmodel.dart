@@ -208,7 +208,7 @@ class SignUpViewModel extends ChangeNotifier {
       }
 
       // 3. (Opcional) mandar verificación de email
-      // await cred.user?.sendEmailVerification();
+      await cred.user?.sendEmailVerification();
 
       // 4. Mensaje informativo UI
       _infoMessage = 'Account created. Welcome ${form.nickname}!';
