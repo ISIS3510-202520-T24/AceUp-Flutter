@@ -20,6 +20,7 @@ import 'services/profile/profile_notifier.dart';
 import 'services/shared/sync_service.dart';
 import 'services/storage/hive_service.dart';
 import 'services/storage/app_preferences.dart';
+import 'services/data/initial_load_service.dart';
 
 // ViewModels
 import 'viewmodels/auth/login_viewmodel.dart';
@@ -45,6 +46,13 @@ import 'core/connectivity/connectivity_manager.dart';
 
 // Data
 import 'data/local/database/app_database.dart';
+import 'data/repositories/academic_repository.dart';
+import 'data/repositories/user_repository.dart';
+import 'data/repositories/group_repository.dart';
+import 'data/repositories/teacher_repository.dart';
+import 'data/repositories/holiday_repository.dart';
+import 'data/repositories/settings_repository.dart';
+import 'data/repositories/sync_repository.dart';
 
 // Tema
 import 'themes/app_theme.dart';
@@ -73,20 +81,60 @@ Future<void> main() async {
 
   // 3) Initialize local database
   final database = AppDatabase();
-  
+
   // 4) Initialize connectivity manager
   final connectivity = ConnectivityManager();
   await connectivity.initialize();
-  
-  // 6) Start background sync service
-  final syncService = SyncService(
+
+  // 5) Initialize repositories
+  final firestore = FirebaseFirestore.instance;
+
+  final syncRepository = SyncRepository(database: database);
+  final academicRepository = AcademicRepository(
     database: database,
-    firestore: FirebaseFirestore.instance,
+    firestore: firestore,
+  );
+  final userRepository = UserRepository(
+    database: database,
+    firestore: firestore,
+  );
+  final groupRepository = GroupRepository(
+    database: database,
+    firestore: firestore,
+  );
+  final teacherRepository = TeacherRepository(
+    database: database,
+    firestore: firestore,
+  );
+  final holidayRepository = HolidayRepository(
+    database: database,
+    firestore: firestore,
+  );
+  final settingsRepository = SettingsRepository(
+    database: database,
+    firestore: firestore,
+  );
+
+  // 6) Initialize services with repositories
+  final gpaService = GpaCalculationService(repository: academicRepository);
+
+  final initialLoadService = InitialLoadService(
+    userRepository: userRepository,
+    academicRepository: academicRepository,
+    teacherRepository: teacherRepository,
+    holidayRepository: holidayRepository,
+    settingsRepository: settingsRepository,
+    groupRepository: groupRepository,
+  );
+
+  final syncService = SyncService(
+    syncRepository: syncRepository,
+    firestore: firestore,
     connectivity: connectivity,
   );
   syncService.startPeriodicSync();
-  
-  print('✅ Eventual connectivity initialized');
+
+  print('✅ Repositories and services initialized');
 
   // 7) Notificaciones
   await NotificationService().initNotifications();
@@ -105,6 +153,16 @@ Future<void> main() async {
     ..put<BiometricService>(bioService)
     ..put<ConnectivityManager>(connectivity)
     ..put<SyncService>(syncService)
+    ..put<AppDatabase>(database)
+    ..put<AcademicRepository>(academicRepository)
+    ..put<UserRepository>(userRepository)
+    ..put<GroupRepository>(groupRepository)
+    ..put<TeacherRepository>(teacherRepository)
+    ..put<HolidayRepository>(holidayRepository)
+    ..put<SettingsRepository>(settingsRepository)
+    ..put<SyncRepository>(syncRepository)
+    ..put<GpaCalculationService>(gpaService)
+    ..put<InitialLoadService>(initialLoadService)
     ..put<LoginViewModel>(loginVM);
 
   // (debug opcional)
@@ -126,15 +184,25 @@ Future<void> main() async {
             create: (_) => HolidaysViewModel(),
           ),
 
-          ProxyProvider<AppDatabase, GpaCalculationService>(
-            update: (_, db, _) => GpaCalculationService(database: db), 
-          ),
+          // Database
+          Provider<AppDatabase>.value(value: database),
 
-          // Exponer servicios para pantallas que hacen context.read<AuthService>()
+          // Repositories
+          Provider<AcademicRepository>.value(value: academicRepository),
+          Provider<UserRepository>.value(value: userRepository),
+          Provider<GroupRepository>.value(value: groupRepository),
+          Provider<TeacherRepository>.value(value: teacherRepository),
+          Provider<HolidayRepository>.value(value: holidayRepository),
+          Provider<SettingsRepository>.value(value: settingsRepository),
+          Provider<SyncRepository>.value(value: syncRepository),
+
+          // Services
+          Provider<GpaCalculationService>.value(value: gpaService),
+          ChangeNotifierProvider<InitialLoadService>.value(value: initialLoadService),
           Provider<AuthService>.value(value: authService),
           Provider<BiometricService>.value(value: bioService),
           Provider<ConnectivityManager>.value(value: connectivity),
-          
+
           // SyncService es ChangeNotifier, debe usar ChangeNotifierProvider
           ChangeNotifierProvider<SyncService>.value(value: syncService),
 

@@ -32,7 +32,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  local_auth: ^2.3.0
+  local_auth: ^3.0.0
   firebase_core: ^4.2.0
   cloud_firestore: ^6.0.2
   firebase_messaging: ^16.0.2
@@ -44,7 +44,7 @@ dependencies:
   firebase_auth: ^6.1.0
   firebase_storage: ^13.0.3
   flutter_secure_storage: ^9.2.2
-  package_info_plus: ^8.3.1
+  package_info_plus: ^9.0.0
   firebase_analytics: ^12.0.3
   crypto: ^3.0.3
   shared_preferences: ^2.2.2
@@ -67,7 +67,7 @@ dependencies:
 
   
   # Connectivity detection
-  connectivity_plus: ^6.0.5
+  connectivity_plus: ^7.0.0
   image_picker: ^1.1.2        # para escoger foto de galería / cámara       # para escribir archivos locales en el sandbox
   image: ^4.2.0                # ya lo usas; solo asegúrate que esté
  

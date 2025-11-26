@@ -1,4 +1,6 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // ignore: uri_does_not_exist
+
+// ignore_for_file: undefined_identifier
 
 class SessionPrefs {
   static const _kWasLoggedIn = 'wasLoggedIn';

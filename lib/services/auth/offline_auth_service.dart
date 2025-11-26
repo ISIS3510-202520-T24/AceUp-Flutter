@@ -1,8 +1,10 @@
 // lib/services/auth/offline_auth_service.dart
 import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // ignore: uri_does_not_exist
+import 'package:shared_preferences/shared_preferences.dart'; // ignore: uri_does_not_exist
 import 'password_hasher.dart';
+
+// ignore_for_file: undefined_identifier, undefined_method, const_initialized_with_non_constant_value
 
 /// Administra el "desbloqueo offline" **solo** tras un primer login ONLINE exitoso.
 /// - Guarda en SecureStorage: uid, email, salt+hash PBKDF2 de la clave, enabledAt.

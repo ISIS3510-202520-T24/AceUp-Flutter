@@ -5,11 +5,12 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../../core/connectivity/connectivity_manager.dart';
+import '../../data/repositories/sync_repository.dart';
 import '../../data/local/database/app_database.dart';
 
 /// Service that handles background synchronization of local changes to Firestore
 class SyncService extends ChangeNotifier {
-  final AppDatabase _db;
+  final SyncRepository _syncRepository;
   final FirebaseFirestore _firestore;
   final ConnectivityManager _connectivity;
   
@@ -21,10 +22,10 @@ class SyncService extends ChangeNotifier {
   int get pendingOperationsCount => _pendingOperationsCount;
 
   SyncService({
-    required AppDatabase database,
+    required SyncRepository syncRepository,
     required FirebaseFirestore firestore,
     required ConnectivityManager connectivity,
-  })  : _db = database,
+  })  : _syncRepository = syncRepository,
         _firestore = firestore,
         _connectivity = connectivity {
     // Initialize and check for pending operations
@@ -112,8 +113,8 @@ class SyncService extends ChangeNotifier {
     print('🔄 Online: ${_connectivity.isOnline}');
 
     try {
-      final pendingItems = await _db.syncDao.getPendingSyncItems();
-      
+      final pendingItems = await _syncRepository.getPendingSyncItems();
+
       if (pendingItems.isEmpty) {
         print('✅ No pending items to sync');
         return;
@@ -124,7 +125,7 @@ class SyncService extends ChangeNotifier {
         final item = pendingItems[i];
         print('📤 [$i/${pendingItems.length}] ${item.operation} ${item.entityType} (${item.entityId})');
       }
-      
+
       int successCount = 0;
       int failCount = 0;
 
@@ -132,14 +133,14 @@ class SyncService extends ChangeNotifier {
         try {
           print('🔄 Syncing ${item.operation} ${item.entityType} ${item.entityId}...');
           await _syncItem(item);
-          await _db.syncDao.deleteSyncItem(item.id);
+          await _syncRepository.deleteSyncItem(item.id);
           successCount++;
           _pendingOperationsCount--;
           print('✅ Synced ${item.operation} ${item.entityType} ${item.entityId}');
           notifyListeners();
         } catch (e) {
           print('❌ Sync failed for ${item.entityType} ${item.entityId}: $e');
-          await _db.syncDao.incrementRetryCount(item.id, e.toString());
+          await _syncRepository.incrementRetryCount(item.id, e.toString());
           failCount++;
         }
       }
@@ -148,7 +149,7 @@ class SyncService extends ChangeNotifier {
       print('✅ Success: $successCount | Failed: $failCount');
 
       // Clean up items with too many failures (max 3 retries)
-      await _db.syncDao.deleteFailedItems(maxRetries: 3);
+      await _syncRepository.deleteFailedItems(maxRetries: 3);
       
       await _updatePendingCount();
       
@@ -162,7 +163,7 @@ class SyncService extends ChangeNotifier {
 
   /// Update pending operations count
   Future<void> _updatePendingCount() async {
-    final items = await _db.syncDao.getPendingSyncItems();
+    final items = await _syncRepository.getPendingSyncItems();
     _pendingOperationsCount = items.length;
     print('📊 [SYNC] Pending operations count: $_pendingOperationsCount');
     if (_pendingOperationsCount > 0) {
@@ -350,7 +351,7 @@ class SyncService extends ChangeNotifier {
 
   /// Get sync statistics
   Future<Map<String, dynamic>> getSyncStats() async {
-    final pendingCount = await _db.syncDao.getPendingSyncCount();
+    final pendingCount = await _syncRepository.getPendingSyncCount();
 
     return {
       'pendingCount': pendingCount,
