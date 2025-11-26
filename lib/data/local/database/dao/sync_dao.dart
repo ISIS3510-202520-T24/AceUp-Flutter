@@ -99,19 +99,27 @@ class SyncDao extends DatabaseAccessor<AppDatabase> with _$SyncDaoMixin {
 
   // ==================== UPDATE ====================
 
-  /// Increment retry count
-  Future<void> incrementRetryCount(int id, String? errorMessage) {
-    return (update(syncQueue)..where((t) => t.id.equals(id))).write(
+  /// Increment retry count - FIXED: Get current value first, then increment
+  Future<void> incrementRetryCount(int id, String? errorMessage) async {
+    // First, get the current item to read its retry count
+    final item = await getSyncItemById(id);
+    if (item == null) return;
+
+    // Increment the retry count
+    final newRetryCount = item.retryCount + 1;
+
+    // Update with the new value
+    await (update(syncQueue)..where((t) => t.id.equals(id))).write(
       SyncQueueCompanion(
-        retryCount: syncQueue.retryCount + const Constant(1),
+        retryCount: Value(newRetryCount),
         errorMessage: Value(errorMessage),
       ),
     );
   }
 
   /// Update error message
-  Future<void> updateErrorMessage(int id, String errorMessage) {
-    return (update(syncQueue)..where((t) => t.id.equals(id))).write(
+  Future<void> updateErrorMessage(int id, String errorMessage) async {
+    await (update(syncQueue)..where((t) => t.id.equals(id))).write(
       SyncQueueCompanion(
         errorMessage: Value(errorMessage),
       ),

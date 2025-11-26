@@ -164,6 +164,10 @@ class SubjectDao extends DatabaseAccessor<AppDatabase> with _$SubjectDaoMixin {
   /// Get total credits for term
   Future<int> getTotalCreditsForTerm(String termId) async {
     final termSubjects = await getSubjectsForTerm(termId);
-    return termSubjects.fold(0, (sum, s) => sum + s.credits);
+    int totalCredits = 0;
+    for (final subject in termSubjects) {
+      totalCredits += subject.credits;
+    }
+    return totalCredits;
   }
 }

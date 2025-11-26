@@ -21,6 +21,7 @@ import '../../widgets/connectivity_indicator.dart';
 import '../../services/storage/group_image_service.dart';
 import '../../services/shared/sync_service.dart';
 import '../../models/shared/group_model.dart';
+import '../../models/user_model.dart';
 
 // ignore_for_file: undefined_identifier, undefined_class, undefined_method
 
@@ -187,7 +188,7 @@ class _SharedScreenState extends State<SharedScreen> {
           FabOption(
             icon: AppIcons.add,
             label: 'Add Group',
-            onPressed: () => _showAddOrUpdateGroupDialog(context, viewModel),
+            onPressed: () => _showAddOrUpdateGroupDialog(context),
           ),
           // Temporary debug sync button
           FabOption(
@@ -411,7 +412,7 @@ class _SharedScreenState extends State<SharedScreen> {
           ),
         );
       },
-      onLongPress: () => _showAddOrUpdateGroupDialog(context, viewModel, group: group),
+      onLongPress: () => _showAddOrUpdateGroupDialog(context, group: group),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Row(
@@ -527,7 +528,7 @@ class _SharedScreenState extends State<SharedScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    group.members.map((user) => user.nick).join(', '),
+                    group.members.map((user) => user.nickname).join(', '),
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.bodyS.copyWith(color: colors.onPrimaryContainer)
                   ),
@@ -549,28 +550,41 @@ class _SharedScreenState extends State<SharedScreen> {
     'assets/group_avatars/group_4.png',
   ];
 
-  // NUEVO: Diálogo para Crear y Actualizar
-  void _showAddOrUpdateGroupDialog(BuildContext context, SharedViewModel viewModel, {Group? group}) {
+  void _showAddOrUpdateGroupDialog(BuildContext context, {Group? group}) {
     final isUpdating = group != null;
     final nameController = TextEditingController(text: isUpdating ? group.name : '');
- 
-    // Lista de controladores para los campos de email
-    final List<TextEditingController> emailControllers = [];
-    if (isUpdating) {
-      for (var member in group.members) {
-        emailControllers.add(TextEditingController(text: member.email));
+
+    // Initialize email controllers - one for each existing member or start with one empty
+    final emailControllers = <TextEditingController>[];
+    if (isUpdating && group != null && group.members.isNotEmpty) {
+      // When editing, populate with existing member emails
+      for (final member in group.members) {
+        // Try to find the user to get their email
+        final user = context.read<SharedViewModel>().availableUsers.firstWhere(
+          (u) => u.uid == member.userId,
+          orElse: () => User(
+            uid: member.userId,
+            email: '', // Will be empty if user not found
+            nickname: member.nickname,
+            createdAt: DateTime.now(),
+          ),
+        );
+        if (user.email.isNotEmpty) {
+          emailControllers.add(TextEditingController(text: user.email));
+        }
       }
-    } else{
+    }
+    // Always ensure at least one empty controller
+    if (emailControllers.isEmpty) {
       emailControllers.add(TextEditingController());
     }
-    
+
     // TODO: Group image support removed - Group model no longer has imageUrl
     final existingImageUrl = null;
 
     showDialog(
       context: context,
       builder: (dialogContext) {
-        // Variables de estado DENTRO del StatefulBuilder
         String? emailError;
         String? selectedPresetAvatar;
         String? selectedGalleryPath;
@@ -622,300 +636,147 @@ class _SharedScreenState extends State<SharedScreen> {
             }
 
             return AlertDialog(
-              title: Text(isUpdating ? 'Update Group' : 'Add Group'),
+              title: Text(isUpdating ? 'Edit Group' : 'Add Group'),
               content: SingleChildScrollView(
-                child: SizedBox(
-                  width: double.maxFinite,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Avatar preview con botones
-                      Center(
-                        child: Column(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Avatar selection section
+                    Column(
+                      children: [
+                        avatarWidget,
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            avatarWidget,
-                            const SizedBox(height: 12),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            TextButton.icon(
+                              icon: const Icon(Icons.collections),
+                              label: const Text('Gallery'),
+                              onPressed: () async {
+                                // TODO: Implement gallery picker
+                                // For now, this is a placeholder
+                              },
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton.icon(
+                              icon: const Icon(Icons.apps),
+                              label: const Text('Presets'),
+                              onPressed: () {
+                                setDialogState(() {
+                                  selectedGalleryPath = null;
+                                  selectedPresetAvatar = null;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'Group Name'),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Member Emails:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    // Usamos un ListView con altura acotada para evitar Expanded dentro de AlertDialog
+                    SizedBox(
+                      height: 150,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: emailControllers.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            child: Row(
                               children: [
-                                TextButton.icon(
-                                  icon: const Icon(Icons.grid_view, size: 18),
-                                  label: const Text('Presets'),
-                                  onPressed: () async {
-                                    final choice = await showModalBottomSheet<String>(
-                                      context: context,
-                                      builder: (ctx) {
-                                        return SafeArea(
-                                          child: GridView.builder(
-                                            padding: const EdgeInsets.all(16),
-                                            shrinkWrap: true,
-                                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: 4,
-                                              mainAxisSpacing: 12,
-                                              crossAxisSpacing: 12,
-                                            ),
-                                            itemCount: _presetGroupAvatars.length,
-                                            itemBuilder: (c, i) {
-                                              final asset = _presetGroupAvatars[i];
-                                              return GestureDetector(
-                                                onTap: () => Navigator.pop(c, asset),
-                                                child: CircleAvatar(
-                                                  backgroundImage: AssetImage(asset),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        );
-                                      },
-                                    );
-                                    if (choice != null) {
-                                      setDialogState(() {
-                                        selectedPresetAvatar = choice;
-                                        selectedGalleryPath = null;
-                                      });
-                                    }
-                                  },
+                                Expanded(
+                                  child: TextField(
+                                    controller: emailControllers[index],
+                                    decoration: InputDecoration(
+                                      hintText: 'member${index + 1}@email.com',
+                                    ),
+                                    keyboardType: TextInputType.emailAddress,
+                                  ),
                                 ),
-                                const SizedBox(width: 8),
-                                TextButton.icon(
-                                  icon: const Icon(Icons.photo_library, size: 18),
-                                  label: const Text('Upload'),
-                                  onPressed: () async {
-                                    final picker = ImagePicker();
-                                    final picked = await picker.pickImage(
-                                      source: ImageSource.gallery,
-                                      maxWidth: 1080,
-                                    );
-                                    if (picked != null) {
+                                // Botón para eliminar un campo de email
+                                IconButton(
+                                  icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+                                  onPressed: () {
+                                    if (emailControllers.length > 1) {
+                                      final controllerToRemove = emailControllers[index];
                                       setDialogState(() {
-                                        selectedGalleryPath = picked.path;
-                                        selectedPresetAvatar = null;
+                                        emailControllers.removeAt(index);
+                                      });
+                                      // Importante: eliminar el controlador después de que el widget haya sido removido del árbol
+                                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                                        controllerToRemove.dispose();
                                       });
                                     }
                                   },
                                 ),
                               ],
                             ),
-                          ],
+                          );
+                        },
+                      ),
+                    ),
+                    // Botón para añadir un nuevo campo de email
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add member'),
+                        onPressed: () {
+                          setDialogState(() {
+                            emailControllers.add(TextEditingController());
+                          });
+                        },
+                      ),
+                    ),
+                    if (emailError?.isNotEmpty == true)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          emailError ?? '',
+                          style: const TextStyle(color: Colors.red),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: nameController,
-                        decoration: const InputDecoration(labelText: 'Group Name')
-                      ),
-                      const SizedBox(height: 16),
-                      const Text('Member Emails:', style: TextStyle(fontWeight: FontWeight.bold)),
-                      // Usamos un ListView con altura acotada para evitar Expanded dentro de AlertDialog
-                      SizedBox(
-                        height: 150,
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: emailControllers.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4.0),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      controller: emailControllers[index],
-                                      decoration: InputDecoration(hintText: 'member${index + 1}@email.com'),
-                                      keyboardType: TextInputType.emailAddress,
-                                    ),
-                                  ),
-                                  // Botón para eliminar un campo de email
-                                  IconButton(
-                                    icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-                                    onPressed: () {
-                                      if (emailControllers.length > 1) {
-                                        final controllerToRemove = emailControllers[index];
-                                        setDialogState(() {
-                                          emailControllers.removeAt(index);
-                                        });
-                                        // Importante: eliminar el controlador después de que el widget haya sido removido del árbol
-                                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                                          controllerToRemove.dispose();
-                                        });
-                                      }
-                                    },
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      // Botón para añadir un nuevo campo de email
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton.icon(
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add member'),
-                          onPressed: () {
-                            setDialogState(() {
-                              emailControllers.add(TextEditingController());
-                            });
-                          },
-                        ),
-                      ),
-                      if (emailError?.isNotEmpty == true)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            emailError ?? '',
-                            style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel')),
-                ElevatedButton(
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
                   onPressed: () async {
-                    final name = nameController.text;
-                    // Recoger todos los emails de los controladores
+                    final name = nameController.text.trim();
+                    if (name.isEmpty) {
+                      setDialogState(() {
+                        emailError = 'Group name required';
+                      });
+                      return;
+                    }
+
                     final emails = emailControllers
-                        .map((controller) => controller.text.trim())
-                        .where((email) => email.isNotEmpty)
+                        .map((c) => c.text.trim())
+                        .where((e) => e.isNotEmpty)
                         .toList();
 
-                    // Validación de correos
-                    final invalidEmails = emails.where((email) => !email.contains('@')).toList();
-                    if (invalidEmails.isNotEmpty) {
+                    if (emails.isEmpty) {
                       setDialogState(() {
-                        emailError = 'All emails must contain "@".';
+                        emailError = 'At least one member email required';
                       });
                       return;
                     }
 
-                    if (name.isEmpty || emails.isEmpty) {
-                      setDialogState(() {
-                        emailError = 'Por favor ingresa un nombre de grupo y al menos un correo válido.';
-                      });
-                      return;
-                    }
+                    Navigator.pop(context);
 
-                    // Cerrar dialog
-                    Navigator.of(dialogContext).pop();
+                    // Use the viewModel from the parent widget
+                    final viewModel = context.read<SharedViewModel>();
 
-                    // Determinar el imageUrl y gestionar la subida
-                    String? imageUrl;
-                    File? fileToUpload;
-                    
-                    // Prioridad: galería > preset > mantener existente
-                    if (selectedGalleryPath != null) {
-                      // Usuario seleccionó imagen de galería
-                      fileToUpload = File(selectedGalleryPath!);
-                      print('📷 [DEBUG] Selected gallery image: $selectedGalleryPath');
-                    } else if (selectedPresetAvatar != null) {
-                      // Usuario seleccionó preset - convertir asset a File temporal
-                      try {
-                        final byteData = await rootBundle.load(selectedPresetAvatar!);
-                        final buffer = byteData.buffer;
-                        final tempDir = await getTemporaryDirectory();
-                        final tempFile = File('${tempDir.path}/preset_${DateTime.now().millisecondsSinceEpoch}.png');
-                        await tempFile.writeAsBytes(buffer.asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
-                        fileToUpload = tempFile;
-                        print('🎨 [DEBUG] Converted preset to temp file: ${tempFile.path}');
-                      } catch (e) {
-                        print('⚠️ [DEBUG] Failed to convert preset to file: $e');
-                        fileToUpload = null;
-                      }
-                    } else if (existingImageUrl != null) {
-                      // No se seleccionó nada nuevo, mantener la imagen existente
-                      imageUrl = existingImageUrl;
-                      print('♻️ [DEBUG] Keeping existing imageUrl: $imageUrl');
-                    }
-                    
-                    // Si hay archivo para subir (galería o preset), subirlo a Firebase Storage
-                    if (fileToUpload != null) {
-                      final groupId = isUpdating ? group.id : DateTime.now().millisecondsSinceEpoch.toString();
-                      final imageService = GroupImageService();
-                      
-                      try {
-                        // Mostrar loading
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Row(
-                                children: [
-                                  SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                    ),
-                                  ),
-                                  SizedBox(width: 12),
-                                  Text('Uploading image to Firebase Storage...'),
-                                ],
-                              ),
-                              duration: Duration(seconds: 30),
-                            ),
-                          );
-                        }
-
-                        imageUrl = await imageService.uploadGroupImage(fileToUpload, groupId);
-                        
-                        print('📤 [DEBUG] Upload result - imageUrl: $imageUrl');
-                        
-                        // Cerrar loading
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                        }
-
-                        if (imageUrl == null) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('⚠️ Firebase Storage not configured. Group created without image.\n\nEnable Storage in Firebase Console to upload images.'),
-                                backgroundColor: Colors.orange,
-                                duration: Duration(seconds: 5),
-                              ),
-                            );
-                          }
-                        } else {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Row(
-                                  children: [
-                                    Icon(Icons.check_circle, color: Colors.white),
-                                    SizedBox(width: 8),
-                                    Text('✅ Image uploaded successfully!'),
-                                  ],
-                                ),
-                                backgroundColor: Colors.green,
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          }
-                        }
-                      } catch (e) {
-                        // Cerrar loading en caso de error
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('❌ Upload failed: ${e.toString().split(':').last.trim()}\n\nCheck Firebase Storage configuration.'),
-                              backgroundColor: Colors.red,
-                              duration: const Duration(seconds: 5),
-                            ),
-                          );
-                        }
-                        // Continuar sin imagen
-                        imageUrl = null;
-                      }
-                    }
-
-                    print('💾 [DEBUG] About to create/update group with imageUrl: $imageUrl');
-                    
-                    // Crear o actualizar grupo
                     if (isUpdating) {
                       await viewModel.updateGroup(group.id, name, emails, description: null);
                       // Show feedback based on connectivity
