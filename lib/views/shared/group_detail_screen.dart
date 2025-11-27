@@ -170,7 +170,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                           child: Text(
                             widget.groupName,
                             style: AppTypography.h4.copyWith(
-                              color: colors.onPrimary,
+                              color: colors.onSecondaryContainer,
                             ),
                           ),
                         ),

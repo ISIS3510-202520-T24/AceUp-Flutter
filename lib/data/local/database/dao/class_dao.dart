@@ -207,6 +207,15 @@ class ClassDao extends DatabaseAccessor<AppDatabase> with _$ClassDaoMixin {
     return (delete(classExceptions)..where((t) => t.classTemplateId.equals(classTemplateId))).go();
   }
 
+  /// Delete all class exceptions for subject
+  Future<int> deleteClassExceptionsForSubject(String subjectId) async {
+    final templates = await (select(classTemplates)..where((t) => t.subjectId.equals(subjectId))).get();
+    final templateIds = templates.map((t) => t.id).toList();
+    if (templateIds.isEmpty) return 0;
+
+    return (delete(classExceptions)..where((t) => t.classTemplateId.isIn(templateIds))).go();
+  }
+
   // ==================== SYNC HELPERS ====================
 
   /// Get class templates that need sync

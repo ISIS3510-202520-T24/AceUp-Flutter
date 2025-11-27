@@ -171,7 +171,7 @@ class _SharedScreenState extends State<SharedScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Text(
               'Shared Calendars',
-              style: AppTypography.h4.copyWith(color: colors.onPrimary),
+              style: AppTypography.h4.copyWith(color: colors.onSecondaryContainer),
             ),
           ),
           const SizedBox(height: 20),
@@ -443,7 +443,7 @@ class _SharedScreenState extends State<SharedScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: colors.onPrimary.withValues(alpha: 0.3),
+                  color: colors.onSecondaryContainer.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                 ),
                 child: const Center(

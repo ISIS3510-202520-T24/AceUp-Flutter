@@ -17,6 +17,11 @@ class ClassTemplate {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // Navigation fields (not persisted, populated from document path or joins)
+  final String? termId;
+  final String? subjectId;
+  final String? subjectName;
+
   ClassTemplate({
     required this.id,
     required this.name,
@@ -31,10 +36,26 @@ class ClassTemplate {
     this.teacherId,
     required this.createdAt,
     required this.updatedAt,
+    this.termId,
+    this.subjectId,
+    this.subjectName,
   });
 
   factory ClassTemplate.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    String? termId;
+    String? subjectId;
+    try{
+      final pathSegments = doc.reference.path.split('/');
+      if (pathSegments.length >= 8) {
+        termId = pathSegments[3]; // terms/{termId}
+        subjectId = pathSegments[5]; // subjects/{subjectId}
+      }
+    } catch (e) {
+      print('Warning: Could not extract parent IDs from path: ${doc.reference.path}');
+    }
+
     return ClassTemplate(
       id: doc.id,
       name: data['name'] ?? '',
@@ -51,6 +72,9 @@ class ClassTemplate {
       teacherId: data['teacherId'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      termId: termId,
+      subjectId: subjectId,
+      subjectName: null,
     );
   }
 
@@ -131,6 +155,9 @@ class ClassTemplate {
     String? teacherId,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? termId,
+    String? subjectId,
+    String? subjectName,
   }) {
     return ClassTemplate(
       id: id ?? this.id,
@@ -146,6 +173,9 @@ class ClassTemplate {
       teacherId: teacherId ?? this.teacherId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      termId: termId ?? this.termId,
+      subjectId: subjectId ?? this.subjectId,
+      subjectName: subjectName ?? this.subjectName,
     );
   }
 

@@ -13,6 +13,7 @@ class AppTheme {
       brightness: Brightness.light,
       primary: AppColors.mintDark, // Buttons, FAB, active tab
       onPrimary: AppColors.blueDarkest, // Icons and texts over primary
+      onSecondaryContainer: AppColors.blueDarkest, // Primary text
       secondary: AppColors.blueLight, // Top bar, current day in calendar
       onSecondary: AppColors.blueDark, // Icons over secondary
       tertiary: AppColors.blueLightest, // Sub top bar
@@ -26,8 +27,9 @@ class AppTheme {
       outline: AppColors.blueMedium, // Form borders, outlines
       outlineVariant: AppColors.lightDark, // Dividers
       shadow: AppColors.lightDarkest, // Unavailable items
-      error: AppColors.errorLight,
+      errorContainer: AppColors.errorLight,
       onError: AppColors.errorMedium,
+      error: AppColors.errorDark,
     ),
 
     inputDecorationTheme: InputDecorationTheme(
@@ -46,9 +48,10 @@ class AppTheme {
     scaffoldBackgroundColor: AppColors.darkDarkest,
 
     colorScheme: ColorScheme(
-      brightness: Brightness.light,
+      brightness: Brightness.dark,
       primary: AppColors.mintLight, // Buttons, FAB, active tab
-      onPrimary: AppColors.blueLight, // Icons and texts over primary
+      onPrimary: AppColors.blueDarkest, // Icons and texts over primary
+      onSecondaryContainer: AppColors.blueLightest, // Primary text
       secondary: AppColors.blueDarkest, // Top bar, current day in calendar
       onSecondary: AppColors.blueMedium, // Icons over secondary
       tertiary: AppColors.blueDark, // Sub top bar
@@ -62,8 +65,9 @@ class AppTheme {
       outline: AppColors.blueMedium, // Form borders, outlines
       outlineVariant: AppColors.darkLight, // Dividers
       shadow: AppColors.darkLightest, // Unavailable items
-      error: AppColors.errorMedium,
-      onError: AppColors.errorLight,
+      error: AppColors.errorLight,
+      onError: AppColors.errorMedium,
+      errorContainer: AppColors.errorDark,
     ),
 
     inputDecorationTheme: InputDecorationTheme(

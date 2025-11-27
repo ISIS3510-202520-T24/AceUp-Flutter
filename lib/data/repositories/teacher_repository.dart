@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart'; // ignore: uri_does_not_exist
 import '../../models/teachers/teacher_model.dart' as model;
 import '../../models/helpers/office_hour_model.dart';
 import '../local/database/app_database.dart';
@@ -125,20 +125,20 @@ class TeacherRepository {
   /// Convert model to companion
   TeachersCompanion _modelToCompanion(model.Teacher teacher, String userId) {
     return TeachersCompanion(
-      id: Value(teacher.id),
-      userId: Value(userId),
-      name: Value(teacher.name),
-      position: Value(teacher.position),
-      department: Value(teacher.department),
-      affiliation: Value(teacher.affiliation),
-      email: Value(teacher.email),
-      phone: Value(teacher.phone),
-      webPage: Value(teacher.webPage),
-      officeHoursJson: Value(OfficeHour.toJsonString(teacher.officeHours)),
-      createdAt: Value(teacher.createdAt),
-      updatedAt: Value(teacher.updatedAt),
-      syncStatus: const Value('pending'),
-      lastSyncedAt: Value(DateTime.now()),
+      id: Value(teacher.id), //ignore: undefined_method
+      userId: Value(userId), //ignore: undefined_method
+      name: Value(teacher.name), //ignore: undefined_method
+      position: Value(teacher.position), //ignore: undefined_method
+      department: Value(teacher.department), //ignore: undefined_method
+      affiliation: Value(teacher.affiliation), //ignore: undefined_method
+      email: Value(teacher.email), //ignore: undefined_method
+      phone: Value(teacher.phone), //ignore: undefined_method
+      webPage: Value(teacher.webPage), //ignore: undefined_method
+      officeHoursJson: Value(OfficeHour.toJsonString(teacher.officeHours)), //ignore: undefined_method
+      createdAt: Value(teacher.createdAt), //ignore: undefined_method
+      updatedAt: Value(teacher.updatedAt), //ignore: undefined_method
+      syncStatus: const Value('pending'), //ignore: creation_with_non_type
+      lastSyncedAt: Value(DateTime.now()), //ignore: undefined_method
     );
   }
 

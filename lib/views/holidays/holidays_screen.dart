@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../data/repositories/holiday_repository.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/holidays/holidays_viewmodel.dart';
 import '../../widgets/burger_menu.dart';
+import '../../widgets/deletable_list_item.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
 
@@ -13,7 +15,9 @@ class HolidaysScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => HolidaysViewModel(),
+      create: (context) => HolidaysViewModel(
+        holidayRepository: context.read<HolidayRepository>(),
+      ),
       child: const HolidaysScreenContent(),
     );
   }
@@ -143,16 +147,16 @@ class HolidaysScreenContent extends StatelessWidget {
       itemCount: viewModel.holidays.length,
       itemBuilder: (context, index) {
         final holiday = viewModel.holidays[index];
-        return _buildHolidayCard(holiday, colors);
+        return _buildHolidayCard(holiday, colors, viewModel);
       },
     );
   }
 
-  Widget _buildHolidayCard(holiday, ColorScheme colors) {
+  Widget _buildHolidayCard(holiday, ColorScheme colors, HolidaysViewModel viewModel) {
     String dateText;
     dateText = holiday.fullDate;
 
-    return Card(
+    final card = Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12.0),
       child: Padding(
@@ -184,6 +188,18 @@ class HolidaysScreenContent extends StatelessWidget {
         ),
       ),
     );
+
+    // Only allow delete for user-created holidays
+    if (holiday.isUserCreated) {
+      return DeletableListItem(
+        itemType: 'Holiday',
+        itemName: holiday.name,
+        onDelete: () => viewModel.deleteHoliday(holiday),
+        child: card,
+      );
+    }
+
+    return card;
   }
 
   void _handleAddAction(BuildContext context, HolidaysViewModel viewModel) {

@@ -312,7 +312,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Text(
                         'AceUp',
                         style: AppTypography.logo.copyWith(
-                          color: colors.onPrimary,
+                          color: colors.onSecondaryContainer,
                           fontSize: 54,
                         ),
                       ),
@@ -342,7 +342,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Text(
                         'Welcome Back!',
                         style: AppTypography.h1.copyWith(
-                          color: colors.onPrimary,
+                          color: colors.onSecondaryContainer,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -467,7 +467,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Text(
                             'New to AceUp? ',
                             style: AppTypography.bodyS.copyWith(
-                              color: colors.onPrimary,
+                              color: colors.onSecondaryContainer,
                             ),
                           ),
                           TextButton(

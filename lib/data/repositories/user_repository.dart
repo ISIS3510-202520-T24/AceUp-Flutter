@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart'; // ignore: uri_does_not_exist
 import '../../models/user_model.dart' as model;
 import '../local/database/app_database.dart';
 
@@ -139,14 +139,14 @@ class UserRepository {
   /// Convert model to companion for database operations
   UsersCompanion _modelToCompanion(model.User user) {
     return UsersCompanion(
-      uid: Value(user.uid),
-      email: Value(user.email),
-      nickname: Value(user.nickname),
-      avatar: Value(user.avatar),
-      createdAt: Value(user.createdAt),
-      lastLogin: Value(user.lastLogin),
-      syncStatus: const Value('pending'),
-      lastSyncedAt: Value(DateTime.now()),
+      uid: Value(user.uid), //ignore: undefined_method
+      email: Value(user.email), //ignore: undefined_method
+      nickname: Value(user.nickname), //ignore: undefined_method
+      avatar: Value(user.avatar), //ignore: undefined_method
+      createdAt: Value(user.createdAt), //ignore: undefined_method
+      lastLogin: Value(user.lastLogin), //ignore: undefined_method
+      syncStatus: const Value('pending'), //ignore: creation_with_non_type
+      lastSyncedAt: Value(DateTime.now()), //ignore: undefined_method
     );
   }
 

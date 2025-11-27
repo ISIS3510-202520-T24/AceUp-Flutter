@@ -126,7 +126,7 @@ class _TermContent extends StatelessWidget {
                   child: Text(
                     viewModel.term?.name ?? 'Term',
                     style: AppTypography.h4.copyWith(
-                      color: colors.onPrimary,
+                      color: colors.onSecondaryContainer,
                     ),
                   ),
                 ),

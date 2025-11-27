@@ -3,11 +3,15 @@ import 'dart:developer' as console;
 import 'package:flutter/material.dart';
 import '../../models/holidays/holiday_model.dart';
 import '../../services/holidays/holiday_service.dart';
+import '../../data/repositories/holiday_repository.dart';
+import '../../services/auth/auth_service.dart';
 
 enum HolidayViewState { idle, loading, error, success }
 
 class HolidaysViewModel extends ChangeNotifier {
   final HolidayService _holidayService = HolidayService();
+  final HolidayRepository? _holidayRepository;
+  final AuthService _authService = AuthService();
 
   List<Holiday> _holidays = [];
   List<Holiday> get holidays => _holidays;
@@ -22,7 +26,8 @@ class HolidaysViewModel extends ChangeNotifier {
   final String _countryCode = 'CO';
   String get countryCode => _countryCode;
 
-  HolidaysViewModel() {
+  HolidaysViewModel({HolidayRepository? holidayRepository})
+      : _holidayRepository = holidayRepository {
     // Automatically fetch holidays when ViewModel is created
     fetchHolidays();
   }
@@ -117,6 +122,41 @@ class HolidaysViewModel extends ChangeNotifier {
       return _holidays.firstWhere((h) => _isDateInHoliday(date));
     } catch (e) {
       return null;
+    }
+  }
+
+  /// Delete a user-created holiday
+  Future<void> deleteHoliday(Holiday holiday) async {
+    if (_holidayRepository == null) {
+      _errorMessage = 'Holiday repository not available';
+      _setState(HolidayViewState.error);
+      notifyListeners();
+      return;
+    }
+
+    // Only allow deleting user-created holidays
+    if (!holiday.isUserCreated) {
+      _errorMessage = 'Cannot delete API holidays';
+      _setState(HolidayViewState.error);
+      notifyListeners();
+      return;
+    }
+
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not logged in';
+      _setState(HolidayViewState.error);
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await _holidayRepository!.deleteHoliday(holiday.id, userId);
+      await fetchHolidays();
+    } catch (e) {
+      _errorMessage = 'Failed to delete holiday: $e';
+      _setState(HolidayViewState.error);
+      notifyListeners();
     }
   }
 }

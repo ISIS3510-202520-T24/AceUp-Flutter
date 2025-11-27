@@ -26,8 +26,8 @@ class EditAssignmentViewModel extends ChangeNotifier {
   Assignment? _assignment;
   Assignment? get assignment => _assignment;
 
-  bool get isCreateMode => _assignment == null;
-  bool get isEditMode => _assignment != null;
+  bool get isCreateMode => assignmentId == null;
+  bool get isEditMode => assignmentId != null;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
@@ -127,15 +127,14 @@ class EditAssignmentViewModel extends ChangeNotifier {
       _assignment = await _repository.getAssignmentById(assignmentId!);
 
       if (_assignment != null) {
-        // Populate form fields with existing data
         titleController.text = _assignment!.title;
         descriptionController.text = _assignment!.description ?? '';
         gradeController.text = _assignment!.grade != null && _assignment!.grade! > 0
             ? _assignment!.grade.toString()
             : '';
 
-        _selectedSubject = _assignment!.subjectName;
         _selectedTermId = _assignment!.termId;
+        _selectedSubject = _assignment!.subjectName;
         _selectedSubjectId = _assignment!.subjectId;
         _isCompleted = _assignment!.isCompleted;
         _selectedDueDate = _assignment!.dueDate;
@@ -168,7 +167,6 @@ class EditAssignmentViewModel extends ChangeNotifier {
     if (userId == null) return;
 
     try {
-      // Use repository to load terms and subjects (offline-first)
       final terms = await _repository.getTermsForUser(userId);
 
       List<SubjectOption> subjectOptions = [];
@@ -201,7 +199,6 @@ class EditAssignmentViewModel extends ChangeNotifier {
     if (subjectName != null) {
       _selectedSubject = subjectName;
 
-      // Find and set the corresponding term and subject IDs
       final subject = _subjects.firstWhere(
             (s) => s.name == subjectName,
         orElse: () => _subjects.first,
@@ -308,7 +305,7 @@ class EditAssignmentViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void toggleAssignmentStatus() {
+  void toggleCompleted() {
     if (_assignment != null) {
       _isCompleted = !_isCompleted;
       notifyListeners();
@@ -325,7 +322,6 @@ class EditAssignmentViewModel extends ChangeNotifier {
     );
   }
 
-  // Validation - required for create mode
   bool get canSave {
     return titleController.text.trim().isNotEmpty &&
         _selectedSubject != null &&

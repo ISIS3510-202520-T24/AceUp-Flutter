@@ -47,7 +47,7 @@ class EmptyState extends StatelessWidget {
                   child: Text(
                     message,
                     textAlign: TextAlign.center,
-                    style: AppTypography.h2.copyWith(color: colors.onPrimary),
+                    style: AppTypography.h2.copyWith(color: colors.onSecondaryContainer),
                   ),
                 ),
 

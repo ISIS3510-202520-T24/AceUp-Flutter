@@ -47,7 +47,7 @@ class BurgerMenu extends StatelessWidget {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-            decoration: BoxDecoration(color: colors.onPrimary),
+            decoration: BoxDecoration(color: colors.onSecondaryContainer),
             child: SafeArea(
               bottom: false,
               child: Row(
@@ -193,7 +193,7 @@ class BurgerMenu extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Text(
         title,
-        style: AppTypography.h4.copyWith(color: colors.onPrimary),
+        style: AppTypography.h4.copyWith(color: colors.onSecondaryContainer),
       ),
     );
   }

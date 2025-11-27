@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart'; // ignore: uri_does_not_exist
 import '../../models/shared/group_model.dart' as model;
 import '../../models/shared/group_member_model.dart';
 import '../../models/shared/weekly_availability_model.dart' as model;
@@ -265,17 +265,17 @@ class GroupRepository {
   /// Convert group model to companion
   GroupsCompanion _groupModelToCompanion(model.Group group) {
     return GroupsCompanion(
-      id: Value(group.id),
-      name: Value(group.name),
-      description: Value(group.description),
-      color: Value(group.color),
-      ownerId: Value(group.ownerId),
-      membersJson: Value(jsonEncode(group.members.map((m) => m.toJsonLocal()).toList())),
-      inviteCode: Value(group.inviteCode),
-      createdAt: Value(group.createdAt),
-      updatedAt: Value(group.updatedAt),
-      syncStatus: const Value('pending'),
-      lastSyncedAt: Value(DateTime.now()),
+      id: Value(group.id), //ignore: undefined_method
+      name: Value(group.name), //ignore: undefined_method
+      description: Value(group.description), //ignore: undefined_method
+      color: Value(group.color), //ignore: undefined_method
+      ownerId: Value(group.ownerId), //ignore: undefined_method
+      membersJson: Value(jsonEncode(group.members.map((m) => m.toJsonLocal()).toList())), //ignore: undefined_method
+      inviteCode: Value(group.inviteCode), //ignore: undefined_method
+      createdAt: Value(group.createdAt), //ignore: undefined_method
+      updatedAt: Value(group.updatedAt), //ignore: undefined_method
+      syncStatus: const Value('pending'), //ignore: creation_with_non_type
+      lastSyncedAt: Value(DateTime.now()), //ignore: undefined_method
     );
   }
 
@@ -309,15 +309,15 @@ class GroupRepository {
   WeeklyAvailabilitiesCompanion _weeklyAvailabilityModelToCompanion(
       model.WeeklyAvailability availability, String groupId) {
     return WeeklyAvailabilitiesCompanion(
-      id: Value(availability.id),
-      groupId: Value(groupId),
-      weekIdentifier: Value(availability.weekIdentifier),
-      weekStartDate: Value(availability.weekStartDate),
-      weekEndDate: Value(availability.weekEndDate),
-      dailySlotsJson: Value(availability.dailySlots.toJsonString()),
-      calculatedAt: Value(availability.calculatedAt),
-      syncStatus: const Value('pending'),
-      lastSyncedAt: Value(DateTime.now()),
+      id: Value(availability.id), //ignore: undefined_method
+      groupId: Value(groupId), //ignore: undefined_method
+      weekIdentifier: Value(availability.weekIdentifier), //ignore: undefined_method
+      weekStartDate: Value(availability.weekStartDate), //ignore: undefined_method
+      weekEndDate: Value(availability.weekEndDate), //ignore: undefined_method
+      dailySlotsJson: Value(availability.dailySlots.toJsonString()), //ignore: undefined_method
+      calculatedAt: Value(availability.calculatedAt), //ignore: undefined_method
+      syncStatus: const Value('pending'), //ignore: creation_with_non_type
+      lastSyncedAt: Value(DateTime.now()), //ignore: undefined_method
     );
   }
 

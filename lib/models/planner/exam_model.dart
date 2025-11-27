@@ -17,6 +17,11 @@ class Exam {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // Navigation fields (not persisted, populated from document path or joins)
+  final String? termId;
+  final String? subjectId;
+  final String? subjectName;
+
   Exam({
     required this.id,
     required this.name,
@@ -33,10 +38,26 @@ class Exam {
     this.grade,
     required this.createdAt,
     required this.updatedAt,
+    this.termId,
+    this.subjectId,
+    this.subjectName,
   });
 
   factory Exam.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    String? termId;
+    String? subjectId;
+    try {
+      final pathSegments = doc.reference.path.split('/');
+      if (pathSegments.length >= 8) {
+        termId = pathSegments[3]; // terms/{termId}
+        subjectId = pathSegments[5]; // subjects/{subjectId}
+      }
+    } catch (e) {
+      print('Warning: Could not extract parent IDs from path: ${doc.reference.path}');
+    }
+
     return Exam(
       id: doc.id,
       name: data['name'] ?? '',
@@ -53,6 +74,9 @@ class Exam {
       grade: data['grade']?.toDouble(),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      termId: termId,
+      subjectId: subjectId,
+      subjectName: null,
     );
   }
 
@@ -139,6 +163,9 @@ class Exam {
     double? grade,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? termId,
+    String? subjectId,
+    String? subjectName,
   }) {
     return Exam(
       id: id ?? this.id,
@@ -156,6 +183,9 @@ class Exam {
       grade: grade ?? this.grade,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      termId: termId ?? this.termId,
+      subjectId: subjectId ?? this.subjectId,
+      subjectName: subjectName ?? this.subjectName,
     );
   }
 

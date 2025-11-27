@@ -48,7 +48,7 @@ class _EditAssignmentContent extends StatelessWidget {
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: TopBar(
-        title: 'Assignment',
+        title: viewModel.isEditMode ? 'Edit Assignment' : 'New Assignment',
         leftControlType: LeftControlType.cancel,
         rightControlType: RightControlType.save,
         onRightPressed: () => _saveAssignment(context, viewModel),
@@ -81,7 +81,7 @@ class _EditAssignmentContent extends StatelessWidget {
                   const SizedBox(width: 8),
                   Checkbox(
                     value: viewModel.isCompleted,
-                    onChanged: (value) => viewModel.toggleAssignmentStatus(),
+                    onChanged: (value) => viewModel.toggleCompleted(),
                     activeColor: colors.primary,
                     checkColor: colors.onPrimary,
                     side: BorderSide(color: colors.primary, width: 2),
@@ -319,10 +319,27 @@ class _EditAssignmentContent extends StatelessWidget {
     }
   }
 
-  Future<void> _saveAssignment(BuildContext context, EditAssignmentViewModel viewModel) async {
+  Future<void> _saveAssignment(
+      BuildContext context, EditAssignmentViewModel viewModel) async {
+    if (!viewModel.canSave) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all required fields')),
+      );
+      return;
+    }
+
     final success = await viewModel.saveAssignment();
-    if (success && context.mounted) {
+
+    if (!context.mounted) return;
+
+    if (success) {
       Navigator.of(context).pop(true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(viewModel.errorMessage ?? 'Failed to save assignment'),
+        ),
+      );
     }
   }
 }

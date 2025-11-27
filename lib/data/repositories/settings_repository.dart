@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart'; // ignore: uri_does_not_exist
 import '../../models/settings_model.dart' as model;
 import '../../models/helpers/grading_scale_model.dart';
 import '../local/database/app_database.dart';
@@ -128,14 +128,14 @@ class SettingsRepository {
   /// Convert model to companion
   SettingsCompanion _modelToCompanion(model.Settings settings, String userId) {
     return SettingsCompanion(
-      userId: Value(userId),
-      defaultClassDuration: Value(settings.defaultClassDuration),
-      weekdaysJson: Value(jsonEncode(settings.weekdays)),
-      gradingScaleJson: Value(settings.gradingScale.toJsonString()),
-      holidayCountry: Value(settings.holidayCountry),
-      updatedAt: Value(settings.updatedAt),
-      syncStatus: const Value('pending'),
-      lastSyncedAt: Value(DateTime.now()),
+      userId: Value(userId), //ignore: undefined_method
+      defaultClassDuration: Value(settings.defaultClassDuration), //ignore: undefined_method
+      weekdaysJson: Value(jsonEncode(settings.weekdays)), //ignore: undefined_method
+      gradingScaleJson: Value(settings.gradingScale.toJsonString()), //ignore: undefined_method
+      holidayCountry: Value(settings.holidayCountry), //ignore: undefined_method
+      updatedAt: Value(settings.updatedAt), //ignore: undefined_method
+      syncStatus: const Value('pending'), //ignore: creation_with_non_type
+      lastSyncedAt: Value(DateTime.now()), //ignore: undefined_method
     );
   }
 

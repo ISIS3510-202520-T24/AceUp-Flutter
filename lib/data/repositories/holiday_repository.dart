@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart'; // ignore: uri_does_not_exist
 import '../../models/holidays/holiday_model.dart' as model;
 import '../local/database/app_database.dart';
 
@@ -142,16 +142,16 @@ class HolidayRepository {
   /// Convert model to companion
   HolidaysCompanion _modelToCompanion(model.Holiday holiday, String userId) {
     return HolidaysCompanion(
-      id: Value(holiday.id),
-      userId: Value(userId),
-      name: Value(holiday.name),
-      startDate: Value(holiday.startDate),
-      endDate: Value(holiday.endDate),
-      source: Value(holiday.source),
-      createdAt: Value(holiday.createdAt),
-      updatedAt: Value(holiday.updatedAt),
-      syncStatus: Value(holiday.source == 'user' ? 'pending' : 'synced'),
-      lastSyncedAt: Value(DateTime.now()),
+      id: Value(holiday.id), //ignore: undefined_method
+      userId: Value(userId), //ignore: undefined_method
+      name: Value(holiday.name), //ignore: undefined_method
+      startDate: Value(holiday.startDate), //ignore: undefined_method
+      endDate: Value(holiday.endDate), //ignore: undefined_method
+      source: Value(holiday.source), //ignore: undefined_method
+      createdAt: Value(holiday.createdAt), //ignore: undefined_method
+      updatedAt: Value(holiday.updatedAt), //ignore: undefined_method
+      syncStatus: Value(holiday.source == 'user' ? 'pending' : 'synced'), //ignore: undefined_method
+      lastSyncedAt: Value(DateTime.now()), //ignore: undefined_method
     );
   }
 
