@@ -86,10 +86,7 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
           final result = await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => EditSubjectScreen(
-                termId: viewModel.termId,
-                subjectId: viewModel.subjectId,
-              ),
+              builder: (_) => EditSubjectScreen(subject: viewModel.subject, termId: viewModel.termId),
             ),
           );
           if (result == true) {
@@ -144,7 +141,7 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const EditAssignmentScreen(assignment: null),
+                    builder: (_) => EditAssignmentScreen(assignment: null, subjectId: viewModel.subjectId, termId: viewModel.subjectId),
                   ),
                 );
                 if (result == true) {
@@ -154,7 +151,22 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
             ),
           ],
         );
-      default:
+      case SubjectTab.timetable:
+        return FAB(
+          options: [
+            FabOption(
+              icon: AppIcons.chalkboard,
+              label: 'New Class',
+              onPressed: (){},
+            ),
+            FabOption(
+              icon: AppIcons.exam,
+              label: 'New Exam',
+              onPressed: (){},
+            ),
+          ],
+        );
+      case SubjectTab.grades:
         return const SizedBox.shrink();
     }
   }

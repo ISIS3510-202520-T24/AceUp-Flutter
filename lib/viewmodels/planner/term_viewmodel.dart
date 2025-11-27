@@ -60,7 +60,6 @@ class TermViewModel extends ChangeNotifier {
     try {
       print('📊 Loading term $termId from local database...');
 
-      // Load term from repository
       _term = await _repository.getTermById(termId);
 
       if (_term == null) {
@@ -72,7 +71,6 @@ class TermViewModel extends ChangeNotifier {
 
       print('✅ Loaded term: ${_term!.name}');
 
-      // Load subjects
       await _loadSubjects();
 
       _state = TermViewState.idle;
@@ -82,7 +80,6 @@ class TermViewModel extends ChangeNotifier {
       _state = TermViewState.error;
       print('❌ Error loading term: $e');
     }
-
     notifyListeners();
   }
 
@@ -188,6 +185,11 @@ class TermViewModel extends ChangeNotifier {
     // Recalculate
     await _calculateTermStats();
     
+    notifyListeners();
+  }
+
+  Future<void> refreshSubjects() async {
+    await _loadSubjects();
     notifyListeners();
   }
 }

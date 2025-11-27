@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/repositories/academic_repository.dart';
@@ -12,7 +11,6 @@ enum SubjectViewState { idle, loading, error }
 
 class SubjectViewModel extends ChangeNotifier {
   final AcademicRepository _repository;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final AuthService _authService = AuthService();
   final String subjectId;
   final String termId;
@@ -84,45 +82,27 @@ class SubjectViewModel extends ChangeNotifier {
     }
 
     try {
-      final subjectDoc = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .doc(termId)
-          .collection('subjects')
-          .doc(subjectId)
-          .get();
+      print('📊 Loading subject $subjectId from local database...');
 
-      if (subjectDoc.exists) {
-        _subject = Subject.fromFirestore(subjectDoc);
-        
-        // Load grades data
-        final data = subjectDoc.data();
-        _useGrades = data?['useGrades'] ?? true;
-        _finalSubjectGrade = data?['finalGrade']?.toDouble();
-        
-        if (_finalSubjectGrade != null) {
-          finalGradeController.text = _finalSubjectGrade!.toStringAsFixed(2);
-        }
-        
-        creditsController.text = _subject!.credits.toString();
-        
-        // Load weights
-        final weightsJson = data?['weightCategoriesJson'] as String?;
-        if (weightsJson != null) {
-          // Parse weights JSON (simplified version)
-          // In a real implementation, you'd properly parse the JSON
-          _weights = {};
-        }
-        
+      _subject = await _repository.getSubjectById(subjectId);
+
+      if (_subject == null) {
+        _errorMessage = 'Term not found';
+        _state = SubjectViewState.error;
         notifyListeners();
+        return;
       }
+
+      print('✅ Loaded subject: ${_subject!.name}');
+
+      _state = SubjectViewState.idle;
+      _errorMessage = null;
     } catch (e) {
-      _errorMessage = 'Failed to load subject: $e';
+      _errorMessage = e.toString();
       _state = SubjectViewState.error;
-      print('Error loading subject: $e');
-      notifyListeners();
+      print('❌ Error loading subject: $e');
     }
+    notifyListeners();
   }
 
   Future<void> _loadSubjectAssignments() async {
@@ -216,17 +196,9 @@ class SubjectViewModel extends ChangeNotifier {
         'useFinalGradeOverride': _finalSubjectGrade != null,
         'finalGrade': _finalSubjectGrade,
         'credits': int.tryParse(creditsController.text) ?? _subject?.credits ?? 3,
-        'updatedAt': Timestamp.now(),
+        'updatedAt': DateTime.now(),
       };
 
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .doc(termId)
-          .collection('subjects')
-          .doc(subjectId)
-          .update(data);
     } catch (e) {
       print('Error saving grades data: $e');
     }

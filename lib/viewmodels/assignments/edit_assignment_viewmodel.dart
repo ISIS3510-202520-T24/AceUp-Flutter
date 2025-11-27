@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart'; // ignore: uri_does_not_exist
 import '../../models/assignments/assignment_model.dart';
@@ -17,17 +16,9 @@ class EditAssignmentViewModel extends ChangeNotifier {
   final AuthService _authService;
   final AcademicRepository _repository;
   final _uuid = const Uuid();
-
-  EditAssignmentViewModel({
-    Assignment? assignment,
-    AuthService? authService,
-    required AcademicRepository repository,
-  })  : _assignment = assignment,
-        _authService = authService ?? AuthService(),
-        _repository = repository {
-    _initializeControllers();
-    _loadSubjects();
-  }
+  final String? termId;
+  final String? subjectId;
+  final String? assignmentId;
 
   EditAssignmentViewState _state = EditAssignmentViewState.idle;
   EditAssignmentViewState get state => _state;
@@ -92,40 +83,84 @@ class EditAssignmentViewModel extends ChangeNotifier {
 
   final List<String> priorities = ['High', 'Medium', 'Low'];
 
+  EditAssignmentViewModel({
+    this.assignmentId,
+    this.subjectId,
+    this.termId,
+    AuthService? authService,
+    required AcademicRepository repository,
+  })  : _authService = authService ?? AuthService(),
+        _repository = repository {
+    _initializeControllers();
+    _loadSubjects();
+    if (isEditMode) {
+      _loadExistingAssignment();
+    }
+  }
 
   void _initializeControllers() {
-    if (_assignment != null) {
-      // Edit mode - populate with existing data
-      titleController = TextEditingController(text: _assignment!.title);
-      descriptionController = TextEditingController(text: _assignment!.description);
-      gradeController = TextEditingController(
-          text: _assignment!.grade != null && _assignment!.grade! > 0 ? _assignment!.grade.toString() : '');
-
-      _selectedSubject = _assignment!.subjectName;
-      _selectedTermId = _assignment!.termId;
-      _selectedSubjectId = _assignment!.subjectId;
-      _isCompleted = _assignment!.isCompleted;
-      _selectedDueDate = _assignment!.dueDate;
-      _selectedDueTime = TimeOfDay.fromDateTime(_assignment!.dueDate);
-      _selectedWeightId = _assignment!.weightId;
-      _selectedPriority = _assignment!.priority.value;
-      _isGraded = _assignment!.grade != null && _assignment!.grade! > 0;
-
-      // Load weight options for the assignment's subject (if we have the subject info)
-      if (_selectedSubjectId != null) {
-        _loadWeightOptionsForSubject(_selectedSubjectId!);
-      }
-    } else {
-      // Create mode - empty controllers
       titleController = TextEditingController();
       descriptionController = TextEditingController();
       gradeController = TextEditingController();
 
-      // Set default due date to tomorrow at current time
+      // Set default due date to tomorrow at 11:59 PM
       final tomorrow = DateTime.now().add(const Duration(days: 1));
       _selectedDueDate = tomorrow;
-      _selectedDueTime = TimeOfDay.now();
+      _selectedDueTime = const TimeOfDay(hour: 23, minute: 59);
+  }
+
+  Future<void> _loadExistingAssignment() async {
+    if (assignmentId == null) return;
+
+    _state = EditAssignmentViewState.loading;
+    notifyListeners();
+
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not logged in';
+      _state = EditAssignmentViewState.error;
+      notifyListeners();
+      return;
     }
+
+    try {
+      _assignment = await _repository.getAssignmentById(assignmentId!);
+
+      if (_assignment != null) {
+        // Populate form fields with existing data
+        titleController.text = _assignment!.title;
+        descriptionController.text = _assignment!.description ?? '';
+        gradeController.text = _assignment!.grade != null && _assignment!.grade! > 0
+            ? _assignment!.grade.toString()
+            : '';
+
+        _selectedSubject = _assignment!.subjectName;
+        _selectedTermId = _assignment!.termId;
+        _selectedSubjectId = _assignment!.subjectId;
+        _isCompleted = _assignment!.isCompleted;
+        _selectedDueDate = _assignment!.dueDate;
+        _selectedDueTime = TimeOfDay.fromDateTime(_assignment!.dueDate);
+        _selectedWeightId = _assignment!.weightId;
+        _selectedPriority = _assignment!.priority.value;
+        _isGraded = _assignment!.grade != null && _assignment!.grade! > 0;
+
+        if (_selectedSubjectId != null) {
+          await _loadWeightOptionsForSubject(_selectedSubjectId!);
+        }
+
+        _state = EditAssignmentViewState.idle;
+        _errorMessage = null;
+      } else {
+        _errorMessage = 'Assignment not found';
+        _state = EditAssignmentViewState.error;
+      }
+    } catch (e) {
+      _errorMessage = 'Failed to load assignment: $e';
+      _state = EditAssignmentViewState.error;
+      print('Error loading assignment: $e');
+    }
+
+    notifyListeners();
   }
 
   Future<void> _loadSubjects() async {
@@ -440,7 +475,7 @@ class SubjectOption {
 class WeightOption {
   final String id;
   final String name;
-  final String displayName; // For UI display (e.g., "Exams > Midterm")
+  final String displayName;
   final double percentage;
   final bool isSubweight;
   final String? parentWeightName;

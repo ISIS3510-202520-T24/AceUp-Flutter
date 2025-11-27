@@ -68,7 +68,7 @@ class _TermContent extends StatelessWidget {
               final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => EditSubjectScreen(termId: viewModel.termId),
+                  builder: (_) => EditSubjectScreen(termId: termId),
                 ),
               );
               if (result == true) {
@@ -186,12 +186,14 @@ class _TermContent extends StatelessWidget {
     );
   }
 
-  Widget _buildSubjectCard(BuildContext context, dynamic subject, TermViewModel viewModel) {
+  Widget _buildSubjectCard(BuildContext context, subject, TermViewModel viewModel) {
     final colors = Theme.of(context).colorScheme;
+    final grade = viewModel.getSubjectGrade(subject.id);
+    final credits = subject.credits;
 
     return InkWell(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => SubjectScreen(
@@ -200,6 +202,9 @@ class _TermContent extends StatelessWidget {
             ),
           ),
         );
+        if (result == true) {
+          viewModel.refreshSubjects();
+        }
       },
       child: Card(
         elevation: 0,
@@ -213,16 +218,6 @@ class _TermContent extends StatelessWidget {
                 subject.name,
                 style: AppTypography.h4.copyWith(color: colors.onSurface),
               ),
-              if (subject.code != null && subject.code.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    subject.code,
-                    style: AppTypography.bodyS.copyWith(
-                      color: colors.onPrimaryContainer,
-                    ),
-                  ),
-                ),
               const SizedBox(height: 8),
               Text(
                 '${subject.credits} credits',

@@ -13,15 +13,24 @@ import '../../widgets/top_bar.dart';
 
 class EditAssignmentScreen extends StatelessWidget {
   final Assignment? assignment;
+  final String? subjectId;
+  final String? termId;
 
-  const EditAssignmentScreen({super.key, this.assignment});
+  const EditAssignmentScreen({
+    super.key,
+    this.assignment,
+    this.subjectId,
+    this.termId,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => EditAssignmentViewModel(
+      create: (_) => EditAssignmentViewModel(
         repository: context.read<AcademicRepository>(),
-        assignment: assignment,
+        assignmentId: assignment?.id,
+        subjectId: subjectId,
+        termId: termId,
       ),
       child: const _EditAssignmentContent(),
     );

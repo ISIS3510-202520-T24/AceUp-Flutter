@@ -1,24 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../data/repositories/academic_repository.dart';
+import '../../models/planner/subject_model.dart';
 import '../../viewmodels/planner/edit_subject_viewmodel.dart';
 import '../../themes/app_typography.dart';
 import '../../widgets/top_bar.dart';
 import '../../widgets/form_field.dart';
 
 class EditSubjectScreen extends StatelessWidget {
+  final Subject? subject;
   final String termId;
-  final String? subjectId;
 
-  const EditSubjectScreen({
-    super.key,
-    required this.termId,
-    this.subjectId,
-  });
+const EditSubjectScreen({
+  super.key,
+  this.subject,
+  required this.termId
+});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => EditSubjectViewModel(termId: termId, subjectId: subjectId),
+      create: (_) => EditSubjectViewModel(
+        repository: context.read<AcademicRepository>(),
+        subjectId: subject?.id,
+        termId: termId,
+      ),
       child: const _EditSubjectContent(),
     );
   }
@@ -110,7 +116,8 @@ class _EditSubjectContent extends StatelessWidget {
     );
   }
 
-  Future<void> _saveSubject(BuildContext context, EditSubjectViewModel viewModel) async {
+  Future<void> _saveSubject(
+      BuildContext context, EditSubjectViewModel viewModel) async {
     if (!viewModel.canSave) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a subject name')),
@@ -119,8 +126,17 @@ class _EditSubjectContent extends StatelessWidget {
     }
 
     final success = await viewModel.saveSubject();
-    if (success && context.mounted) {
-      Navigator.pop(context, true);
+
+    if (!context.mounted) return;
+
+    if (success) {
+      Navigator.of(context).pop(true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(viewModel.errorMessage ?? 'Failed to save term'),
+        ),
+      );
     }
   }
 }

@@ -199,6 +199,7 @@ class PlannerViewModel extends ChangeNotifier {
       _cache.invalidateUserGpaCache(userId);
     }
     await _loadTerms();
+    notifyListeners();
   }
 
   /// Delete a term

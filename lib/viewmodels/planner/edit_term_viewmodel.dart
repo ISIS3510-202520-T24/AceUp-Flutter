@@ -64,7 +64,6 @@ class EditTermViewModel extends ChangeNotifier {
     }
 
     try {
-      // Load from repository (local database)
       _term = await _repository.getTermById(termId!);
 
       if (_term != null) {
@@ -122,7 +121,6 @@ class EditTermViewModel extends ChangeNotifier {
       final id = termId ?? _uuid.v4();
       final now = DateTime.now();
 
-      // Create Term model
       final term = Term(
         id: id,
         name: nameController.text.trim(),
@@ -133,7 +131,6 @@ class EditTermViewModel extends ChangeNotifier {
         updatedAt: now,
       );
 
-      // Save via repository (saves to local DB + queues Firebase sync)
       await _repository.saveTerm(term, userId);
 
       _state = EditTermViewState.idle;
