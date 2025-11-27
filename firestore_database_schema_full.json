@@ -670,6 +670,11 @@
           "description": "Hex color code for group",
           "required": true
         },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL to group image stored in Firebase Storage",
+          "required": false
+        },
         "ownerId": {
           "type": "string",
           "description": "Group owner user ID",

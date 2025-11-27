@@ -1,15 +1,13 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Para rootBundle
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart'; // ignore: uri_does_not_exist
-import 'package:image_picker/image_picker.dart'; // ignore: uri_does_not_exist
-import 'package:path_provider/path_provider.dart';  // ignore: uri_does_not_exist
+
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/shared/shared_viewmodel.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/content_counter.dart';
+import 'edit_group_screen.dart';
 import 'group_detail_screen.dart';
 import '../../widgets/top_bar.dart';
 import '../../services/auth/auth_service.dart';
@@ -18,12 +16,8 @@ import '../../data/repositories/group_repository.dart';
 import '../../data/repositories/user_repository.dart';
 import '../../core/connectivity/connectivity_manager.dart';
 import '../../widgets/connectivity_indicator.dart';
-import '../../services/storage/group_image_service.dart';
 import '../../services/shared/sync_service.dart';
 import '../../models/shared/group_model.dart';
-import '../../models/user_model.dart';
-
-// ignore_for_file: undefined_identifier, undefined_class, undefined_method
 
 class SharedScreenWrapper extends StatelessWidget {
   const SharedScreenWrapper({super.key});
@@ -188,22 +182,17 @@ class _SharedScreenState extends State<SharedScreen> {
           FabOption(
             icon: AppIcons.add,
             label: 'Add Group',
-            onPressed: () => _showAddOrUpdateGroupDialog(context),
-          ),
-          // Temporary debug sync button
-          FabOption(
-            icon: Icons.sync,
-            label: 'Force Sync (${syncService.pendingOperationsCount})',
             onPressed: () async {
-              print('🔵 [DEBUG] Manual sync triggered - pending: ${syncService.pendingOperationsCount}');
-              await syncService.syncPendingOperations();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('✅ Sync complete! ${syncService.pendingOperationsCount} remaining'),
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const EditGroupScreen()),
+              );
+              if (result == true && context.mounted) {
+                final authService = context.read<AuthService>();
+                final userId = authService.currentUser?.uid;
+                if (userId != null) {
+                  viewModel.fetchGroups(userId);
+                }
               }
             },
           ),
@@ -412,14 +401,13 @@ class _SharedScreenState extends State<SharedScreen> {
           ),
         );
       },
-      onLongPress: () => _showAddOrUpdateGroupDialog(context, group: group),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Row(
           children: [
             // Avatar del grupo usando CachedNetworkImage
             // Prioridad: imagen personalizada del grupo > avatar generado por API
-            CachedNetworkImage(
+            CachedNetworkImage( // ignore: undefined_method
               imageUrl: imageUrl ?? 
                   'https://ui-avatars.com/api/'
                   '?name=${Uri.encodeComponent(group.name)}'
@@ -540,321 +528,5 @@ class _SharedScreenState extends State<SharedScreen> {
         ),
       ),
     );
-  }
-  
-  // Lista de avatares preset para grupos
-  static const List<String> _presetGroupAvatars = [
-    'assets/group_avatars/group_1.png',
-    'assets/group_avatars/group_2.png',
-    'assets/group_avatars/group_3.png',
-    'assets/group_avatars/group_4.png',
-  ];
-
-  void _showAddOrUpdateGroupDialog(BuildContext context, {Group? group}) {
-    final isUpdating = group != null;
-    final nameController = TextEditingController(text: isUpdating ? group.name : '');
-
-    // Initialize email controllers - one for each existing member or start with one empty
-    final emailControllers = <TextEditingController>[];
-    if (isUpdating && group != null && group.members.isNotEmpty) {
-      // When editing, populate with existing member emails
-      for (final member in group.members) {
-        // Try to find the user to get their email
-        final user = context.read<SharedViewModel>().availableUsers.firstWhere(
-          (u) => u.uid == member.userId,
-          orElse: () => User(
-            uid: member.userId,
-            email: '', // Will be empty if user not found
-            nickname: member.nickname,
-            createdAt: DateTime.now(),
-          ),
-        );
-        if (user.email.isNotEmpty) {
-          emailControllers.add(TextEditingController(text: user.email));
-        }
-      }
-    }
-    // Always ensure at least one empty controller
-    if (emailControllers.isEmpty) {
-      emailControllers.add(TextEditingController());
-    }
-
-    // TODO: Group image support removed - Group model no longer has imageUrl
-    final existingImageUrl = null;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        String? emailError;
-        String? selectedPresetAvatar;
-        String? selectedGalleryPath;
-        
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            // Determinar qué avatar mostrar
-            Widget avatarWidget;
-            if (selectedGalleryPath != null) {
-              // Mostrar imagen de galería
-              avatarWidget = CircleAvatar(
-                radius: 40,
-                backgroundImage: FileImage(File(selectedGalleryPath!)),
-              );
-            } else if (selectedPresetAvatar != null) {
-              // Mostrar preset seleccionado
-              avatarWidget = CircleAvatar(
-                radius: 40,
-                backgroundImage: AssetImage(selectedPresetAvatar!),
-              );
-            } else if (existingImageUrl != null) {
-              // Mostrar imagen existente con caché optimizado
-              avatarWidget = CachedNetworkImage(
-                imageUrl: existingImageUrl,
-                imageBuilder: (context, imageProvider) => CircleAvatar(
-                  radius: 40,
-                  backgroundImage: imageProvider,
-                ),
-                placeholder: (context, url) => const CircleAvatar(
-                  radius: 40,
-                  child: CircularProgressIndicator(),
-                ),
-                errorWidget: (context, url, error) => const CircleAvatar(
-                  radius: 40,
-                  child: Icon(Icons.group),
-                ),
-                // Configuración de caché consistente con la lista
-                memCacheHeight: 160,  // 2x el tamaño de display (80px)
-                memCacheWidth: 160,
-                maxHeightDiskCache: 240,  // Tamaño máximo en disco
-                maxWidthDiskCache: 240,
-              );
-            } else {
-              // Avatar por defecto
-              avatarWidget = const CircleAvatar(
-                radius: 40,
-                child: Icon(Icons.group, size: 40),
-              );
-            }
-
-            return AlertDialog(
-              title: Text(isUpdating ? 'Edit Group' : 'Add Group'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Avatar selection section
-                    Column(
-                      children: [
-                        avatarWidget,
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            TextButton.icon(
-                              icon: const Icon(Icons.collections),
-                              label: const Text('Gallery'),
-                              onPressed: () async {
-                                // TODO: Implement gallery picker
-                                // For now, this is a placeholder
-                              },
-                            ),
-                            const SizedBox(width: 8),
-                            TextButton.icon(
-                              icon: const Icon(Icons.apps),
-                              label: const Text('Presets'),
-                              onPressed: () {
-                                setDialogState(() {
-                                  selectedGalleryPath = null;
-                                  selectedPresetAvatar = null;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: nameController,
-                      decoration: const InputDecoration(labelText: 'Group Name'),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text('Member Emails:', style: TextStyle(fontWeight: FontWeight.bold)),
-                    // Usamos un ListView con altura acotada para evitar Expanded dentro de AlertDialog
-                    SizedBox(
-                      height: 150,
-                      child: ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: emailControllers.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4.0),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: emailControllers[index],
-                                    decoration: InputDecoration(
-                                      hintText: 'member${index + 1}@email.com',
-                                    ),
-                                    keyboardType: TextInputType.emailAddress,
-                                  ),
-                                ),
-                                // Botón para eliminar un campo de email
-                                IconButton(
-                                  icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
-                                  onPressed: () {
-                                    if (emailControllers.length > 1) {
-                                      final controllerToRemove = emailControllers[index];
-                                      setDialogState(() {
-                                        emailControllers.removeAt(index);
-                                      });
-                                      // Importante: eliminar el controlador después de que el widget haya sido removido del árbol
-                                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                                        controllerToRemove.dispose();
-                                      });
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    // Botón para añadir un nuevo campo de email
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton.icon(
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add member'),
-                        onPressed: () {
-                          setDialogState(() {
-                            emailControllers.add(TextEditingController());
-                          });
-                        },
-                      ),
-                    ),
-                    if (emailError?.isNotEmpty == true)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Text(
-                          emailError ?? '',
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    final name = nameController.text.trim();
-                    if (name.isEmpty) {
-                      setDialogState(() {
-                        emailError = 'Group name required';
-                      });
-                      return;
-                    }
-
-                    final emails = emailControllers
-                        .map((c) => c.text.trim())
-                        .where((e) => e.isNotEmpty)
-                        .toList();
-
-                    if (emails.isEmpty) {
-                      setDialogState(() {
-                        emailError = 'At least one member email required';
-                      });
-                      return;
-                    }
-
-                    Navigator.pop(context);
-
-                    // Use the viewModel from the parent widget
-                    final viewModel = context.read<SharedViewModel>();
-
-                    if (isUpdating) {
-                      await viewModel.updateGroup(group.id, name, emails, description: null);
-                      // Show feedback based on connectivity
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                Icon(
-                                  viewModel.isOnline ? Icons.check_circle : Icons.save,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    viewModel.isOnline
-                                        ? 'Group "$name" updated and syncing...'
-                                        : 'Group "$name" saved locally - will sync when online',
-                                  ),
-                                ),
-                              ],
-                            ),
-                            backgroundColor: viewModel.isOnline 
-                                ? Colors.green.shade600 
-                                : Colors.orange.shade600,
-                            duration: const Duration(seconds: 3),
-                          ),
-                        );
-                      }
-                    } else {
-                      await viewModel.addGroup(name, emails, description: null);
-                      // Show feedback based on connectivity
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                Icon(
-                                  viewModel.isOnline ? Icons.check_circle : Icons.save,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    viewModel.isOnline
-                                        ? 'Group "$name" created and syncing...'
-                                        : 'Group "$name" saved locally - will sync when online',
-                                  ),
-                                ),
-                              ],
-                            ),
-                            backgroundColor: viewModel.isOnline 
-                                ? Colors.green.shade600 
-                                : Colors.orange.shade600,
-                            duration: const Duration(seconds: 3),
-                          ),
-                        );
-                      }
-                    }
-                  },
-                  child: Text(isUpdating ? 'Update' : 'Add'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    ).then((_) {
-      // Limpieza segura de controladores después de cerrar el diálogo
-      // Ejecutamos en el siguiente frame para asegurarnos de que ya no hay dependientes montados
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        nameController.dispose();
-        for (final c in emailControllers) {
-          c.dispose();
-        }
-      });
-    });
   }
 }

@@ -262,6 +262,7 @@ class Groups extends Table {
   TextColumn get name => text()();
   TextColumn get description => text().nullable()();
   TextColumn get color => text()();
+  TextColumn get imageUrl => text().nullable()(); // URL to group image in Firebase Storage
   TextColumn get ownerId => text()();
   TextColumn get membersJson => text().withDefault(const Constant('[]'))(); // JSON array
   TextColumn get inviteCode => text()();

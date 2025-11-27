@@ -15,6 +15,7 @@ import '../../data/repositories/group_repository.dart';
 import '../../data/repositories/user_repository.dart';
 import '../../core/connectivity/connectivity_manager.dart';
 import '../../widgets/connectivity_indicator.dart';
+import 'edit_group_screen.dart';
 
 
 // Wrapper
@@ -104,27 +105,24 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final vm = context.watch<GroupDetailViewModel>();
+    final viewModel = context.watch<GroupDetailViewModel>();
+    final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
       drawer: const BurgerMenu(),
       appBar: TopBar(
         title: "Shared",
         leftControlType: LeftControlType.menu,
-        rightControlType: RightControlType.refresh,
+        rightControlType: RightControlType.edit,
         onRightPressed: () async {
-          // Forzar refresh desde Firebase (limpiar cache y recargar)
-          await vm.forceRefreshFromFirebase();
-          // Mostrar snackbar de confirmación
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('🔄 Datos actualizados desde Firebase'),
-                duration: Duration(seconds: 2),
-              ),
-            );
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EditGroupScreen(groupId: viewModel.groupId),
+            ),
+          );
+          if (result == true) {
+            viewModel.refreshData();
           }
         },
       ),

@@ -33,8 +33,6 @@ class SharedViewModel extends ChangeNotifier {
   bool _isOnline = true;
   bool get isOnline => _isOnline;
 
-  String? _currentUserId;
-
   SharedViewModel({
     required GroupRepository groupRepository,
     required UserRepository userRepository,
@@ -90,8 +88,6 @@ class SharedViewModel extends ChangeNotifier {
   // --- MÉTODOS EXISTENTES (ACTUALIZADOS PARA OFFLINE-FIRST) ---
 
   Future<void> fetchGroups(String userId, {bool skipFirestore = false}) async {
-    _currentUserId = userId;
-
     print('🔵 [FETCH] fetchGroups called');
 
     _setState(ViewState.loading);
@@ -215,7 +211,6 @@ class SharedViewModel extends ChangeNotifier {
     try {
       final authService = AuthService();
       final currentUserId = authService.currentUser?.uid;
-      final currentUserEmail = authService.currentUser?.email;
 
       if (currentUserId == null) {
         console.log('Error: User not logged in');

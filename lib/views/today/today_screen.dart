@@ -16,6 +16,8 @@ import '../../widgets/content_switcher.dart';
 import '../../viewmodels/today/today_viewmodel.dart';
 import '../../data/repositories/academic_repository.dart';
 import '../assignments/edit_assignment_screen.dart';
+import '../planner/edit_class_screen.dart';
+import '../planner/edit_exam_screen.dart';
 
 class TodayScreen extends StatelessWidget {
   const TodayScreen({super.key});
@@ -99,12 +101,12 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
           FabOption(
             icon: AppIcons.exam,
             label: 'New Exam',
-            onPressed: () => _handleAddAction(context, viewModel),
+            onPressed: () => _handleAddExamAction(context, viewModel),
           ),
           FabOption(
             icon: AppIcons.chalkboard,
             label: 'New Class',
-            onPressed: () => _handleAddAction(context, viewModel),
+            onPressed: () => _handleAddClassAction(context, viewModel),
           ),
           FabOption(
             icon: AppIcons.assignments,
@@ -325,7 +327,7 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
   Future<void> _handleAddAssignmentAction(BuildContext context, TodayViewModel viewModel) async {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const EditAssignmentScreen(assignment: null),
+        builder: (context) => EditAssignmentScreen(),
       ),
     );
 
@@ -334,12 +336,27 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
     }
   }
 
-  void _handleAddAction(BuildContext context, TodayViewModel viewModel) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Add new - Coming Soon!'),
-        duration: Duration(seconds: 2),
+  Future<void> _handleAddExamAction(BuildContext context, TodayViewModel viewModel) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EditExamScreen(),
       ),
     );
+
+    if (result == true && context.mounted) {
+      context.read<TodayViewModel>().refreshAssignments();
+    }
+  }
+
+  Future<void> _handleAddClassAction(BuildContext context, TodayViewModel viewModel) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EditClassScreen(),
+      ),
+    );
+
+    if (result == true && context.mounted) {
+      context.read<TodayViewModel>().refreshAssignments();
+    }
   }
 }

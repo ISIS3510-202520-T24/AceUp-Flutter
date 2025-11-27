@@ -254,6 +254,7 @@ class GroupRepository {
       name: entity.name,
       description: entity.description,
       color: entity.color,
+      imageUrl: entity.imageUrl,
       ownerId: entity.ownerId,
       members: members,
       inviteCode: entity.inviteCode,
@@ -269,6 +270,7 @@ class GroupRepository {
       name: Value(group.name), //ignore: undefined_method
       description: Value(group.description), //ignore: undefined_method
       color: Value(group.color), //ignore: undefined_method
+      imageUrl: Value(group.imageUrl), //ignore: undefined_method
       ownerId: Value(group.ownerId), //ignore: undefined_method
       membersJson: Value(jsonEncode(group.members.map((m) => m.toJsonLocal()).toList())), //ignore: undefined_method
       inviteCode: Value(group.inviteCode), //ignore: undefined_method

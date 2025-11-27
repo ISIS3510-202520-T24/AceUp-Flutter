@@ -13,6 +13,8 @@ import '../../widgets/floating_action_button.dart';
 import '../../widgets/keep_alive_wrapper.dart';
 import '../../widgets/top_bar.dart';
 import '../assignments/edit_assignment_screen.dart';
+import 'edit_class_screen.dart';
+import 'edit_exam_screen.dart';
 import 'edit_subject_screen.dart';
 
 class SubjectScreen extends StatelessWidget {
@@ -157,12 +159,32 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
             FabOption(
               icon: AppIcons.chalkboard,
               label: 'New Class',
-              onPressed: (){},
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditClassScreen(classTemplate: null, subjectId: viewModel.subjectId, termId: viewModel.subjectId),
+                  ),
+                );
+                if (result == true) {
+                  viewModel.refreshAssignments();
+                }
+              },
             ),
             FabOption(
               icon: AppIcons.exam,
               label: 'New Exam',
-              onPressed: (){},
+              onPressed: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditExamScreen(exam: null, subjectId: viewModel.subjectId, termId: viewModel.subjectId),
+                  ),
+                );
+                if (result == true) {
+                  viewModel.refreshAssignments();
+                }
+              },
             ),
           ],
         );

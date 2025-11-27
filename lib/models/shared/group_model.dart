@@ -6,6 +6,7 @@ class Group {
   final String name;
   final String? description;
   final String color; // Hex color code
+  final String? imageUrl; // URL to group image in Firebase Storage
   final String ownerId;
   final List<GroupMember> members;
   final String inviteCode; // 6-character invite code
@@ -17,6 +18,7 @@ class Group {
     required this.name,
     this.description,
     required this.color,
+    this.imageUrl,
     required this.ownerId,
     required this.members,
     required this.inviteCode,
@@ -31,6 +33,7 @@ class Group {
       name: data['name'] ?? '',
       description: data['description'],
       color: data['color'] ?? '#6B7280',
+      imageUrl: data['imageUrl'],
       ownerId: data['ownerId'] ?? '',
       members: (data['members'] as List<dynamic>?)
               ?.map((e) => GroupMember.fromJson(e as Map<String, dynamic>))
@@ -48,6 +51,7 @@ class Group {
       name: json['name'] ?? '',
       description: json['description'],
       color: json['color'] ?? '#6B7280',
+      imageUrl: json['imageUrl'],
       ownerId: json['ownerId'] ?? '',
       members: (json['members'] as List<dynamic>?)
               ?.map((e) => GroupMember.fromJson(e as Map<String, dynamic>))
@@ -68,6 +72,7 @@ class Group {
       'name': name,
       if (description != null) 'description': description,
       'color': color,
+      if (imageUrl != null) 'imageUrl': imageUrl,
       'ownerId': ownerId,
       'members': members.map((e) => e.toJson()).toList(),
       'inviteCode': inviteCode,
@@ -82,6 +87,7 @@ class Group {
       'name': name,
       if (description != null) 'description': description,
       'color': color,
+      if (imageUrl != null) 'imageUrl': imageUrl,
       'ownerId': ownerId,
       'members': members.map((e) => e.toJson()).toList(),
       'inviteCode': inviteCode,
@@ -95,6 +101,7 @@ class Group {
     String? name,
     String? description,
     String? color,
+    String? imageUrl,
     String? ownerId,
     List<GroupMember>? members,
     String? inviteCode,
@@ -106,6 +113,7 @@ class Group {
       name: name ?? this.name,
       description: description ?? this.description,
       color: color ?? this.color,
+      imageUrl: imageUrl ?? this.imageUrl,
       ownerId: ownerId ?? this.ownerId,
       members: members ?? this.members,
       inviteCode: inviteCode ?? this.inviteCode,

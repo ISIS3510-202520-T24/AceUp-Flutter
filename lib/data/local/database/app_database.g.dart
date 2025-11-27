@@ -6132,6 +6132,12 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, GroupEntity> {
   late final GeneratedColumn<String> color = GeneratedColumn<String>(
       'color', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _imageUrlMeta =
+      const VerificationMeta('imageUrl');
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+      'image_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _ownerIdMeta =
       const VerificationMeta('ownerId');
   @override
@@ -6184,6 +6190,7 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, GroupEntity> {
         name,
         description,
         color,
+        imageUrl,
         ownerId,
         membersJson,
         inviteCode,
@@ -6224,6 +6231,10 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, GroupEntity> {
           _colorMeta, color.isAcceptableOrUnknown(data['color']!, _colorMeta));
     } else if (isInserting) {
       context.missing(_colorMeta);
+    }
+    if (data.containsKey('image_url')) {
+      context.handle(_imageUrlMeta,
+          imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta));
     }
     if (data.containsKey('owner_id')) {
       context.handle(_ownerIdMeta,
@@ -6286,6 +6297,8 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, GroupEntity> {
           .read(DriftSqlType.string, data['${effectivePrefix}description']),
       color: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}color'])!,
+      imageUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}image_url']),
       ownerId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}owner_id'])!,
       membersJson: attachedDatabase.typeMapping
@@ -6314,6 +6327,7 @@ class GroupEntity extends DataClass implements Insertable<GroupEntity> {
   final String name;
   final String? description;
   final String color;
+  final String? imageUrl;
   final String ownerId;
   final String membersJson;
   final String inviteCode;
@@ -6326,6 +6340,7 @@ class GroupEntity extends DataClass implements Insertable<GroupEntity> {
       required this.name,
       this.description,
       required this.color,
+      this.imageUrl,
       required this.ownerId,
       required this.membersJson,
       required this.inviteCode,
@@ -6342,6 +6357,9 @@ class GroupEntity extends DataClass implements Insertable<GroupEntity> {
       map['description'] = Variable<String>(description);
     }
     map['color'] = Variable<String>(color);
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
     map['owner_id'] = Variable<String>(ownerId);
     map['members_json'] = Variable<String>(membersJson);
     map['invite_code'] = Variable<String>(inviteCode);
@@ -6362,6 +6380,9 @@ class GroupEntity extends DataClass implements Insertable<GroupEntity> {
           ? const Value.absent()
           : Value(description),
       color: Value(color),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
       ownerId: Value(ownerId),
       membersJson: Value(membersJson),
       inviteCode: Value(inviteCode),
@@ -6382,6 +6403,7 @@ class GroupEntity extends DataClass implements Insertable<GroupEntity> {
       name: serializer.fromJson<String>(json['name']),
       description: serializer.fromJson<String?>(json['description']),
       color: serializer.fromJson<String>(json['color']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
       ownerId: serializer.fromJson<String>(json['ownerId']),
       membersJson: serializer.fromJson<String>(json['membersJson']),
       inviteCode: serializer.fromJson<String>(json['inviteCode']),
@@ -6399,6 +6421,7 @@ class GroupEntity extends DataClass implements Insertable<GroupEntity> {
       'name': serializer.toJson<String>(name),
       'description': serializer.toJson<String?>(description),
       'color': serializer.toJson<String>(color),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
       'ownerId': serializer.toJson<String>(ownerId),
       'membersJson': serializer.toJson<String>(membersJson),
       'inviteCode': serializer.toJson<String>(inviteCode),
@@ -6414,6 +6437,7 @@ class GroupEntity extends DataClass implements Insertable<GroupEntity> {
           String? name,
           Value<String?> description = const Value.absent(),
           String? color,
+          Value<String?> imageUrl = const Value.absent(),
           String? ownerId,
           String? membersJson,
           String? inviteCode,
@@ -6426,6 +6450,7 @@ class GroupEntity extends DataClass implements Insertable<GroupEntity> {
         name: name ?? this.name,
         description: description.present ? description.value : this.description,
         color: color ?? this.color,
+        imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
         ownerId: ownerId ?? this.ownerId,
         membersJson: membersJson ?? this.membersJson,
         inviteCode: inviteCode ?? this.inviteCode,
@@ -6442,6 +6467,7 @@ class GroupEntity extends DataClass implements Insertable<GroupEntity> {
       description:
           data.description.present ? data.description.value : this.description,
       color: data.color.present ? data.color.value : this.color,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
       ownerId: data.ownerId.present ? data.ownerId.value : this.ownerId,
       membersJson:
           data.membersJson.present ? data.membersJson.value : this.membersJson,
@@ -6464,6 +6490,7 @@ class GroupEntity extends DataClass implements Insertable<GroupEntity> {
           ..write('name: $name, ')
           ..write('description: $description, ')
           ..write('color: $color, ')
+          ..write('imageUrl: $imageUrl, ')
           ..write('ownerId: $ownerId, ')
           ..write('membersJson: $membersJson, ')
           ..write('inviteCode: $inviteCode, ')
@@ -6476,8 +6503,19 @@ class GroupEntity extends DataClass implements Insertable<GroupEntity> {
   }
 
   @override
-  int get hashCode => Object.hash(id, name, description, color, ownerId,
-      membersJson, inviteCode, createdAt, updatedAt, syncStatus, lastSyncedAt);
+  int get hashCode => Object.hash(
+      id,
+      name,
+      description,
+      color,
+      imageUrl,
+      ownerId,
+      membersJson,
+      inviteCode,
+      createdAt,
+      updatedAt,
+      syncStatus,
+      lastSyncedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -6486,6 +6524,7 @@ class GroupEntity extends DataClass implements Insertable<GroupEntity> {
           other.name == this.name &&
           other.description == this.description &&
           other.color == this.color &&
+          other.imageUrl == this.imageUrl &&
           other.ownerId == this.ownerId &&
           other.membersJson == this.membersJson &&
           other.inviteCode == this.inviteCode &&
@@ -6500,6 +6539,7 @@ class GroupsCompanion extends UpdateCompanion<GroupEntity> {
   final Value<String> name;
   final Value<String?> description;
   final Value<String> color;
+  final Value<String?> imageUrl;
   final Value<String> ownerId;
   final Value<String> membersJson;
   final Value<String> inviteCode;
@@ -6513,6 +6553,7 @@ class GroupsCompanion extends UpdateCompanion<GroupEntity> {
     this.name = const Value.absent(),
     this.description = const Value.absent(),
     this.color = const Value.absent(),
+    this.imageUrl = const Value.absent(),
     this.ownerId = const Value.absent(),
     this.membersJson = const Value.absent(),
     this.inviteCode = const Value.absent(),
@@ -6527,6 +6568,7 @@ class GroupsCompanion extends UpdateCompanion<GroupEntity> {
     required String name,
     this.description = const Value.absent(),
     required String color,
+    this.imageUrl = const Value.absent(),
     required String ownerId,
     this.membersJson = const Value.absent(),
     required String inviteCode,
@@ -6547,6 +6589,7 @@ class GroupsCompanion extends UpdateCompanion<GroupEntity> {
     Expression<String>? name,
     Expression<String>? description,
     Expression<String>? color,
+    Expression<String>? imageUrl,
     Expression<String>? ownerId,
     Expression<String>? membersJson,
     Expression<String>? inviteCode,
@@ -6561,6 +6604,7 @@ class GroupsCompanion extends UpdateCompanion<GroupEntity> {
       if (name != null) 'name': name,
       if (description != null) 'description': description,
       if (color != null) 'color': color,
+      if (imageUrl != null) 'image_url': imageUrl,
       if (ownerId != null) 'owner_id': ownerId,
       if (membersJson != null) 'members_json': membersJson,
       if (inviteCode != null) 'invite_code': inviteCode,
@@ -6577,6 +6621,7 @@ class GroupsCompanion extends UpdateCompanion<GroupEntity> {
       Value<String>? name,
       Value<String?>? description,
       Value<String>? color,
+      Value<String?>? imageUrl,
       Value<String>? ownerId,
       Value<String>? membersJson,
       Value<String>? inviteCode,
@@ -6590,6 +6635,7 @@ class GroupsCompanion extends UpdateCompanion<GroupEntity> {
       name: name ?? this.name,
       description: description ?? this.description,
       color: color ?? this.color,
+      imageUrl: imageUrl ?? this.imageUrl,
       ownerId: ownerId ?? this.ownerId,
       membersJson: membersJson ?? this.membersJson,
       inviteCode: inviteCode ?? this.inviteCode,
@@ -6615,6 +6661,9 @@ class GroupsCompanion extends UpdateCompanion<GroupEntity> {
     }
     if (color.present) {
       map['color'] = Variable<String>(color.value);
+    }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
     }
     if (ownerId.present) {
       map['owner_id'] = Variable<String>(ownerId.value);
@@ -6650,6 +6699,7 @@ class GroupsCompanion extends UpdateCompanion<GroupEntity> {
           ..write('name: $name, ')
           ..write('description: $description, ')
           ..write('color: $color, ')
+          ..write('imageUrl: $imageUrl, ')
           ..write('ownerId: $ownerId, ')
           ..write('membersJson: $membersJson, ')
           ..write('inviteCode: $inviteCode, ')
@@ -10491,6 +10541,7 @@ typedef $$GroupsTableCreateCompanionBuilder = GroupsCompanion Function({
   required String name,
   Value<String?> description,
   required String color,
+  Value<String?> imageUrl,
   required String ownerId,
   Value<String> membersJson,
   required String inviteCode,
@@ -10505,6 +10556,7 @@ typedef $$GroupsTableUpdateCompanionBuilder = GroupsCompanion Function({
   Value<String> name,
   Value<String?> description,
   Value<String> color,
+  Value<String?> imageUrl,
   Value<String> ownerId,
   Value<String> membersJson,
   Value<String> inviteCode,
@@ -10535,6 +10587,9 @@ class $$GroupsTableFilterComposer
 
   ColumnFilters<String> get color => $composableBuilder(
       column: $table.color, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+      column: $table.imageUrl, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get ownerId => $composableBuilder(
       column: $table.ownerId, builder: (column) => ColumnFilters(column));
@@ -10579,6 +10634,9 @@ class $$GroupsTableOrderingComposer
   ColumnOrderings<String> get color => $composableBuilder(
       column: $table.color, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+      column: $table.imageUrl, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get ownerId => $composableBuilder(
       column: $table.ownerId, builder: (column) => ColumnOrderings(column));
 
@@ -10622,6 +10680,9 @@ class $$GroupsTableAnnotationComposer
 
   GeneratedColumn<String> get color =>
       $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
 
   GeneratedColumn<String> get ownerId =>
       $composableBuilder(column: $table.ownerId, builder: (column) => column);
@@ -10672,6 +10733,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             Value<String> name = const Value.absent(),
             Value<String?> description = const Value.absent(),
             Value<String> color = const Value.absent(),
+            Value<String?> imageUrl = const Value.absent(),
             Value<String> ownerId = const Value.absent(),
             Value<String> membersJson = const Value.absent(),
             Value<String> inviteCode = const Value.absent(),
@@ -10686,6 +10748,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             name: name,
             description: description,
             color: color,
+            imageUrl: imageUrl,
             ownerId: ownerId,
             membersJson: membersJson,
             inviteCode: inviteCode,
@@ -10700,6 +10763,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             required String name,
             Value<String?> description = const Value.absent(),
             required String color,
+            Value<String?> imageUrl = const Value.absent(),
             required String ownerId,
             Value<String> membersJson = const Value.absent(),
             required String inviteCode,
@@ -10714,6 +10778,7 @@ class $$GroupsTableTableManager extends RootTableManager<
             name: name,
             description: description,
             color: color,
+            imageUrl: imageUrl,
             ownerId: ownerId,
             membersJson: membersJson,
             inviteCode: inviteCode,
