@@ -5,4 +5,6 @@ part of 'exam_dao.dart';
 // ignore_for_file: type=lint
 mixin _$ExamDaoMixin on DatabaseAccessor<AppDatabase> {
   $ExamsTable get exams => attachedDatabase.exams;
+  $SubjectsTable get subjects => attachedDatabase.subjects;
+  $TermsTable get terms => attachedDatabase.terms;
 }

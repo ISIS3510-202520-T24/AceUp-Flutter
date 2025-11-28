@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart'; // ignore: uri_does_not_exist
 import '../../models/planner/term_model.dart';
 import '../../services/auth/auth_service.dart';
+import '../../data/repositories/academic_repository.dart';
 
 // ignore_for_file: creation_with_non_type
 
-enum EditTermViewState { idle, saving, error }
+enum EditTermViewState { idle, loading, saving, error }
 
 class EditTermViewModel extends ChangeNotifier {
-  final AuthService _authService = AuthService();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final AuthService _authService;
+  final AcademicRepository _repository;
   final _uuid = const Uuid();
+  final String? termId;
 
   EditTermViewState _state = EditTermViewState.idle;
   EditTermViewState get state => _state;
@@ -19,7 +20,7 @@ class EditTermViewModel extends ChangeNotifier {
   Term? _term;
   Term? get term => _term;
 
-  bool get isEditMode => _term != null;
+  bool get isEditMode => termId != null;
 
   late TextEditingController nameController;
 
@@ -32,18 +33,57 @@ class EditTermViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  EditTermViewModel({Term? term}) : _term = term {
+  EditTermViewModel({
+    this.termId,
+    AuthService? authService,
+    required AcademicRepository repository,
+  })  : _authService = authService ?? AuthService(),
+        _repository = repository {
     _initializeControllers();
+    if (isEditMode) {
+      _loadExistingTerm();
+    }
   }
 
   void _initializeControllers() {
-    if (_term != null) {
-      nameController = TextEditingController(text: _term!.name);
-      _startDate = _term!.startDate ?? DateTime.now();
-      _endDate = _term!.endDate ?? DateTime.now().add(const Duration(days: 90));
-    } else {
-      nameController = TextEditingController();
+    nameController = TextEditingController();
+  }
+
+  Future<void> _loadExistingTerm() async {
+    if (termId == null) return;
+
+    _state = EditTermViewState.loading;
+    notifyListeners();
+
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not logged in';
+      _state = EditTermViewState.error;
+      notifyListeners();
+      return;
     }
+
+    try {
+      _term = await _repository.getTermById(termId!);
+
+      if (_term != null) {
+        nameController.text = _term!.name;
+        _startDate = _term!.startDate;
+        _endDate = _term!.endDate;
+
+        _state = EditTermViewState.idle;
+        _errorMessage = null;
+      } else {
+        _errorMessage = 'Term not found';
+        _state = EditTermViewState.error;
+      }
+    } catch (e) {
+      _errorMessage = 'Failed to load term: $e';
+      _state = EditTermViewState.error;
+      print('Error loading term: $e');
+    }
+
+    notifyListeners();
   }
 
   void setStartDate(DateTime date) {
@@ -78,34 +118,30 @@ class EditTermViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final termId = _term?.id ?? _uuid.v4();
+      final id = termId ?? _uuid.v4();
       final now = DateTime.now();
 
-      final termData = {
-        'userId': userId,
-        'name': nameController.text.trim(),
-        'startDate': Timestamp.fromDate(_startDate),
-        'endDate': Timestamp.fromDate(_endDate),
-        'createdAt': Timestamp.fromDate(_term?.createdAt ?? now),
-        'updatedAt': Timestamp.fromDate(now),
-      };
+      final term = Term(
+        id: id,
+        name: nameController.text.trim(),
+        startDate: _startDate,
+        endDate: _endDate,
+        isActive: _term?.isActive ?? false,
+        createdAt: _term?.createdAt ?? now,
+        updatedAt: now,
+      );
 
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .doc(termId)
-          .set(termData, SetOptions(merge: true));
+      await _repository.saveTerm(term, userId);
 
       _state = EditTermViewState.idle;
       _errorMessage = null;
       notifyListeners();
       return true;
     } catch (e) {
+      _errorMessage = 'Failed to save term: $e';
       _state = EditTermViewState.error;
-      _errorMessage = e.toString();
-      print('Error saving term: $e');
       notifyListeners();
+      print('Error saving term: $e');
       return false;
     }
   }

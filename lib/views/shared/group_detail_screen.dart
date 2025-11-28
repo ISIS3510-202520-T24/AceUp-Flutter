@@ -11,9 +11,11 @@ import '../../viewmodels/shared/group_detail_viewmodel.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/top_bar.dart';
 import '../../themes/app_typography.dart';
-import '../../data/repositories/shared_repository.dart';
+import '../../data/repositories/group_repository.dart';
+import '../../data/repositories/user_repository.dart';
 import '../../core/connectivity/connectivity_manager.dart';
 import '../../widgets/connectivity_indicator.dart';
+import 'edit_group_screen.dart';
 
 
 // Wrapper
@@ -25,13 +27,15 @@ class GroupDetailScreenWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Obtener las dependencias del Provider
-    final repository = context.read<SharedRepository>();
+    final groupRepository = context.read<GroupRepository>();
+    final userRepository = context.read<UserRepository>();
     final connectivity = context.read<ConnectivityManager>();
-    
+
     return ChangeNotifierProvider(
       create: (_) => GroupDetailViewModel(
         groupId: groupId,
-        repository: repository,
+        groupRepository: groupRepository,
+        userRepository: userRepository,
         connectivity: connectivity,
       ),
       child: GroupDetailScreen(groupName: groupName),
@@ -101,27 +105,24 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final vm = context.watch<GroupDetailViewModel>();
+    final viewModel = context.watch<GroupDetailViewModel>();
+    final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
       drawer: const BurgerMenu(),
       appBar: TopBar(
         title: "Shared",
         leftControlType: LeftControlType.menu,
-        rightControlType: RightControlType.refresh,
+        rightControlType: RightControlType.edit,
         onRightPressed: () async {
-          // Forzar refresh desde Firebase (limpiar cache y recargar)
-          await vm.forceRefreshFromFirebase();
-          // Mostrar snackbar de confirmación
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('🔄 Datos actualizados desde Firebase'),
-                duration: Duration(seconds: 2),
-              ),
-            );
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EditGroupScreen(groupId: viewModel.groupId),
+            ),
+          );
+          if (result == true) {
+            viewModel.refreshData();
           }
         },
       ),
@@ -167,7 +168,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                           child: Text(
                             widget.groupName,
                             style: AppTypography.h4.copyWith(
-                              color: colors.onPrimary,
+                              color: colors.onSecondaryContainer,
                             ),
                           ),
                         ),

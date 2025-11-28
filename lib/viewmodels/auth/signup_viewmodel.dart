@@ -1,6 +1,8 @@
 // lib/viewmodels/auth/signup_viewmodel.dart
 import 'package:flutter/foundation.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // ignore: uri_does_not_exist
+
+// ignore_for_file: undefined_identifier, undefined_class, non_type_in_catch_clause
 
 /// Resultado de intentar registrarse.
 /// ok = true  -> éxito
@@ -206,7 +208,7 @@ class SignUpViewModel extends ChangeNotifier {
       }
 
       // 3. (Opcional) mandar verificación de email
-      // await cred.user?.sendEmailVerification();
+      await cred.user?.sendEmailVerification();
 
       // 4. Mensaje informativo UI
       _infoMessage = 'Account created. Welcome ${form.nickname}!';

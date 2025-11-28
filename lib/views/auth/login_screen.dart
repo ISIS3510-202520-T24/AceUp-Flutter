@@ -1,11 +1,13 @@
 // lib/views/auth/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/flutter_svg.dart'; // ignore: uri_does_not_exist
 
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/auth/login_viewmodel.dart';
+
+// ignore_for_file: undefined_identifier
 
 /// Pantalla de Login
 /// Requiere que le inyectes un LoginViewModel (por Provider, VmScope, etc.)
@@ -310,7 +312,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Text(
                         'AceUp',
                         style: AppTypography.logo.copyWith(
-                          color: colors.onPrimary,
+                          color: colors.onSecondaryContainer,
                           fontSize: 54,
                         ),
                       ),
@@ -340,7 +342,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Text(
                         'Welcome Back!',
                         style: AppTypography.h1.copyWith(
-                          color: colors.onPrimary,
+                          color: colors.onSecondaryContainer,
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -465,7 +467,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Text(
                             'New to AceUp? ',
                             style: AppTypography.bodyS.copyWith(
-                              color: colors.onPrimary,
+                              color: colors.onSecondaryContainer,
                             ),
                           ),
                           TextButton(

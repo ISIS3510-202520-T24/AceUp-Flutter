@@ -10,65 +10,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="83f1ba98-ac45-48c6-90e8-73adca6f18e6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/assets/avatars/bat_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/bear_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/beaver_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/boar_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/buffalo_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/camel_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/cat_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/chameleon_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/cheetah_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/cow_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/deer_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/dog_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/duck_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/eagle_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/elephant_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/fox_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/frog_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/giraffe_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/goat_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/gorilla_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/hamster_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/hen_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/hippo_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/horse_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/kangaroo_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/koala_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/lemur_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/lion_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/llama_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/monkey_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/ostrich_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/owl_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/panda_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/penguin_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/pig_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/polarbear_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/rabbit_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/raccoon_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/rhinoceros_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/shark_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/sheep_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/sloth_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/snake_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/squirrel_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/swan_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/tiger_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/turtle_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/walrus_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/wolf_avatar.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/avatars/zebra_avatar.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/avatars/avatar_1.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/avatars/avatar_2.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/avatars/avatar_3.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/avatars/avatar_4.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/main.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/main.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/auth/account_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/settings/account_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/build/reports/problems/problems-report.html" beforeDir="false" afterPath="$PROJECT_DIR$/android/build/reports/problems/problems-report.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/assignments/assignments_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/assignments/assignments_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/settings/account_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/settings/account_screen.dart" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/widgets/burger_menu.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/burger_menu.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/widgets/floating_action_button.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/floating_action_button.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/linux/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/linux/flutter/generated_plugin_registrant.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/linux/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/linux/flutter/generated_plugins.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/windows/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/windows/flutter/generated_plugin_registrant.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/windows/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/windows/flutter/generated_plugins.cmake" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -169,7 +123,7 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "UI-UX/add-new-avatars",
+    "git-widget-placeholder": "feature/planner-related-views",
     "io.flutter.reload.alreadyRun": "true",
     "last_opened_file_path": "C:/Users/LAURA/AceUp-Flutter/assets/icons",
     "project.structure.last.edited": "SDKs",

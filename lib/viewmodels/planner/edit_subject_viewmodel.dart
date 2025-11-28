@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart'; // ignore: uri_does_not_exist
 import '../../models/planner/subject_model.dart';
+import '../../data/repositories/academic_repository.dart';
 import '../../services/auth/auth_service.dart';
 
 // ignore_for_file: creation_with_non_type
 
-enum EditSubjectViewState { idle, saving, error }
+enum EditSubjectViewState { idle, loading, saving, error }
 
 class EditSubjectViewModel extends ChangeNotifier {
-  final AuthService _authService = AuthService();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final AuthService _authService;
+  final AcademicRepository _repository;
   final _uuid = const Uuid();
   final String termId;
+  final String? subjectId;
 
   EditSubjectViewState _state = EditSubjectViewState.idle;
   EditSubjectViewState get state => _state;
@@ -20,7 +21,7 @@ class EditSubjectViewModel extends ChangeNotifier {
   Subject? _subject;
   Subject? get subject => _subject;
 
-  bool get isEditMode => _subject != null;
+  bool get isEditMode => subjectId != null;
 
   late TextEditingController nameController;
 
@@ -30,7 +31,7 @@ class EditSubjectViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  // Predefined color palette
+    // Predefined color palette
   final List<String> colorOptions = [
     '#E57373', // Red
     '#F06292', // Pink
@@ -51,20 +52,57 @@ class EditSubjectViewModel extends ChangeNotifier {
   ];
 
   EditSubjectViewModel({
+    this.subjectId,
     required this.termId,
-    Subject? subject,
-  }) : _subject = subject {
+    AuthService? authService,
+    required AcademicRepository repository,
+  })  : _authService = authService ?? AuthService(),
+        _repository = repository {
     _initializeControllers();
+    if (isEditMode) {
+      _loadExistingSubject();
+    }
   }
 
   void _initializeControllers() {
-    if (_subject != null) {
-      nameController = TextEditingController(text: _subject!.name);
-      _selectedColor = '#4CAF50'; // Default since Subject model doesn't have color yet
-    } else {
-      nameController = TextEditingController();
-      _selectedColor = colorOptions[0];
+    nameController = TextEditingController();
+  }
+
+  Future<void> _loadExistingSubject() async {
+    if (subjectId == null) return;
+
+    _state = EditSubjectViewState.loading;
+    notifyListeners();
+
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not logged in';
+      _state = EditSubjectViewState.error;
+      notifyListeners();
+      return;
     }
+
+    try {
+      _subject = await _repository.getSubjectById(subjectId!);
+
+      if (_subject != null) {
+        _subject = subject;
+        nameController.text = _subject!.name;
+        _selectedColor = colorOptions[0];
+        
+        _state = EditSubjectViewState.idle;
+        _errorMessage = null;
+      } else {
+        _errorMessage = 'Subject not found';
+        _state = EditSubjectViewState.error;
+      }
+    } catch (e) {
+      _errorMessage = 'Failed to load subject: $e';
+      _state = EditSubjectViewState.error;
+      print('Error loading subject: $e');
+    }
+
+    notifyListeners();
   }
 
   void setColor(String color) {
@@ -90,39 +128,33 @@ class EditSubjectViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final subjectId = _subject?.id ?? _uuid.v4();
+      final id = subjectId ?? _uuid.v4();
       final now = DateTime.now();
 
-      final subjectData = {
-        'userId': userId,
-        'termId': termId,
-        'name': nameController.text.trim(),
-        'color': _selectedColor,
-        'code': null,
-        'credits': 3, // Default credits
-        'hasCompleteDataForGPA': false,
-        'createdAt': Timestamp.fromDate(_subject?.createdAt ?? now),
-        'updatedAt': Timestamp.fromDate(now),
-      };
+      final subject = Subject(
+        id: id,
+        name: nameController.text.trim(),
+        color: _selectedColor,
+        credits: 3,
+        weights: _subject?.weights ?? [],
+        finalGrade: _subject?.finalGrade,
+        useFinalGradeOverride: _subject?.useFinalGradeOverride ?? false,
+        createdAt: _subject?.createdAt ?? now,
+        updatedAt: now,
+        termId: termId,
+      );
 
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .doc(termId)
-          .collection('subjects')
-          .doc(subjectId)
-          .set(subjectData, SetOptions(merge: true));
+      await _repository.saveSubject(subject, userId, termId);
 
       _state = EditSubjectViewState.idle;
       _errorMessage = null;
       notifyListeners();
       return true;
     } catch (e) {
+      _errorMessage = 'Failed to save subject: $e';
       _state = EditSubjectViewState.error;
-      _errorMessage = e.toString();
-      print('Error saving subject: $e');
       notifyListeners();
+      print('Error saving subject: $e');
       return false;
     }
   }

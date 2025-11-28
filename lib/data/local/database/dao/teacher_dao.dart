@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import '../app_database.dart';
-import '../tables/academic_tables.dart';
+import '../tables/tables.dart';
 
 part 'teacher_dao.g.dart';
 
@@ -8,135 +8,103 @@ part 'teacher_dao.g.dart';
 class TeacherDao extends DatabaseAccessor<AppDatabase> with _$TeacherDaoMixin {
   TeacherDao(AppDatabase db) : super(db);
 
-  // ==================== CREATE ====================
-
-  /// Crear o actualizar teacher
-  Future<void> upsertTeacher(TeachersCompanion teacher) async {
-    await into(teachers).insert(
-      teacher,
-      mode: InsertMode.insertOrReplace,
-    );
-  }
-
-  /// Batch insert/update teachers
-  Future<void> upsertTeachersBatch(List<TeachersCompanion> teachersList) async {
-    await batch((batch) {
-      batch.insertAll(
-        teachers,
-        teachersList,
-        mode: InsertMode.insertOrReplace,
-      );
-    });
-  }
-
   // ==================== READ ====================
 
-  /// Obtener teacher por ID
-  Future<Teacher?> getTeacherById(String id) async {
-    return await (select(teachers)
-      ..where((t) => t.id.equals(id) & t.isDeleted.equals(false))
-    ).getSingleOrNull();
+  /// Get teacher by ID
+  Future<TeacherEntity?> getTeacherById(String id) {
+    return (select(teachers)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
-  /// Obtener todos los teachers de un usuario
-  Future<List<Teacher>> getAllTeachersForUser(String userId) async {
-    return await (select(teachers)
-      ..where((t) => t.userId.equals(userId) & t.isDeleted.equals(false))
-      ..orderBy([(t) => OrderingTerm.asc(t.name)])
-    ).get();
+  /// Watch teacher by ID
+  Stream<TeacherEntity?> watchTeacherById(String id) {
+    return (select(teachers)..where((t) => t.id.equals(id))).watchSingleOrNull();
   }
 
-  /// Buscar teachers por nombre
-  Future<List<Teacher>> searchTeachersByName(String userId, String searchQuery) async {
-    return await (select(teachers)
-      ..where((t) =>
-      t.userId.equals(userId) &
-      t.name.like('%$searchQuery%') &
-      t.isDeleted.equals(false))
-      ..orderBy([(t) => OrderingTerm.asc(t.name)])
-    ).get();
+  /// Get all teachers for user
+  Future<List<TeacherEntity>> getTeachersForUser(String userId) {
+    return (select(teachers)
+          ..where((t) => t.userId.equals(userId))
+          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
+        .get();
   }
 
-  /// Obtener teachers por departamento
-  Future<List<Teacher>> getTeachersByDepartment(String userId, String department) async {
-    return await (select(teachers)
-      ..where((t) =>
-      t.userId.equals(userId) &
-      t.department.equals(department) &
-      t.isDeleted.equals(false))
-      ..orderBy([(t) => OrderingTerm.asc(t.name)])
-    ).get();
+  /// Watch all teachers for user
+  Stream<List<TeacherEntity>> watchTeachersForUser(String userId) {
+    return (select(teachers)
+          ..where((t) => t.userId.equals(userId))
+          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
+        .watch();
   }
 
-  /// Obtener teachers que necesitan sincronización
-  Future<List<Teacher>> getTeachersNeedingSync() async {
-    return await (select(teachers)
-      ..where((t) => t.needsSync.equals(true))
-    ).get();
+  /// Search teachers by name
+  Future<List<TeacherEntity>> searchTeachers(String userId, String query) {
+    return (select(teachers)
+          ..where((t) => t.userId.equals(userId) & t.name.contains(query)))
+        .get();
   }
 
-  // ==================== UPDATE ====================
+  // ==================== CREATE/UPDATE ====================
 
-  /// Actualizar información de contacto
-  Future<void> updateTeacherContact(
-      String id, {
-        String? email,
-        String? phone,
-        String? officeLocation,
-        String? officeHours,
-      }) async {
-    await (update(teachers)..where((t) => t.id.equals(id))).write(
+  /// Insert or update teacher
+  Future<void> upsertTeacher(TeachersCompanion teacher) {
+    return into(teachers).insertOnConflictUpdate(teacher);
+  }
+
+  /// Insert teacher
+  Future<void> insertTeacher(TeachersCompanion teacher) {
+    return into(teachers).insert(teacher, mode: InsertMode.insertOrReplace);
+  }
+
+  /// Update teacher
+  Future<bool> updateTeacher(TeachersCompanion teacher) {
+    return (update(teachers)..where((t) => t.id.equals(teacher.id.value)))
+        .write(teacher)
+        .then((rows) => rows > 0);
+  }
+
+  /// Update sync status
+  Future<void> updateSyncStatus(String id, String status) {
+    return (update(teachers)..where((t) => t.id.equals(id))).write(
       TeachersCompanion(
-        email: email != null ? Value(email) : const Value.absent(),
-        phone: phone != null ? Value(phone) : const Value.absent(),
-        officeLocation: officeLocation != null ? Value(officeLocation) : const Value.absent(),
-        officeHours: officeHours != null ? Value(officeHours) : const Value.absent(),
-        updatedAt: Value(DateTime.now()),
-        needsSync: const Value(true),
+        syncStatus: Value(status),
+        lastSyncedAt: Value(DateTime.now()),
       ),
-    );
-  }
-
-  /// Marcar teacher como necesitando sincronización
-  Future<void> markForSync(String id) async {
-    await (update(teachers)..where((t) => t.id.equals(id))).write(
-      const TeachersCompanion(needsSync: Value(true)),
-    );
-  }
-
-  /// Marcar teacher como sincronizado
-  Future<void> markAsSynced(String id) async {
-    await (update(teachers)..where((t) => t.id.equals(id))).write(
-      const TeachersCompanion(needsSync: Value(false)),
     );
   }
 
   // ==================== DELETE ====================
 
-  /// Soft delete - marcar como eliminado
-  Future<void> softDeleteTeacher(String id) async {
-    await (update(teachers)..where((t) => t.id.equals(id))).write(
+  /// Delete teacher by ID
+  Future<int> deleteTeacher(String id) {
+    return (delete(teachers)..where((t) => t.id.equals(id))).go();
+  }
+
+  /// Delete all teachers for user
+  Future<int> deleteTeachersForUser(String userId) {
+    return (delete(teachers)..where((t) => t.userId.equals(userId))).go();
+  }
+
+  // ==================== SYNC HELPERS ====================
+
+  /// Get teachers that need sync
+  Future<List<TeacherEntity>> getTeachersNeedingSync() {
+    return (select(teachers)..where((t) => t.syncStatus.equals('pending'))).get();
+  }
+
+  /// Mark teacher as synced
+  Future<void> markAsSynced(String id) {
+    return (update(teachers)..where((t) => t.id.equals(id))).write(
       TeachersCompanion(
-        isDeleted: const Value(true),
-        updatedAt: Value(DateTime.now()),
-        needsSync: const Value(true),
+        syncStatus: const Value('synced'),
+        lastSyncedAt: Value(DateTime.now()),
       ),
     );
   }
 
-  /// Hard delete - eliminar permanentemente
-  Future<void> hardDeleteTeacher(String id) async {
-    await (delete(teachers)..where((t) => t.id.equals(id))).go();
-  }
-
-  /// Eliminar todos los teachers de un usuario
-  Future<void> deleteAllTeachersForUser(String userId) async {
-    await (delete(teachers)..where((t) => t.userId.equals(userId))).go();
-  }
-
-  /// Eliminar teachers antiguos (cache cleanup)
-  Future<void> deleteOldCache(Duration maxAge) async {
-    final cutoffDate = DateTime.now().subtract(maxAge);
-    await (delete(teachers)..where((t) => t.cachedAt.isSmallerThanValue(cutoffDate))).go();
+  /// Insert multiple teachers (batch)
+  Future<void> insertTeachersBatch(List<TeachersCompanion> teachersList) {
+    return batch((b) {
+      b.insertAllOnConflictUpdate(teachers, teachersList);
+    });
   }
 }

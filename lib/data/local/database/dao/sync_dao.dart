@@ -1,8 +1,6 @@
-// lib/data/local/database/dao/sync_dao.dart
-
 import 'package:drift/drift.dart';
 import '../app_database.dart';
-import '../tables/shared_tables.dart';
+import '../tables/tables.dart';
 
 part 'sync_dao.g.dart';
 
@@ -10,106 +8,168 @@ part 'sync_dao.g.dart';
 class SyncDao extends DatabaseAccessor<AppDatabase> with _$SyncDaoMixin {
   SyncDao(AppDatabase db) : super(db);
 
-  // ==================== SYNC QUEUE ====================
-  
-  /// Agregar item a la cola de sincronización
-  Future<int> addToSyncQueue(SyncQueueCompanion item) async {
-    return await into(syncQueue).insert(item);
+  // ==================== READ ====================
+
+  /// Get sync item by ID
+  Future<SyncQueueEntity?> getSyncItemById(int id) {
+    return (select(syncQueue)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
-  
-  /// Obtener items pendientes de sincronización
-  Future<List<SyncQueueData>> getPendingSyncItems() async {
+
+  /// Get all pending sync items
+  Future<List<SyncQueueEntity>> getPendingSyncItems() {
+    return (select(syncQueue)..orderBy([(t) => OrderingTerm.asc(t.createdAt)])).get();
+  }
+
+  /// Watch all pending sync items
+  Stream<List<SyncQueueEntity>> watchPendingSyncItems() {
+    return (select(syncQueue)..orderBy([(t) => OrderingTerm.asc(t.createdAt)])).watch();
+  }
+
+  /// Get sync items by entity type
+  Future<List<SyncQueueEntity>> getSyncItemsByEntityType(String entityType) {
     return (select(syncQueue)
-      ..orderBy([(sq) => OrderingTerm.asc(sq.createdAt)])
-      ..limit(100)) // Limitar a 100 items por batch
-      .get();
+          ..where((t) => t.entityType.equals(entityType))
+          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+        .get();
   }
-  
-  /// Obtener items pendientes de un tipo específico
-  Future<List<SyncQueueData>> getPendingSyncItemsByType(String entityType) async {
+
+  /// Get sync items for specific entity
+  Future<List<SyncQueueEntity>> getSyncItemsForEntity(String entityType, String entityId) {
     return (select(syncQueue)
-      ..where((sq) => sq.entityType.equals(entityType))
-      ..orderBy([(sq) => OrderingTerm.asc(sq.createdAt)]))
-      .get();
-  }
-  
-  /// Eliminar item de la cola (después de sincronizar)
-  Future<void> removeFromSyncQueue(int id) async {
-    await (delete(syncQueue)..where((sq) => sq.id.equals(id))).go();
-  }
-  
-  /// Actualizar error de sincronización
-  Future<void> updateSyncError(int id, String error, int currentRetryCount) async {
-    await (update(syncQueue)..where((sq) => sq.id.equals(id)))
-        .write(SyncQueueCompanion(
-          lastError: Value(error),
-          retryCount: Value(currentRetryCount + 1),
-        ));
-  }
-  
-  /// Eliminar items con muchos errores (más de 5 reintentos)
-  Future<void> clearFailedSyncItems() async {
-    await (delete(syncQueue)..where((sq) => sq.retryCount.isBiggerThanValue(5))).go();
+          ..where((t) => t.entityType.equals(entityType) & t.entityId.equals(entityId))
+          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+        .get();
   }
 
-  /// Limpiar toda la cola de sincronización
-  Future<void> clearSyncQueue() async {
-    await delete(syncQueue).go();
+  /// Get failed sync items (retry count > 0)
+  Future<List<SyncQueueEntity>> getFailedSyncItems() {
+    return (select(syncQueue)
+          ..where((t) => t.retryCount.isBiggerThanValue(0))
+          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+        .get();
   }
 
-  // ==================== ESTADÍSTICAS ====================
-  
-  /// Contar items pendientes
-  Future<int> countPendingItems() async {
-    final result = await (selectOnly(syncQueue)
-      ..addColumns([syncQueue.id.count()]))
-      .getSingle();
-    
-    return result.read(syncQueue.id.count())!;
+  /// Get sync items that haven't exceeded max retries
+  Future<List<SyncQueueEntity>> getSyncItemsToRetry({int maxRetries = 3}) {
+    return (select(syncQueue)
+          ..where((t) => t.retryCount.isSmallerThanValue(maxRetries))
+          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+        .get();
   }
 
-  /// Verificar si una entidad específica tiene operaciones pendientes
-  Future<bool> hasPendingSyncForEntity(String entityType, String entityId) async {
-    final result = await (select(syncQueue)
-      ..where((sq) => sq.entityType.equals(entityType) & sq.entityId.equals(entityId))
-      ..limit(1))
-      .get();
-    
-    return result.isNotEmpty;
+  /// Get pending sync count
+  Future<int> getPendingSyncCount() async {
+    final countExp = syncQueue.id.count();
+    final query = selectOnly(syncQueue)..addColumns([countExp]);
+    final result = await query.map((row) => row.read(countExp)).getSingle();
+    return result ?? 0;
   }
 
-  /// Contar items por tipo
-  Future<Map<String, int>> countItemsByType() async {
-    final items = await select(syncQueue).get();
-    final counts = <String, int>{};
-    
+  /// Watch pending sync count
+  Stream<int> watchPendingSyncCount() {
+    final countExp = syncQueue.id.count();
+    final query = selectOnly(syncQueue)..addColumns([countExp]);
+    return query.map((row) => row.read(countExp) ?? 0).watchSingle();
+  }
+
+  // ==================== CREATE ====================
+
+  /// Add sync item
+  Future<int> addSyncItem(SyncQueueCompanion item) {
+    return into(syncQueue).insert(item);
+  }
+
+  /// Add sync item for entity
+  Future<int> queueSync({
+    required String entityType,
+    required String entityId,
+    required String operation,
+    required String dataJson,
+    required String documentPath,
+  }) {
+    return addSyncItem(SyncQueueCompanion(
+      entityType: Value(entityType),
+      entityId: Value(entityId),
+      operation: Value(operation),
+      dataJson: Value(dataJson),
+      documentPath: Value(documentPath),
+      createdAt: Value(DateTime.now()),
+    ));
+  }
+
+  // ==================== UPDATE ====================
+
+  /// Increment retry count - FIXED: Get current value first, then increment
+  Future<void> incrementRetryCount(int id, String? errorMessage) async {
+    // First, get the current item to read its retry count
+    final item = await getSyncItemById(id);
+    if (item == null) return;
+
+    // Increment the retry count
+    final newRetryCount = item.retryCount + 1;
+
+    // Update with the new value
+    await (update(syncQueue)..where((t) => t.id.equals(id))).write(
+      SyncQueueCompanion(
+        retryCount: Value(newRetryCount),
+        errorMessage: Value(errorMessage),
+      ),
+    );
+  }
+
+  /// Update error message
+  Future<void> updateErrorMessage(int id, String errorMessage) async {
+    await (update(syncQueue)..where((t) => t.id.equals(id))).write(
+      SyncQueueCompanion(
+        errorMessage: Value(errorMessage),
+      ),
+    );
+  }
+
+  // ==================== DELETE ====================
+
+  /// Delete sync item by ID (after successful sync)
+  Future<int> deleteSyncItem(int id) {
+    return (delete(syncQueue)..where((t) => t.id.equals(id))).go();
+  }
+
+  /// Delete sync items for entity
+  Future<int> deleteSyncItemsForEntity(String entityType, String entityId) {
+    return (delete(syncQueue)
+          ..where((t) => t.entityType.equals(entityType) & t.entityId.equals(entityId)))
+        .go();
+  }
+
+  /// Delete all sync items (clear queue)
+  Future<int> clearSyncQueue() {
+    return delete(syncQueue).go();
+  }
+
+  /// Delete sync items that exceeded max retries
+  Future<int> deleteFailedItems({int maxRetries = 3}) {
+    return (delete(syncQueue)..where((t) => t.retryCount.isBiggerOrEqualValue(maxRetries))).go();
+  }
+
+  // ==================== BATCH OPERATIONS ====================
+
+  /// Process and delete batch of sync items
+  Future<void> markItemsAsSynced(List<int> ids) async {
+    await (delete(syncQueue)..where((t) => t.id.isIn(ids))).go();
+  }
+
+  /// Remove duplicate sync items for same entity (keep latest)
+  Future<void> removeDuplicates() async {
+    // This is a simplification - in production, you'd want more sophisticated deduplication
+    final items = await getPendingSyncItems();
+    final Map<String, SyncQueueEntity> latestItems = {};
+
     for (final item in items) {
-      counts[item.entityType] = (counts[item.entityType] ?? 0) + 1;
+      final key = '${item.entityType}:${item.entityId}';
+      if (latestItems.containsKey(key)) {
+        // Delete the older duplicate
+        await deleteSyncItem(latestItems[key]!.id);
+      }
+      latestItems[key] = item;
     }
-    
-    return counts;
-  }
-
-  Future<List<SyncQueueData>> getAllPendingOperations() async {
-    return await (select(syncQueue)
-      ..orderBy([(sq) => OrderingTerm.asc(sq.createdAt)])
-    ).get();
-  }
-
-  // ==================== STREAMS ====================
-  
-  /// Watch cola de sincronización
-  Stream<List<SyncQueueData>> watchSyncQueue() {
-    return (select(syncQueue)
-      ..orderBy([(sq) => OrderingTerm.asc(sq.createdAt)]))
-      .watch();
-  }
-
-  /// Watch count de items pendientes
-  Stream<int> watchPendingCount() {
-    return (selectOnly(syncQueue)
-      ..addColumns([syncQueue.id.count()]))
-      .watchSingle()
-      .map((row) => row.read(syncQueue.id.count())!);
   }
 }

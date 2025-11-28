@@ -3,11 +3,15 @@ import 'dart:developer' as console;
 import 'package:flutter/material.dart';
 import '../../models/holidays/holiday_model.dart';
 import '../../services/holidays/holiday_service.dart';
+import '../../data/repositories/holiday_repository.dart';
+import '../../services/auth/auth_service.dart';
 
 enum HolidayViewState { idle, loading, error, success }
 
 class HolidaysViewModel extends ChangeNotifier {
   final HolidayService _holidayService = HolidayService();
+  final HolidayRepository? _holidayRepository;
+  final AuthService _authService = AuthService();
 
   List<Holiday> _holidays = [];
   List<Holiday> get holidays => _holidays;
@@ -22,7 +26,8 @@ class HolidaysViewModel extends ChangeNotifier {
   final String _countryCode = 'CO';
   String get countryCode => _countryCode;
 
-  HolidaysViewModel() {
+  HolidaysViewModel({HolidayRepository? holidayRepository})
+      : _holidayRepository = holidayRepository {
     // Automatically fetch holidays when ViewModel is created
     fetchHolidays();
   }
@@ -52,7 +57,7 @@ class HolidaysViewModel extends ChangeNotifier {
     final Map<int, List<Holiday>> grouped = {};
 
     for (var holiday in _holidays) {
-      final year = holiday.date.year;
+      final year = holiday.startDate.year;
       if (!grouped.containsKey(year)) {
         grouped[year] = [];
       }
@@ -62,27 +67,11 @@ class HolidaysViewModel extends ChangeNotifier {
     return grouped;
   }
 
-  /// Gets holidays grouped by month for a specific year
-  Map<int, List<Holiday>> getHolidaysByMonth(int year) {
-    final yearHolidays = _holidays.where((h) => h.date.year == year).toList();
-    final Map<int, List<Holiday>> grouped = {};
-
-    for (var holiday in yearHolidays) {
-      final month = holiday.date.month;
-      if (!grouped.containsKey(month)) {
-        grouped[month] = [];
-      }
-      grouped[month]!.add(holiday);
-    }
-
-    return grouped;
-  }
-
   /// Gets upcoming holidays (from today onwards)
   List<Holiday> getUpcomingHolidays() {
     final now = DateTime.now();
     return _holidays
-        .where((h) => h.date.isAfter(now) || _isSameDay(h.date, now))
+        .where((h) => h.startDate.isAfter(now) || _isSameDay(h.startDate, now))
         .toList();
   }
 
@@ -90,7 +79,7 @@ class HolidaysViewModel extends ChangeNotifier {
   List<Holiday> getPastHolidays() {
     final now = DateTime.now();
     return _holidays
-        .where((h) => h.date.isBefore(now) && !_isSameDay(h.date, now))
+        .where((h) => h.endDate.isBefore(now) && !_isSameDay(h.endDate, now))
         .toList();
   }
 
@@ -101,9 +90,19 @@ class HolidaysViewModel extends ChangeNotifier {
         date1.day == date2.day;
   }
 
+  /// Checks if date is in a holiday period
+  bool _isDateInHoliday(DateTime date) {
+    for (var holiday in _holidays) {
+      if (!date.isBefore(holiday.startDate) && !date.isAfter(holiday.endDate)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /// Gets the count of holidays for a specific year
   int getHolidayCountForYear(int year) {
-    return _holidays.where((h) => h.date.year == year).length;
+    return _holidays.where((h) => h.startDate.year == year).length;
   }
 
   /// Private method to update state and notify listeners
@@ -112,31 +111,52 @@ class HolidaysViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Filter holidays by type
-  List<Holiday> filterByType(String type) {
-    return _holidays.where((h) => h.types.contains(type)).toList();
-  }
-
-  /// Get all unique holiday types
-  List<String> getHolidayTypes() {
-    final Set<String> types = {};
-    for (var holiday in _holidays) {
-      types.addAll(holiday.types);
-    }
-    return types.toList();
-  }
-
   /// Check if a specific date is a holiday
   bool isHoliday(DateTime date) {
-    return _holidays.any((h) => _isSameDay(h.date, date));
+    return _holidays.any((h) => _isDateInHoliday(date));
   }
 
   /// Get holiday for a specific date (if exists)
   Holiday? getHolidayForDate(DateTime date) {
     try {
-      return _holidays.firstWhere((h) => _isSameDay(h.date, date));
+      return _holidays.firstWhere((h) => _isDateInHoliday(date));
     } catch (e) {
       return null;
+    }
+  }
+
+  /// Delete a user-created holiday
+  Future<void> deleteHoliday(Holiday holiday) async {
+    if (_holidayRepository == null) {
+      _errorMessage = 'Holiday repository not available';
+      _setState(HolidayViewState.error);
+      notifyListeners();
+      return;
+    }
+
+    // Only allow deleting user-created holidays
+    if (!holiday.isUserCreated) {
+      _errorMessage = 'Cannot delete API holidays';
+      _setState(HolidayViewState.error);
+      notifyListeners();
+      return;
+    }
+
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not logged in';
+      _setState(HolidayViewState.error);
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await _holidayRepository!.deleteHoliday(holiday.id, userId);
+      await fetchHolidays();
+    } catch (e) {
+      _errorMessage = 'Failed to delete holiday: $e';
+      _setState(HolidayViewState.error);
+      notifyListeners();
     }
   }
 }

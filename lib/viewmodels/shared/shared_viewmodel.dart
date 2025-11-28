@@ -4,23 +4,27 @@ import 'dart:developer' as console;
 
 import 'package:flutter/material.dart';
 
-import '../../models/group_model.dart';
+import '../../models/shared/group_model.dart';
+import '../../models/shared/group_member_model.dart';
 import '../../services/auth/auth_service.dart';
-import '../../data/repositories/shared_repository.dart';
+import '../../data/repositories/group_repository.dart';
+import '../../data/repositories/user_repository.dart';
 import '../../core/connectivity/connectivity_manager.dart';
 import '../../models/user_model.dart';
 import '../../services/shared/sync_service.dart';
 import '../../services/storage/app_preferences.dart';
+import 'dart:math';
 
 // El enum de estado que usan ambos ViewModels
 enum ViewState { idle, loading, error }
 
 class SharedViewModel extends ChangeNotifier {
-  final SharedRepository _repository;
+  final GroupRepository _groupRepository;
+  final UserRepository _userRepository;
   final ConnectivityManager _connectivity;
   final SyncService? _syncService;
-  
-  List<AppUser> availableUsers = []; // Nueva lista para el selector
+
+  List<User> availableUsers = []; // Lista de usuarios disponibles
   List<Group> groups = [];
   
   ViewState _state = ViewState.idle;
@@ -29,13 +33,13 @@ class SharedViewModel extends ChangeNotifier {
   bool _isOnline = true;
   bool get isOnline => _isOnline;
 
-  String? _currentUserId;
-
   SharedViewModel({
-    required SharedRepository repository,
+    required GroupRepository groupRepository,
+    required UserRepository userRepository,
     required ConnectivityManager connectivity,
     SyncService? syncService,
-  })  : _repository = repository,
+  })  : _groupRepository = groupRepository,
+        _userRepository = userRepository,
         _connectivity = connectivity,
         _syncService = syncService {
     // 🔹 STREAM: Subscribe a cambios de conectividad
@@ -84,21 +88,22 @@ class SharedViewModel extends ChangeNotifier {
   // --- MÉTODOS EXISTENTES (ACTUALIZADOS PARA OFFLINE-FIRST) ---
 
   Future<void> fetchGroups(String userId, {bool skipFirestore = false}) async {
-    _currentUserId = userId;
-    
-    print('🔵 [FETCH] fetchGroups called with skipFirestore=$skipFirestore');
+    print('🔵 [FETCH] fetchGroups called');
 
     _setState(ViewState.loading);
     try {
-      // Usa el repositorio offline-first: intenta cache local primero
-      groups = await _repository.getGroupsForUser(userId, skipFirestore: skipFirestore);
-      print('📦 [FETCH] Loaded ${groups.length} groups');
+      // Get groups owned by user and groups where user is a member
+      final ownedGroups = await _groupRepository.getGroupsOwnedByUser(userId);
+      final memberGroups = await _groupRepository.getGroupsForMember(userId);
 
-      // Cargar miembros de cada grupo
-      for (var group in groups) {
-        final members = await _repository.getGroupMembers(group.id);
-        group.members = members;
+      // Combine and remove duplicates
+      final allGroupsMap = <String, Group>{};
+      for (final group in [...ownedGroups, ...memberGroups]) {
+        allGroupsMap[group.id] = group;
       }
+      groups = allGroupsMap.values.toList();
+
+      print('📦 [FETCH] Loaded ${groups.length} groups');
 
       _setState(ViewState.idle);
     } catch (e) {
@@ -110,12 +115,17 @@ class SharedViewModel extends ChangeNotifier {
   // --- NUEVOS MÉTODOS CRUD (ACTUALIZADOS PARA OFFLINE-FIRST) ---
 
   /// Añade un nuevo grupo - se guarda localmente y se sincroniza en background
-  Future<void> addGroup(String name, List<String> memberEmails, {String? imageUrl}) async {
+  Future<void> addGroup(String name, List<String> memberEmails, {String? description}) async {
     try {
       final authService = AuthService();
       final currentUserId = authService.currentUser?.uid;
       final currentUserEmail = authService.currentUser?.email;
-      
+
+      if (currentUserId == null) {
+        console.log('Error: User not logged in');
+        return;
+      }
+
       // Asegurar que el usuario actual esté en la lista de emails
       if (currentUserEmail != null && !memberEmails.any((email) => email.toLowerCase() == currentUserEmail.toLowerCase())) {
         memberEmails.add(currentUserEmail);
@@ -126,53 +136,70 @@ class SharedViewModel extends ChangeNotifier {
         await fetchAllUsers();
       }
 
-      // Convert emails to UIDs
-      final memberUids = _emailsToUids(memberEmails);
-      
-      // 🔥 IMPORTANTE: Asegurar que el creador SIEMPRE esté en memberUids
-      // Esto evita problemas cuando el usuario actual no está en availableUsers
-      if (currentUserId != null && !memberUids.contains(currentUserId)) {
-        memberUids.insert(0, currentUserId); // Agregar al inicio
-        print('✅ Creador del grupo agregado a memberUids: $currentUserId');
+      // Convert emails to GroupMember objects
+      final members = <GroupMember>[];
+      final now = DateTime.now();
+
+      for (final email in memberEmails) {
+        final user = availableUsers.firstWhere(
+          (u) => u.email.toLowerCase() == email.toLowerCase(),
+          orElse: () => User(uid: '', email: '', nickname: '', createdAt: now),
+        );
+
+        if (user.uid.isNotEmpty) {
+          members.add(GroupMember(
+            userId: user.uid,
+            nickname: user.nickname,
+            joinedAt: now,
+          ));
+        }
       }
-      
+
+      // Asegurar que el creador SIEMPRE esté en members
+      if (!members.any((m) => m.userId == currentUserId)) {
+        final currentUser = availableUsers.firstWhere(
+          (u) => u.uid == currentUserId,
+          orElse: () => User(uid: currentUserId, email: currentUserEmail ?? '', nickname: 'Me', createdAt: now),
+        );
+        members.insert(0, GroupMember(
+          userId: currentUserId,
+          nickname: currentUser.nickname,
+          joinedAt: now,
+        ));
+      }
+
       // Validar que haya al menos un miembro
-      if (memberUids.isEmpty) {
+      if (members.isEmpty) {
         print('❌ No se pudo agregar ningún miembro al grupo');
         console.log('Error: No members could be added to the group');
         return;
       }
-      
+
       final newGroup = Group(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: name,
-        memberUids: memberUids,
-        imageUrl: imageUrl,
+        description: description,
+        color: _generateRandomColor(),
+        ownerId: currentUserId,
+        members: members,
+        inviteCode: _generateInviteCode(),
+        createdAt: now,
+        updatedAt: now,
       );
 
-      print('📝 Creando grupo con ${memberUids.length} miembros: $memberUids');
-      await _repository.createGroup(newGroup);
-      
+      print('📝 Creando grupo con ${members.length} miembros');
+      await _groupRepository.saveGroup(newGroup);
+
       // Trigger immediate sync if online
       if (_syncService != null && _connectivity.isOnline) {
         print('🚀 [CREATE] Triggering immediate sync after group creation');
         _syncService.syncPendingOperations();
       }
-      
-      // Refresh groups - Force refresh with current user
-      if (_currentUserId != null) {
-        await fetchGroups(_currentUserId!);
-      } else {
-        // Si no hay currentUserId, obtenerlo del AuthService
-        final userId = authService.currentUser?.uid;
-        if (userId != null) {
-          await fetchGroups(userId);
-        } else {
-          console.log('⚠️ Cannot refresh groups: no user ID available');
-        }
-      }
-      
-      // Force UI update even if state didn't change
+
+      // Refresh groups
+      await fetchGroups(currentUserId);
+
+      // Force UI update
       notifyListeners();
     } catch (e) {
       console.log('Error adding group: $e');
@@ -180,71 +207,85 @@ class SharedViewModel extends ChangeNotifier {
   }
 
   /// Actualiza un grupo existente - se guarda localmente y se sincroniza en background
-  Future<void> updateGroup(String id, String name, List<String> memberEmails, {String? imageUrl}) async {
+  Future<void> updateGroup(String id, String name, List<String> memberEmails, {String? description}) async {
     try {
       final authService = AuthService();
       final currentUserId = authService.currentUser?.uid;
-      
+
+      if (currentUserId == null) {
+        console.log('Error: User not logged in');
+        return;
+      }
+
+      // Get existing group to preserve fields
+      final existingGroup = await _groupRepository.getGroupById(id);
+      if (existingGroup == null) {
+        console.log('Error: Group not found');
+        return;
+      }
+
       // Ensure users are loaded
       if (availableUsers.isEmpty) {
         await fetchAllUsers();
       }
 
-      // Convert emails to UIDs
-      final memberUids = _emailsToUids(memberEmails);
-      
-      // 🔥 IMPORTANTE: Asegurar que el usuario actual siempre esté en memberUids
-      // (puede que se esté editando el grupo y el creador se removió por error)
-      if (currentUserId != null && !memberUids.contains(currentUserId)) {
-        memberUids.insert(0, currentUserId);
-        print('✅ Usuario actual agregado a memberUids durante actualización: $currentUserId');
+      // Convert emails to GroupMember objects
+      final members = <GroupMember>[];
+      final now = DateTime.now();
+
+      for (final email in memberEmails) {
+        final user = availableUsers.firstWhere(
+          (u) => u.email.toLowerCase() == email.toLowerCase(),
+          orElse: () => User(uid: '', email: '', nickname: '', createdAt: now),
+        );
+
+        if (user.uid.isNotEmpty) {
+          // Preserve original joinedAt if member already exists
+          final existingMember = existingGroup.getMember(user.uid);
+          members.add(GroupMember(
+            userId: user.uid,
+            nickname: user.nickname,
+            joinedAt: existingMember?.joinedAt ?? now,
+          ));
+        }
       }
-      
+
+      // Asegurar que el owner siempre esté en members
+      if (!members.any((m) => m.userId == existingGroup.ownerId)) {
+        final ownerUser = availableUsers.firstWhere(
+          (u) => u.uid == existingGroup.ownerId,
+          orElse: () => User(uid: existingGroup.ownerId, email: '', nickname: 'Owner', createdAt: now),
+        );
+        final existingOwner = existingGroup.getMember(existingGroup.ownerId);
+        members.insert(0, GroupMember(
+          userId: existingGroup.ownerId,
+          nickname: ownerUser.nickname,
+          joinedAt: existingOwner?.joinedAt ?? existingGroup.createdAt,
+        ));
+      }
+
       // Validar que haya al menos un miembro
-      if (memberUids.isEmpty) {
+      if (members.isEmpty) {
         print('❌ No se pudo actualizar: el grupo quedaría sin miembros');
         console.log('Error: Group must have at least one member');
         return;
       }
-      
-      final updatedGroup = Group(
-        id: id,
+
+      final updatedGroup = existingGroup.copyWith(
         name: name,
-        memberUids: memberUids,
-        imageUrl: imageUrl,
+        description: description,
+        members: members,
+        updatedAt: now,
       );
 
-      print('📝 Actualizando grupo con ${memberUids.length} miembros: $memberUids');
-      await _repository.updateGroup(updatedGroup);
-      
-      // Refresh groups - Skip Firestore and use local data immediately after update
-      // This ensures UI shows the latest changes instantly
-      print('⚡ [UPDATE] Refreshing with local data only (skipFirestore=true)');
-      if (_currentUserId != null) {
-        await fetchGroups(_currentUserId!, skipFirestore: true);
-      } else {
-        // Si no hay currentUserId, obtenerlo del AuthService
-        final authService = AuthService();
-        final userId = authService.currentUser?.uid;
-        if (userId != null) {
-          await fetchGroups(userId, skipFirestore: true);
-        } else {
-          console.log('⚠️ Cannot refresh groups: no user ID available');
-        }
-      }
-      
-      // Force UI update even if state didn't change
+      print('📝 Actualizando grupo con ${members.length} miembros');
+      await _groupRepository.saveGroup(updatedGroup);
+
+      // Refresh groups
+      await fetchGroups(currentUserId);
+
+      // Force UI update
       notifyListeners();
-      
-      // Schedule a background refresh from Firestore after 5 seconds (increased delay)
-      // This ensures we get synced data without blocking the UI
-      // Using Future.delayed without await so it doesn't block
-      Future.delayed(const Duration(seconds: 5), () {
-        print('⏰ [DELAYED] Background Firestore refresh starting...');
-        if (_currentUserId != null) {
-          fetchGroups(_currentUserId!, skipFirestore: false);
-        }
-      });
     } catch (e) {
       console.log('Error updating group: $e');
     }
@@ -255,13 +296,13 @@ class SharedViewModel extends ChangeNotifier {
     // 1. Actualización optimista: Borra el grupo de la lista local inmediatamente
     final index = groups.indexWhere((group) => group.id == id);
     if (index == -1) return;
-    
+
     final groupToDelete = groups.removeAt(index);
     notifyListeners();
 
     // 2. Llama al repositorio para borrar (se sincroniza en background)
     try {
-      await _repository.deleteGroup(id);
+      await _groupRepository.deleteGroup(id);
     } catch (e) {
       console.log('Error deleting group: $e');
       // 3. Si falla, revierte el cambio
@@ -272,24 +313,34 @@ class SharedViewModel extends ChangeNotifier {
 
   Future<void> fetchAllUsers() async {
     try {
-      availableUsers = await _repository.getAllUsers();
+      availableUsers = await _userRepository.getAllUsers();
       notifyListeners();
     } catch (e) {
       print('Error fetching users: $e');
     }
   }
 
-  /// Helper to convert emails to UIDs
-  List<String> _emailsToUids(List<String> emails) {
-    return emails
-        .map((email) {
-          final user = availableUsers.firstWhere(
-            (u) => u.email.toLowerCase() == email.toLowerCase(),
-            orElse: () => AppUser(uid: '', nick: '', email: ''),
-          );
-          return user.uid;
-        })
-        .where((uid) => uid.isNotEmpty)
-        .toList();
+  /// Generate random color for group
+  String _generateRandomColor() {
+    final colors = [
+      '#EF4444', // Red
+      '#F59E0B', // Amber
+      '#10B981', // Green
+      '#3B82F6', // Blue
+      '#8B5CF6', // Purple
+      '#EC4899', // Pink
+      '#6366F1', // Indigo
+      '#14B8A6', // Teal
+    ];
+    return colors[Random().nextInt(colors.length)];
+  }
+
+  /// Generate 6-character invite code
+  String _generateInviteCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    final random = Random();
+    return String.fromCharCodes(
+      Iterable.generate(6, (_) => chars.codeUnitAt(random.nextInt(chars.length))),
+    );
   }
 }

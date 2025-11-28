@@ -8,6 +8,7 @@ import '../../themes/app_typography.dart';
 
 import '../../widgets/burger_menu.dart';
 import '../../widgets/content_switcher.dart';
+import '../../widgets/deletable_list_item.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/keep_alive_wrapper.dart';
@@ -70,7 +71,6 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<AssignmentsViewModel>();
-    final theme = Theme.of(context);
 
     return Scaffold(
       drawer: const BurgerMenu(),
@@ -238,7 +238,10 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
       }
     }
 
-    return InkWell(
+    return DeletableListItem(
+      itemType: 'Assignment',
+      itemName: assignment.title,
+      onDelete: () => viewModel.deleteAssignment(assignment),
       onTap: () async {
         final result = await Navigator.of(context).push(
           MaterialPageRoute(
@@ -249,7 +252,6 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
           viewModel.refreshAssignments();
         }
       },
-
       child: Card(
         elevation: 0,
         margin: const EdgeInsets.only(bottom: 12.0),
@@ -274,7 +276,7 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      assignment.subjectName,
+                      assignment.subjectName ?? 'Unknown Subject',
                       style: AppTypography.h5.copyWith(
                         color: colors.onSecondary,
                       ),
@@ -290,7 +292,7 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
                     const SizedBox(height: 4),
 
                     Text(
-                      assignment.description,
+                      assignment.description ?? '',
                       style: AppTypography.bodyS.copyWith(
                         color: colors.onPrimaryContainer,
                       ),

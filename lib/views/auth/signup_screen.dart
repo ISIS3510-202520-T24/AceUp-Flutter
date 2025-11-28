@@ -3,8 +3,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter_svg/flutter_svg.dart'; // ignore: uri_does_not_exist
+import 'package:image_picker/image_picker.dart'; // ignore: uri_does_not_exist
 import 'package:provider/provider.dart';
 
 import '../../themes/app_typography.dart';
@@ -14,13 +14,8 @@ import '../../services/profile/profile_cache_service.dart';
 import '../../services/profile/profile_notifier.dart';
 import '../../models/user_profile.dart';
 
-/// Pantalla de registro con:
-/// - nickname / email / password / confirm
-/// - aceptar Términos & Privacy
-/// - selección de avatar inicial (preset o galería)
-/// - guardado inmediato del perfil local + notificación global
-///
-/// Usa Provider<SignUpViewModel> inyectado desde main.dart.
+// ignore_for_file: undefined_identifier, undefined_method
+
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 

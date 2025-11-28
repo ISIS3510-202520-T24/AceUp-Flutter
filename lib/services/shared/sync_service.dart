@@ -5,11 +5,12 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../../core/connectivity/connectivity_manager.dart';
+import '../../data/repositories/sync_repository.dart';
 import '../../data/local/database/app_database.dart';
 
 /// Service that handles background synchronization of local changes to Firestore
 class SyncService extends ChangeNotifier {
-  final AppDatabase _db;
+  final SyncRepository _syncRepository;
   final FirebaseFirestore _firestore;
   final ConnectivityManager _connectivity;
   
@@ -21,10 +22,10 @@ class SyncService extends ChangeNotifier {
   int get pendingOperationsCount => _pendingOperationsCount;
 
   SyncService({
-    required AppDatabase database,
+    required SyncRepository syncRepository,
     required FirebaseFirestore firestore,
     required ConnectivityManager connectivity,
-  })  : _db = database,
+  })  : _syncRepository = syncRepository,
         _firestore = firestore,
         _connectivity = connectivity {
     // Initialize and check for pending operations
@@ -112,8 +113,8 @@ class SyncService extends ChangeNotifier {
     print('🔄 Online: ${_connectivity.isOnline}');
 
     try {
-      final pendingItems = await _db.syncDao.getPendingSyncItems();
-      
+      final pendingItems = await _syncRepository.getPendingSyncItems();
+
       if (pendingItems.isEmpty) {
         print('✅ No pending items to sync');
         return;
@@ -124,7 +125,7 @@ class SyncService extends ChangeNotifier {
         final item = pendingItems[i];
         print('📤 [$i/${pendingItems.length}] ${item.operation} ${item.entityType} (${item.entityId})');
       }
-      
+
       int successCount = 0;
       int failCount = 0;
 
@@ -132,14 +133,14 @@ class SyncService extends ChangeNotifier {
         try {
           print('🔄 Syncing ${item.operation} ${item.entityType} ${item.entityId}...');
           await _syncItem(item);
-          await _db.syncDao.removeFromSyncQueue(item.id);
+          await _syncRepository.deleteSyncItem(item.id);
           successCount++;
           _pendingOperationsCount--;
           print('✅ Synced ${item.operation} ${item.entityType} ${item.entityId}');
           notifyListeners();
         } catch (e) {
           print('❌ Sync failed for ${item.entityType} ${item.entityId}: $e');
-          await _db.syncDao.updateSyncError(item.id, e.toString(), item.retryCount);
+          await _syncRepository.incrementRetryCount(item.id, e.toString());
           failCount++;
         }
       }
@@ -147,8 +148,8 @@ class SyncService extends ChangeNotifier {
       print('✅ ========== SYNC COMPLETE ==========');
       print('✅ Success: $successCount | Failed: $failCount');
 
-      // Clean up items with too many failures
-      await _db.syncDao.clearFailedSyncItems();
+      // Clean up items with too many failures (max 3 retries)
+      await _syncRepository.deleteFailedItems(maxRetries: 3);
       
       await _updatePendingCount();
       
@@ -162,7 +163,7 @@ class SyncService extends ChangeNotifier {
 
   /// Update pending operations count
   Future<void> _updatePendingCount() async {
-    final items = await _db.syncDao.getPendingSyncItems();
+    final items = await _syncRepository.getPendingSyncItems();
     _pendingOperationsCount = items.length;
     print('📊 [SYNC] Pending operations count: $_pendingOperationsCount');
     if (_pendingOperationsCount > 0) {
@@ -174,25 +175,92 @@ class SyncService extends ChangeNotifier {
   }
 
   /// Sync a single item to Firestore
-  Future<void> _syncItem(SyncQueueData item) async {
-    final dataMap = item.dataJson != null ? _parseJson(item.dataJson!) : null;
+  Future<void> _syncItem(SyncQueueEntity item) async {
+    final dataMap = _parseJson(item.dataJson);
 
     switch (item.entityType) {
+      // Academic entities
+      case 'term':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+      case 'subject':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+      case 'assignment':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+      case 'exam':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+      case 'class_template':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+      case 'class_exception':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+
+      // User entities
+      case 'user':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+      case 'settings':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+
+      // Teacher entities
+      case 'teacher':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+
+      // Holiday entities
+      case 'holiday':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+
+      // Group entities (existing)
       case 'group':
         await _syncGroup(item.entityId, item.operation, dataMap);
         break;
       case 'group_member':
         await _syncGroupMember(item.entityId, item.operation, dataMap);
         break;
+      case 'weekly_availability':
+        await _syncByPath(item.documentPath, item.operation, dataMap);
+        break;
+
+      // Calendar events (existing)
       case 'calendar_event':
         await _syncCalendarEvent(item.entityId, item.operation, dataMap);
         break;
+
       default:
         print('⚠️  Unknown entity type: ${item.entityType}');
     }
   }
 
   // ==================== SYNC HANDLERS ====================
+
+  /// Generic sync handler that uses document path
+  Future<void> _syncByPath(String documentPath, String operation, Map<String, dynamic> data) async {
+    // Parse document path to get collection and document references
+    final pathParts = documentPath.split('/');
+
+    DocumentReference ref = _firestore.doc(documentPath);
+
+    switch (operation) {
+      case 'create':
+      case 'update':
+        if (data.isNotEmpty) {
+          await ref.set(data, SetOptions(merge: true));
+          print('✅ Synced $documentPath');
+        }
+        break;
+      case 'delete':
+        await ref.delete();
+        print('✅ Deleted $documentPath');
+        break;
+    }
+  }
 
   Future<void> _syncGroup(String groupId, String operation, Map<String, dynamic>? data) async {
     final groupRef = _firestore.collection('groups').doc(groupId);
@@ -269,7 +337,8 @@ class SyncService extends ChangeNotifier {
       final decoded = jsonDecode(jsonStr);
       if (decoded is Map<String, dynamic>) {
         print('📋 [PARSE] Parsed JSON: $decoded');
-        return decoded;
+        // Convert ISO8601 date strings back to Timestamps for Firestore
+        return _convertDatesToTimestamps(decoded);
       } else {
         print('⚠️  [PARSE] Decoded JSON is not a Map: $decoded');
         return {};
@@ -281,14 +350,53 @@ class SyncService extends ChangeNotifier {
     }
   }
 
+  /// Recursively convert ISO8601 date strings to Firestore Timestamps
+  Map<String, dynamic> _convertDatesToTimestamps(Map<String, dynamic> data) {
+    final result = <String, dynamic>{};
+
+    data.forEach((key, value) {
+      if (value is String && _isIso8601Date(value)) {
+        // Convert ISO8601 string to Timestamp
+        try {
+          final dateTime = DateTime.parse(value);
+          result[key] = Timestamp.fromDate(dateTime);
+        } catch (e) {
+          result[key] = value;
+        }
+      } else if (value is Map<String, dynamic>) {
+        // Recursively process nested maps
+        result[key] = _convertDatesToTimestamps(value);
+      } else if (value is List) {
+        // Process lists
+        result[key] = value.map((item) {
+          if (item is Map<String, dynamic>) {
+            return _convertDatesToTimestamps(item);
+          }
+          return item;
+        }).toList();
+      } else {
+        result[key] = value;
+      }
+    });
+
+    return result;
+  }
+
+  /// Check if a string is an ISO8601 date format
+  bool _isIso8601Date(String value) {
+    // ISO8601 format: YYYY-MM-DDTHH:MM:SS.SSSZ or variations
+    final iso8601Pattern = RegExp(
+      r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}',
+    );
+    return iso8601Pattern.hasMatch(value);
+  }
+
   /// Get sync statistics
   Future<Map<String, dynamic>> getSyncStats() async {
-    final pendingCount = await _db.syncDao.countPendingItems();
-    final itemsByType = await _db.syncDao.countItemsByType();
-    
+    final pendingCount = await _syncRepository.getPendingSyncCount();
+
     return {
       'pendingCount': pendingCount,
-      'itemsByType': itemsByType,
       'isOnline': _connectivity.isOnline,
       'isSyncing': _isSyncing,
     };

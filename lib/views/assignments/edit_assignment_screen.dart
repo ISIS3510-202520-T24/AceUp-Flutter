@@ -13,15 +13,24 @@ import '../../widgets/top_bar.dart';
 
 class EditAssignmentScreen extends StatelessWidget {
   final Assignment? assignment;
+  final String? subjectId;
+  final String? termId;
 
-  const EditAssignmentScreen({super.key, this.assignment});
+  const EditAssignmentScreen({
+    super.key,
+    this.assignment,
+    this.subjectId,
+    this.termId,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => EditAssignmentViewModel(
+      create: (_) => EditAssignmentViewModel(
         repository: context.read<AcademicRepository>(),
-        assignment: assignment,
+        assignmentId: assignment?.id,
+        subjectId: subjectId,
+        termId: termId,
       ),
       child: const _EditAssignmentContent(),
     );
@@ -39,7 +48,7 @@ class _EditAssignmentContent extends StatelessWidget {
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: TopBar(
-        title: 'Assignment',
+        title: viewModel.isEditMode ? 'Edit Assignment' : 'New Assignment',
         leftControlType: LeftControlType.cancel,
         rightControlType: RightControlType.save,
         onRightPressed: () => _saveAssignment(context, viewModel),
@@ -72,7 +81,7 @@ class _EditAssignmentContent extends StatelessWidget {
                   const SizedBox(width: 8),
                   Checkbox(
                     value: viewModel.isCompleted,
-                    onChanged: (value) => viewModel.toggleAssignmentStatus(),
+                    onChanged: (value) => viewModel.toggleCompleted(),
                     activeColor: colors.primary,
                     checkColor: colors.onPrimary,
                     side: BorderSide(color: colors.primary, width: 2),
@@ -155,13 +164,11 @@ class _EditAssignmentContent extends StatelessWidget {
                   color: colors.outline,
                 ),
                 Expanded(
-                  child: AppDropdownField<int>(
-                    value: viewModel.selectedWeight,
-                    items: viewModel.weights,
+                  child: AppDropdownField<String>(
+                    value: viewModel.selectedWeightDisplayName ,
+                    items: viewModel.weightOptions.map((w) => w.displayName).toList(),
                     getLabel: (weight) => '$weight%',
-                    onChanged: (value) {
-                      if (value != null) viewModel.setWeight(value);
-                    },
+                    onChanged: (value) => viewModel.setWeightByDisplayName(value),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -238,8 +245,7 @@ class _EditAssignmentContent extends StatelessWidget {
 
             // Validation hint for create mode
             if (viewModel.isCreateMode && !viewModel.canSave) ...[
-            const SizedBox(height: 16),
-
+              const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -252,7 +258,7 @@ class _EditAssignmentContent extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        viewModel.errorMessage!,
+                        viewModel.validationMessage,
                         style: AppTypography.bodyS.copyWith(color: colors.secondary),
                       ),
                     ),
@@ -312,10 +318,27 @@ class _EditAssignmentContent extends StatelessWidget {
     }
   }
 
-  Future<void> _saveAssignment(BuildContext context, EditAssignmentViewModel viewModel) async {
+  Future<void> _saveAssignment(
+      BuildContext context, EditAssignmentViewModel viewModel) async {
+    if (!viewModel.canSave) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all required fields')),
+      );
+      return;
+    }
+
     final success = await viewModel.saveAssignment();
-    if (success && context.mounted) {
+
+    if (!context.mounted) return;
+
+    if (success) {
       Navigator.of(context).pop(true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(viewModel.errorMessage ?? 'Failed to save assignment'),
+        ),
+      );
     }
   }
 }

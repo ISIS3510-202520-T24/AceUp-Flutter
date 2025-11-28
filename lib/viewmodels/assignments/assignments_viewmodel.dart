@@ -81,13 +81,38 @@ class AssignmentsViewModel extends ChangeNotifier {
     }
 
     try {
-      final newStatus = assignment.isPending ? 'Completed' : 'Pending';
+      final newStatus = assignment.isCompleted ? false : true;
 
       await _repository.updateAssignmentStatus(assignment.id, newStatus);
 
       await _loadAllAssignments();
     } catch (e) {
       _errorMessage = 'Failed to update assignment: $e';
+      _state = AssignmentsViewState.error;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteAssignment(Assignment assignment) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null || assignment.termId == null || assignment.subjectId == null) {
+      _errorMessage = 'Cannot delete assignment: missing required information';
+      _state = AssignmentsViewState.error;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await _repository.deleteAssignment(
+        assignment.id,
+        userId,
+        assignment.termId!,
+        assignment.subjectId!,
+      );
+
+      await _loadAllAssignments();
+    } catch (e) {
+      _errorMessage = 'Failed to delete assignment: $e';
       _state = AssignmentsViewState.error;
       notifyListeners();
     }

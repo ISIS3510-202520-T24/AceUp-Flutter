@@ -31,12 +31,6 @@ class BiometricService {
     try {
       final ok = await _auth.authenticate(
         localizedReason: 'Unlock with biometrics',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-          useErrorDialogs: true,
-          sensitiveTransaction: false,
-        ),
       );
       // ignore: avoid_print
       print('[bio] authenticate -> $ok');

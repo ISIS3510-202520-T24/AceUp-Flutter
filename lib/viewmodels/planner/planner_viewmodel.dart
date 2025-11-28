@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/planner/term_model.dart';
 import '../../models/planner/subject_model.dart';
 import '../../services/auth/auth_service.dart';
+import '../../services/grades/gpa_calculation_service.dart';
+import '../../services/cache/memory_cache_service.dart';
+import '../../data/repositories/academic_repository.dart';
 
 enum PlannerViewState { idle, loading, error }
 
 class PlannerViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final AcademicRepository _repository;
+  final GpaCalculationService _gpaService;
+  final MemoryCacheService _cache = MemoryCacheService();
 
   PlannerViewState _state = PlannerViewState.idle;
   PlannerViewState get state => _state;
@@ -16,9 +20,12 @@ class PlannerViewModel extends ChangeNotifier {
   List<Term> _terms = [];
   List<Term> get terms => _terms;
 
-  Map<String, List<Subject>> _termSubjects = {};
-  Map<String, double> _termGPAs = {};
-  Map<String, int> _termCredits = {};
+  // Map of termId -> subjects for that term
+  final Map<String, List<Subject>> _termSubjects = {};
+
+  // Cached GPA values (computed at runtime)
+  final Map<String, double?> _termGPAs = {};
+  final Map<String, int> _termCredits = {};
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
@@ -29,10 +36,17 @@ class PlannerViewModel extends ChangeNotifier {
   int _totalCredits = 0;
   int get totalCredits => _totalCredits;
 
-  PlannerViewModel() {
+  PlannerViewModel({
+    required AcademicRepository repository,
+    required GpaCalculationService gpaService,
+  })  : _repository = repository,
+        _gpaService = gpaService {
     _loadTerms();
   }
 
+  // ==================== LOAD DATA (OFFLINE-FIRST) ====================
+
+  /// Load terms from local database (offline-first)
   Future<void> _loadTerms() async {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
@@ -46,91 +60,126 @@ class PlannerViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final termsSnapshot = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .orderBy('startDate', descending: true)
-          .get();
+      print('📊 Loading terms from local database...');
 
-      _terms = termsSnapshot.docs.map((doc) => Term.fromFirestore(doc)).toList();
+      // Load terms from repository
+      _terms = await _repository.getTermsForUser(userId);
+
+      print('✅ Loaded ${_terms.length} terms from local database');
 
       // Load subjects for each term
       for (var term in _terms) {
-        await _loadTermSubjects(userId, term.id);
+        await _loadTermSubjects(term.id);
       }
 
-      _calculateOverallGPA();
+      // Calculate overall GPA and credits
+      await _calculateOverallGPA(userId);
+
       _state = PlannerViewState.idle;
       _errorMessage = null;
     } catch (e) {
       _errorMessage = e.toString();
       _state = PlannerViewState.error;
-      print('Error loading terms: $e');
+      print('❌ Error loading terms: $e');
     }
 
     notifyListeners();
   }
 
-  Future<void> _loadTermSubjects(String userId, String termId) async {
+  /// Load subjects for a specific term from repository
+  Future<void> _loadTermSubjects(String termId) async {
     try {
-      final subjectsSnapshot = await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .doc(termId)
-          .collection('subjects')
-          .get();
+      print('📚 Loading subjects for term $termId...');
 
-      final subjects = subjectsSnapshot.docs
-          .map((doc) => Subject.fromFirestore(doc))
-          .toList();
+      // Load subjects from repository
+      final subjects = await _repository.getSubjectsForTerm(termId);
 
       _termSubjects[termId] = subjects;
 
-      // Calculate term GPA and credits
-      _calculateTermStats(termId, subjects);
+      // Calculate term stats (GPA and credits)
+      await _calculateTermStats(termId, subjects);
+
+      print('✅ Loaded ${subjects.length} subjects for term $termId');
     } catch (e) {
-      print('Error loading subjects for term $termId: $e');
+      print('❌ Error loading subjects for term $termId: $e');
     }
   }
 
-  void _calculateTermStats(String termId, List<Subject> subjects) {
-    int totalCredits = 0;
-    double weightedGPA = 0;
+  // ==================== GPA CALCULATIONS ====================
 
-    for (var subject in subjects) {
-      totalCredits += subject.credits;
-      // TODO: Calculate actual GPA based on grades when implemented
-      // For now, just count credits
+  /// Calculate term statistics (GPA and credits) with caching
+  Future<void> _calculateTermStats(String termId, List<Subject> subjects) async {
+    try {
+      // Check cache first
+      final cachedGpa = _cache.getCachedTermGpa(termId);
+      final cachedCredits = _cache.getCachedTermCredits(termId);
+      
+      if (cachedGpa != null && cachedCredits != null) {
+        _termGPAs[termId] = cachedGpa;
+        _termCredits[termId] = cachedCredits;
+        print('✅ Using cached GPA for term $termId: ${cachedGpa.toStringAsFixed(2)}');
+        return;
+      }
+
+      // Calculate credits
+      final totalCredits = await _gpaService.getTermTotalCredits(termId);
+      _termCredits[termId] = totalCredits;
+      _cache.cacheTermCredits(termId, totalCredits);
+
+      // Calculate GPA
+      final termGpa = await _gpaService.calculateTermGpa(termId);
+      _termGPAs[termId] = termGpa;
+      _cache.cacheTermGpa(termId, termGpa);
+
+      print('✅ Calculated GPA for term $termId: ${termGpa?.toStringAsFixed(2) ?? 'N/A'}');
+    } catch (e) {
+      print('❌ Error calculating term stats for $termId: $e');
+      _termGPAs[termId] = null;
+      _termCredits[termId] = 0;
     }
-
-    _termCredits[termId] = totalCredits;
-    _termGPAs[termId] = subjects.isNotEmpty ? 4.15 : 0.0; // Placeholder
   }
 
-  void _calculateOverallGPA() {
-    _totalCredits = 0;
-    double totalWeightedGPA = 0;
+  /// Calculate overall GPA across all terms with caching
+  Future<void> _calculateOverallGPA(String userId) async {
+    try {
+      // Check cache first
+      final cachedGpa = _cache.getCachedOverallGpa(userId);
+      final cachedCredits = _cache.getCachedTotalCredits(userId);
+      
+      if (cachedGpa != null && cachedCredits != null) {
+        _overallGPA = cachedGpa;
+        _totalCredits = cachedCredits;
+        print('✅ Using cached overall GPA: ${cachedGpa.toStringAsFixed(2)}');
+        return;
+      }
 
-    _termCredits.forEach((termId, credits) {
-      _totalCredits += credits;
-      totalWeightedGPA += (_termGPAs[termId] ?? 0) * credits;
-    });
+      // Calculate total credits
+      _totalCredits = await _gpaService.getTotalCredits(userId);
+      _cache.cacheTotalCredits(userId, _totalCredits);
 
-    _overallGPA = _totalCredits > 0 ? totalWeightedGPA / _totalCredits : 0.0;
+      // Calculate overall GPA
+      _overallGPA = await _gpaService.calculateOverallGpa(userId);
+      _cache.cacheOverallGpa(userId, _overallGPA);
+
+      print('✅ Calculated overall GPA: ${_overallGPA?.toStringAsFixed(2) ?? 'N/A'}');
+    } catch (e) {
+      print('❌ Error calculating overall GPA: $e');
+      _overallGPA = null;
+      _totalCredits = 0;
+    }
   }
+
+  // ==================== GETTERS ====================
 
   double? getTermGPA(String termId) => _termGPAs[termId];
 
   int getTermCredits(String termId) => _termCredits[termId] ?? 0;
 
+  List<Subject> getTermSubjects(String termId) => _termSubjects[termId] ?? [];
+
   String getTermDateRange(Term term) {
-    if (term.startDate == null || term.endDate == null) {
-      return '';
-    }
-    final start = _formatDate(term.startDate!);
-    final end = _formatDate(term.endDate!);
+    final start = _formatDate(term.startDate);
+    final end = _formatDate(term.endDate);
     return '$start - $end';
   }
 
@@ -140,25 +189,58 @@ class PlannerViewModel extends ChangeNotifier {
     return '${months[date.month - 1]} ${date.day}';
   }
 
+  // ==================== ACTIONS ====================
+
+  /// Refresh terms (reload from database and recalculate)
   Future<void> refreshTerms() async {
+    final userId = _authService.currentUser?.uid;
+    if (userId != null) {
+      // Invalidate cache
+      _cache.invalidateUserGpaCache(userId);
+    }
     await _loadTerms();
+    notifyListeners();
   }
 
+  /// Delete a term
   Future<void> deleteTerm(String termId) async {
     final userId = _authService.currentUser?.uid;
     if (userId == null) return;
 
     try {
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('terms')
-          .doc(termId)
-          .delete();
+      // Delete via repository
+      await _repository.deleteTerm(termId, userId);
 
+      // Invalidate cache
+      _cache.invalidateTermCache(termId);
+      _cache.invalidateUserGpaCache(userId);
+
+      // Refresh data
       await refreshTerms();
     } catch (e) {
-      print('Error deleting term: $e');
+      print('❌ Error deleting term: $e');
     }
+  }
+
+  /// Force recalculate all GPA values (invalidate cache)
+  Future<void> recalculateAllGPA() async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) return;
+
+    print('🔄 Forcing GPA recalculation...');
+    
+    // Clear all GPA cache
+    _cache.invalidateUserGpaCache(userId);
+    
+    // Recalculate for all terms
+    for (var term in _terms) {
+      final subjects = _termSubjects[term.id] ?? [];
+      await _calculateTermStats(term.id, subjects);
+    }
+    
+    // Recalculate overall
+    await _calculateOverallGPA(userId);
+    
+    notifyListeners();
   }
 }

@@ -1,16 +1,7 @@
-# aceup_clean
+# 🎓AceUp Android version
 
-A new Flutter project.
+Welcome to AceUp's Android app!
 
-## Getting Started
+Developed by [AceUp Dart Team](https://github.com/orgs/ISIS3510-202520-T24/teams/dart-flutter) for students wanting to organise their classes, exams, assignments, grades, and even identify common free times with friends and classmates.
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+You can also check out the iOS (Swift) version [here](https://github.com/ISIS3510-202520-T24/AceUp-Swift)

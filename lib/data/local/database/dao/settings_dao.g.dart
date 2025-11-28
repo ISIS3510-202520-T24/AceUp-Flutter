@@ -4,5 +4,5 @@ part of 'settings_dao.dart';
 
 // ignore_for_file: type=lint
 mixin _$SettingsDaoMixin on DatabaseAccessor<AppDatabase> {
-  $AppSettingsTable get appSettings => attachedDatabase.appSettings;
+  $SettingsTable get settings => attachedDatabase.settings;
 }

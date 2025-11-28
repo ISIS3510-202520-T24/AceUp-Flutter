@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth; // ignore: uri_does_not_exist
 import 'package:provider/provider.dart';
 
+import '../models/user_model.dart';
 import '../services/auth/secure_store.dart';
 import '../services/auth/session_prefs.dart';
 import '../services/auth/auth_service.dart';
+
+// ignore_for_file: undefined_identifier
 
 class AuthGate extends StatefulWidget {
   final Widget home;   // TodayScreen
@@ -23,7 +26,7 @@ class _AuthGateState extends State<AuthGate> {
     await Future.delayed(const Duration(milliseconds: 40));
 
     // 1) si ya hay usuario -> a Home
-    if (FirebaseAuth.instance.currentUser != null) return true;
+    if (firebase_auth.FirebaseAuth.instance.currentUser != null) return true;
 
     // 2) Sign-in silencioso con credenciales guardadas (si hay red)
     final sess = await SecureStore.sessionCredentials();
@@ -67,8 +70,8 @@ class _AuthGateState extends State<AuthGate> {
 
         // si entramos a Home, igual escuchamos authState por si se hace logout
         if (goHome) {
-          return StreamBuilder<User?>(
-            stream: FirebaseAuth.instance.authStateChanges(),
+          return StreamBuilder<firebase_auth.User?>(
+            stream: firebase_auth.FirebaseAuth.instance.authStateChanges(),
             builder: (_, s) {
               if (s.connectionState == ConnectionState.active && s.data == null) {
                 return widget.login;

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../data/repositories/academic_repository.dart';
+import '../../services/grades/gpa_calculation_service.dart';
 import '../../viewmodels/planner/planner_viewmodel.dart';
 import '../../themes/app_typography.dart';
 import '../../themes/app_icons.dart';
@@ -16,7 +18,10 @@ class PlannerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => PlannerViewModel(),
+      create: (context) => PlannerViewModel(
+        repository: context.read<AcademicRepository>(),
+        gpaService: context.read<GpaCalculationService>(), 
+      ),
       child: const _PlannerContent(),
     );
   }

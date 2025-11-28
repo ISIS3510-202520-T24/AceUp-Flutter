@@ -1,7 +1,9 @@
 // lib/models/visited_group_history.dart
 // Modelo para almacenar el historial de grupos visitados usando Hive
 
-import 'package:hive/hive.dart';
+import 'package:hive/hive.dart'; // ignore: uri_does_not_exist
+
+// ignore_for_file: undefined_annotation
 
 part 'visited_group_history.g.dart';
 

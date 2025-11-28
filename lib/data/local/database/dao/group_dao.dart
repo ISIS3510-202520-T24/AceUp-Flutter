@@ -1,242 +1,197 @@
-// lib/data/local/database/dao/group_dao.dart
-
 import 'package:drift/drift.dart';
 import '../app_database.dart';
-import '../tables/shared_tables.dart';
+import '../tables/tables.dart';
 
 part 'group_dao.g.dart';
 
-@DriftAccessor(tables: [Groups, GroupMembers, FreeBlocks])
+@DriftAccessor(tables: [Groups, WeeklyAvailabilities])
 class GroupDao extends DatabaseAccessor<AppDatabase> with _$GroupDaoMixin {
   GroupDao(AppDatabase db) : super(db);
 
-  // ==================== CRUD DE GRUPOS ====================
-  
-  /// Obtener todos los grupos de un usuario
-  Future<List<Group>> getGroupsForUser(String userId) async {
-    final query = select(groups).join([
-      innerJoin(
-        groupMembers,
-        groupMembers.groupId.equalsExp(groups.id),
-      ),
-    ])..where(groupMembers.userId.equals(userId));
+  // ==================== GROUPS - READ ====================
 
-    final results = await query.get();
-    
-    // Eliminar duplicados (un grupo puede aparecer múltiples veces si tiene varios miembros)
-    final uniqueGroups = <String, Group>{};
-    for (final row in results) {
-      final group = row.readTable(groups);
-      uniqueGroups[group.id] = group;
-    }
-    
-    return uniqueGroups.values.toList();
-  }
-  
-  /// Obtener un grupo por ID
-  Future<Group?> getGroupById(String groupId) async {
-    return (select(groups)..where((g) => g.id.equals(groupId)))
-        .getSingleOrNull();
-  }
-  
-  /// Insertar nuevo grupo
-  Future<void> insertGroup(GroupsCompanion group) async {
-    await into(groups).insert(
-      group,
-      mode: InsertMode.insertOrReplace,
-    );
-  }
-  
-  /// Actualizar grupo
-  Future<void> updateGroup(Group group) async {
-    await update(groups).replace(group);
-  }
-  
-  /// Eliminar grupo
-  Future<void> deleteGroup(String groupId) async {
-    await (delete(groups)..where((g) => g.id.equals(groupId))).go();
+  /// Get group by ID
+  Future<GroupEntity?> getGroupById(String id) {
+    return (select(groups)..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
-  /// Obtener todos los grupos (para backup/debug)
-  Future<List<Group>> getAllGroups() async {
-    return select(groups).get();
+  /// Watch group by ID
+  Stream<GroupEntity?> watchGroupById(String id) {
+    return (select(groups)..where((t) => t.id.equals(id))).watchSingleOrNull();
   }
 
-  // ==================== MIEMBROS DE GRUPOS ====================
-  
-  /// Agregar miembro a grupo
-  Future<void> addMember(GroupMembersCompanion member) async {
-    await into(groupMembers).insert(
-      member,
-      mode: InsertMode.insertOrReplace,
-    );
-  }
-  
-  /// Obtener miembros de un grupo
-  Future<List<GroupMember>> getGroupMembers(String groupId) async {
-    return (select(groupMembers)..where((m) => m.groupId.equals(groupId)))
+  /// Get all groups for user (where user is owner)
+  Future<List<GroupEntity>> getGroupsOwnedByUser(String userId) {
+    return (select(groups)
+          ..where((t) => t.ownerId.equals(userId))
+          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
         .get();
   }
-  
-  /// Obtener UIDs de miembros de un grupo
-  Future<List<String>> getGroupMemberUids(String groupId) async {
-    final members = await getGroupMembers(groupId);
-    return members.map((m) => m.userId).toList();
-  }
-  
-  /// Eliminar miembro de grupo
-  Future<void> removeMember(String groupId, String userId) async {
-    await (delete(groupMembers)
-      ..where((m) => 
-        m.groupId.equals(groupId) & m.userId.equals(userId)))
-      .go();
-  }
 
-  /// Eliminar todos los miembros de un grupo
-  Future<void> removeAllMembers(String groupId) async {
-    await (delete(groupMembers)..where((m) => m.groupId.equals(groupId))).go();
-  }
-
-  /// Verificar si un usuario es miembro de un grupo
-  Future<bool> isMember(String groupId, String userId) async {
-    final count = await (selectOnly(groupMembers)
-      ..addColumns([groupMembers.id.count()])
-      ..where(groupMembers.groupId.equals(groupId) & 
-              groupMembers.userId.equals(userId)))
-      .getSingle();
-    
-    return count.read(groupMembers.id.count())! > 0;
-  }
-
-  // ==================== FREE BLOCKS (CACHÉ) ====================
-  
-  /// Guardar free blocks calculados
-  Future<void> cacheFreeBlocks(String groupId, List<FreeBlocksCompanion> blocks) async {
-    await transaction(() async {
-      // Eliminar bloques viejos del grupo
-      await (delete(freeBlocks)..where((fb) => fb.groupId.equals(groupId))).go();
-      
-      // Insertar nuevos bloques
-      await batch((batch) {
-        batch.insertAll(freeBlocks, blocks);
-      });
-    });
-  }
-  
-  /// Obtener free blocks cacheados
-  Future<List<FreeBlock>?> getCachedFreeBlocks(String groupId) async {
-    final blocks = await (select(freeBlocks)
-      ..where((fb) => fb.groupId.equals(groupId))
-      ..orderBy([
-        (fb) => OrderingTerm.asc(fb.weekday),
-        (fb) => OrderingTerm.asc(fb.startHour),
-        (fb) => OrderingTerm.asc(fb.startMinute),
-      ]))
-      .get();
-    
-    if (blocks.isEmpty) return null;
-    
-    // Verificar que no estén expirados (30 minutos)
-    final firstBlock = blocks.first;
-    final age = DateTime.now().difference(firstBlock.calculatedAt);
-    if (age.inMinutes > 30) {
-      // Expirado, eliminar caché
-      await deleteCachedFreeBlocks(groupId);
-      return null;
-    }
-    
-    return blocks;
-  }
-
-  /// Eliminar free blocks cacheados para un grupo
-  /// Usado para invalidar caché cuando cambian los miembros o schedules
-  Future<void> deleteCachedFreeBlocks(String groupId) async {
-    await (delete(freeBlocks)..where((fb) => fb.groupId.equals(groupId))).go();
-  }
-
-  /// Limpiar free blocks expirados (todos los grupos)
-  Future<void> clearExpiredFreeBlocks() async {
-    final thirtyMinutesAgo = DateTime.now().subtract(const Duration(minutes: 30));
-    await (delete(freeBlocks)
-      ..where((fb) => fb.calculatedAt.isSmallerThanValue(thirtyMinutesAgo)))
-      .go();
-  }
-
-  // ==================== STREAMS (REACTIVIDAD) ====================
-  
-  /// Watch grupos de un usuario (se actualiza automáticamente)
-  Stream<List<Group>> watchGroupsForUser(String userId) {
-    final query = select(groups).join([
-      innerJoin(
-        groupMembers,
-        groupMembers.groupId.equalsExp(groups.id),
-      ),
-    ])..where(groupMembers.userId.equals(userId));
-
-    return query.watch().map((rows) {
-      final uniqueGroups = <String, Group>{};
-      for (final row in rows) {
-        final group = row.readTable(groups);
-        uniqueGroups[group.id] = group;
-      }
-      return uniqueGroups.values.toList();
-    });
-  }
-  
-  /// Watch miembros de un grupo
-  Stream<List<GroupMember>> watchGroupMembers(String groupId) {
-    return (select(groupMembers)..where((m) => m.groupId.equals(groupId)))
+  /// Watch all groups for user (where user is owner)
+  Stream<List<GroupEntity>> watchGroupsOwnedByUser(String userId) {
+    return (select(groups)
+          ..where((t) => t.ownerId.equals(userId))
+          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
         .watch();
   }
 
-  /// Watch un grupo específico
-  Stream<Group?> watchGroup(String groupId) {
-    return (select(groups)..where((g) => g.id.equals(groupId)))
+  /// Get all groups (for user to be filtered by membership in repository)
+  Future<List<GroupEntity>> getAllGroups() {
+    return (select(groups)..orderBy([(t) => OrderingTerm.asc(t.name)])).get();
+  }
+
+  /// Watch all groups
+  Stream<List<GroupEntity>> watchAllGroups() {
+    return (select(groups)..orderBy([(t) => OrderingTerm.asc(t.name)])).watch();
+  }
+
+  /// Get group by invite code
+  Future<GroupEntity?> getGroupByInviteCode(String inviteCode) {
+    return (select(groups)..where((t) => t.inviteCode.equals(inviteCode))).getSingleOrNull();
+  }
+
+  // ==================== GROUPS - CREATE/UPDATE ====================
+
+  /// Insert or update group
+  Future<void> upsertGroup(GroupsCompanion group) {
+    return into(groups).insertOnConflictUpdate(group);
+  }
+
+  /// Insert group
+  Future<void> insertGroup(GroupsCompanion group) {
+    return into(groups).insert(group, mode: InsertMode.insertOrReplace);
+  }
+
+  /// Update group
+  Future<bool> updateGroup(GroupsCompanion group) {
+    return (update(groups)..where((t) => t.id.equals(group.id.value)))
+        .write(group)
+        .then((rows) => rows > 0);
+  }
+
+  /// Update group members
+  Future<void> updateGroupMembers(String id, String membersJson) {
+    return (update(groups)..where((t) => t.id.equals(id))).write(
+      GroupsCompanion(
+        membersJson: Value(membersJson),
+        updatedAt: Value(DateTime.now()),
+        syncStatus: const Value('pending'),
+      ),
+    );
+  }
+
+  /// Update sync status
+  Future<void> updateSyncStatus(String id, String status) {
+    return (update(groups)..where((t) => t.id.equals(id))).write(
+      GroupsCompanion(
+        syncStatus: Value(status),
+        lastSyncedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  // ==================== GROUPS - DELETE ====================
+
+  /// Delete group by ID
+  Future<int> deleteGroup(String id) {
+    return (delete(groups)..where((t) => t.id.equals(id))).go();
+  }
+
+  /// Delete all groups owned by user
+  Future<int> deleteGroupsOwnedByUser(String userId) {
+    return (delete(groups)..where((t) => t.ownerId.equals(userId))).go();
+  }
+
+  // ==================== WEEKLY AVAILABILITY - READ ====================
+
+  /// Get weekly availability by ID
+  Future<WeeklyAvailabilityEntity?> getWeeklyAvailabilityById(String id) {
+    return (select(weeklyAvailabilities)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
+  /// Get weekly availability for group and week
+  Future<WeeklyAvailabilityEntity?> getWeeklyAvailability(String groupId, String weekIdentifier) {
+    return (select(weeklyAvailabilities)
+          ..where((t) => t.groupId.equals(groupId) & t.weekIdentifier.equals(weekIdentifier)))
+        .getSingleOrNull();
+  }
+
+  /// Watch weekly availability for group and week
+  Stream<WeeklyAvailabilityEntity?> watchWeeklyAvailability(String groupId, String weekIdentifier) {
+    return (select(weeklyAvailabilities)
+          ..where((t) => t.groupId.equals(groupId) & t.weekIdentifier.equals(weekIdentifier)))
         .watchSingleOrNull();
   }
 
-  // ==================== BÚSQUEDA Y FILTROS ====================
-  
-  /// Buscar grupos por nombre
-  Future<List<Group>> searchGroupsByName(String query, String userId) async {
-    final lowerQuery = query.toLowerCase();
-    
-    final results = await (select(groups).join([
-      innerJoin(
-        groupMembers,
-        groupMembers.groupId.equalsExp(groups.id),
-      ),
-    ])
-      ..where(groupMembers.userId.equals(userId) & 
-              groups.name.lower().like('%$lowerQuery%')))
-      .get();
-    
-    final uniqueGroups = <String, Group>{};
-    for (final row in results) {
-      final group = row.readTable(groups);
-      uniqueGroups[group.id] = group;
-    }
-    
-    return uniqueGroups.values.toList();
+  /// Get all weekly availabilities for group
+  Future<List<WeeklyAvailabilityEntity>> getWeeklyAvailabilitiesForGroup(String groupId) {
+    return (select(weeklyAvailabilities)
+          ..where((t) => t.groupId.equals(groupId))
+          ..orderBy([(t) => OrderingTerm.asc(t.weekStartDate)]))
+        .get();
   }
 
-  /// Contar grupos de un usuario
-  Future<int> countUserGroups(String userId) async {
-    final query = selectOnly(groups).join([
-      innerJoin(
-        groupMembers,
-        groupMembers.groupId.equalsExp(groups.id),
-      ),
-    ])
-      ..addColumns([groups.id.count(distinct: true)])
-      ..where(groupMembers.userId.equals(userId));
-
-    final result = await query.getSingle();
-    return result.read(groups.id.count())!;
+  /// Watch all weekly availabilities for group
+  Stream<List<WeeklyAvailabilityEntity>> watchWeeklyAvailabilitiesForGroup(String groupId) {
+    return (select(weeklyAvailabilities)
+          ..where((t) => t.groupId.equals(groupId))
+          ..orderBy([(t) => OrderingTerm.asc(t.weekStartDate)]))
+        .watch();
   }
 
-  /// Obtener grupos creados por un usuario
-  Future<List<Group>> getGroupsCreatedBy(String userId) async {
-    return (select(groups)..where((g) => g.createdBy.equals(userId))).get();
+  // ==================== WEEKLY AVAILABILITY - CREATE/UPDATE ====================
+
+  /// Insert or update weekly availability
+  Future<void> upsertWeeklyAvailability(WeeklyAvailabilitiesCompanion availability) {
+    return into(weeklyAvailabilities).insertOnConflictUpdate(availability);
+  }
+
+  /// Insert weekly availability
+  Future<void> insertWeeklyAvailability(WeeklyAvailabilitiesCompanion availability) {
+    return into(weeklyAvailabilities).insert(availability, mode: InsertMode.insertOrReplace);
+  }
+
+  // ==================== WEEKLY AVAILABILITY - DELETE ====================
+
+  /// Delete weekly availability by ID
+  Future<int> deleteWeeklyAvailability(String id) {
+    return (delete(weeklyAvailabilities)..where((t) => t.id.equals(id))).go();
+  }
+
+  /// Delete all weekly availabilities for group
+  Future<int> deleteWeeklyAvailabilitiesForGroup(String groupId) {
+    return (delete(weeklyAvailabilities)..where((t) => t.groupId.equals(groupId))).go();
+  }
+
+  // ==================== SYNC HELPERS ====================
+
+  /// Get groups that need sync
+  Future<List<GroupEntity>> getGroupsNeedingSync() {
+    return (select(groups)..where((t) => t.syncStatus.equals('pending'))).get();
+  }
+
+  /// Mark group as synced
+  Future<void> markGroupAsSynced(String id) {
+    return (update(groups)..where((t) => t.id.equals(id))).write(
+      GroupsCompanion(
+        syncStatus: const Value('synced'),
+        lastSyncedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  /// Insert multiple groups (batch)
+  Future<void> insertGroupsBatch(List<GroupsCompanion> groupsList) {
+    return batch((b) {
+      b.insertAllOnConflictUpdate(groups, groupsList);
+    });
+  }
+
+  /// Insert multiple weekly availabilities (batch)
+  Future<void> insertWeeklyAvailabilitiesBatch(List<WeeklyAvailabilitiesCompanion> availabilitiesList) {
+    return batch((b) {
+      b.insertAllOnConflictUpdate(weeklyAvailabilities, availabilitiesList);
+    });
   }
 }
