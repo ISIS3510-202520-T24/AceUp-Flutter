@@ -144,7 +144,11 @@ Future<void> main() async {
   final bioService = BiometricService();
 
   // 9) Instanciar VMs que viven "global"
-  final loginVM = LoginViewModel(authService, bioService);
+  final loginVM = LoginViewModel(
+    authService,
+    bioService,
+    initialLoadService: initialLoadService,
+  );
   // SignUpViewModel se crea en la ruta, no lo registramos globalmente
 
   // 10) Registrar en VmRegistry (nuestro contenedor simple)

@@ -286,7 +286,7 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    assignment.subjectName,
+                    assignment.subjectName ?? 'Unknown Subject',
                     style: AppTypography.h5.copyWith(
                       color: colors.onSecondary,
                     ),
@@ -302,7 +302,7 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    assignment.description,
+                    assignment.description ?? '',
                     style: AppTypography.bodyS.copyWith(
                       color: colors.onPrimaryContainer,
                     ),

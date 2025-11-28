@@ -276,7 +276,7 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      assignment.subjectName,
+                      assignment.subjectName ?? 'Unknown Subject',
                       style: AppTypography.h5.copyWith(
                         color: colors.onSecondary,
                       ),
@@ -292,7 +292,7 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
                     const SizedBox(height: 4),
 
                     Text(
-                      assignment.description,
+                      assignment.description ?? '',
                       style: AppTypography.bodyS.copyWith(
                         color: colors.onPrimaryContainer,
                       ),

@@ -32,6 +32,18 @@ class EditAssignmentViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  /// Get validation message based on form state
+  String get validationMessage {
+    if (titleController.text.trim().isEmpty && (_selectedSubject == null || _selectedSubject!.isEmpty)) {
+      return 'Please fill in subject and title to save';
+    } else if (titleController.text.trim().isEmpty) {
+      return 'Please enter a title';
+    } else if (_selectedSubject == null || _selectedSubject!.isEmpty) {
+      return 'Please select a subject';
+    }
+    return 'Fill in all required fields';
+  }
+
   // Form fields
   late TextEditingController titleController;
   late TextEditingController descriptionController;

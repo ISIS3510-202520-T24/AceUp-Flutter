@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../data/repositories/academic_repository.dart';
 import '../../models/planner/subject_model.dart';
+import '../../models/planner/class_template_model.dart';
+import '../../models/planner/exam_model.dart';
 import '../../services/auth/auth_service.dart';
 import '../../models/assignments/assignment_model.dart';
 
@@ -26,6 +28,17 @@ class SubjectViewModel extends ChangeNotifier {
 
   List<Assignment> _subjectAssignments = [];
   List<Assignment> get subjectAssignments => _subjectAssignments;
+
+  List<ClassTemplate> _classTemplates = [];
+  List<ClassTemplate> get classTemplates => _classTemplates;
+
+  List<Exam> _exams = [];
+  List<Exam> get exams => _exams;
+
+  // TODO: Implement classes left calculation (complex - requires date calculations, holiday checks, etc.)
+  int get classesLeft => 23; // Static placeholder for now
+
+  int get examsLeft => _exams.where((exam) => !exam.isCompleted).length;
 
   double _currentGrade = 4.00;
   double get currentGrade => _currentGrade;
@@ -58,6 +71,8 @@ class SubjectViewModel extends ChangeNotifier {
     creditsController = TextEditingController();
     _loadSubject();
     _loadSubjectAssignments();
+    _loadClassTemplates();
+    _loadExams();
   }
 
   void selectTab(int index) {
@@ -132,6 +147,24 @@ class SubjectViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _loadClassTemplates() async {
+    try {
+      _classTemplates = await _repository.getClassTemplatesForSubject(subjectId);
+      notifyListeners();
+    } catch (e) {
+      print('Error loading class templates: $e');
+    }
+  }
+
+  Future<void> _loadExams() async {
+    try {
+      _exams = await _repository.getExamsForSubject(subjectId);
+      notifyListeners();
+    } catch (e) {
+      print('Error loading exams: $e');
+    }
+  }
+
   Future<void> refreshAssignments() async {
     await _loadSubjectAssignments();
   }
@@ -139,6 +172,8 @@ class SubjectViewModel extends ChangeNotifier {
   Future<void> refreshSubject() async {
     await _loadSubject();
     await _loadSubjectAssignments();
+    await _loadClassTemplates();
+    await _loadExams();
   }
 
   Future<void> toggleAssignmentStatus(Assignment assignment) async {
@@ -188,17 +223,25 @@ class SubjectViewModel extends ChangeNotifier {
 
   Future<void> _saveGradesData() async {
     final userId = _authService.currentUser?.uid;
-    if (userId == null) return;
+    if (userId == null || _subject == null) return;
 
     try {
-      final data = <String, dynamic>{
-        'useGrades': _useGrades,
-        'useFinalGradeOverride': _finalSubjectGrade != null,
-        'finalGrade': _finalSubjectGrade,
-        'credits': int.tryParse(creditsController.text) ?? _subject?.credits ?? 3,
-        'updatedAt': DateTime.now(),
-      };
+      // Update subject with new grade settings
+      final updatedSubject = _subject!.copyWith(
+        useFinalGradeOverride: _finalSubjectGrade != null,
+        finalGrade: _finalSubjectGrade,
+        credits: int.tryParse(creditsController.text) ?? _subject!.credits,
+        updatedAt: DateTime.now(),
+      );
 
+      // Save to repository (offline-first with sync queue)
+      await _repository.saveSubject(
+        updatedSubject,
+        userId,
+        termId,
+      );
+
+      _subject = updatedSubject;
     } catch (e) {
       print('Error saving grades data: $e');
     }

@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories/academic_repository.dart';
+import '../../models/planner/class_template_model.dart';
+import '../../models/planner/exam_model.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
@@ -194,12 +196,171 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
   }
 
   Widget _buildTimetableTab(BuildContext context, SubjectViewModel viewModel) {
-    return Center(
-      child: Text(
-        'Timetable coming soon',
-        style: AppTypography.bodyM.copyWith(
-          color: Theme.of(context).colorScheme.onPrimaryContainer,
-        ),
+    final colors = Theme.of(context).colorScheme;
+    final subjectColor = viewModel.subject != null
+        ? Color(int.parse('0xFF${viewModel.subject!.color.substring(1)}'))
+        : colors.primary;
+
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Content Counter
+          ContentCounter(
+            firstItem: CounterItem(
+              title: 'Classes left: ',
+              value: '${viewModel.classesLeft}',
+            ),
+            secondItem: CounterItem(
+              title: 'Exams left: ',
+              value: '${viewModel.examsLeft}',
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Classes Section
+          Text(
+            'Classes',
+            style: AppTypography.h4.copyWith(color: colors.onSurface),
+          ),
+          const SizedBox(height: 12),
+
+          ...viewModel.classTemplates.map((classTemplate) => _buildClassItem(
+            context,
+            classTemplate,
+            subjectColor,
+            colors,
+          )),
+
+          const SizedBox(height: 24),
+
+          // Exams Section
+          Text(
+            'Exams',
+            style: AppTypography.h4.copyWith(color: colors.onSurface),
+          ),
+          const SizedBox(height: 12),
+
+          ...viewModel.exams.map((exam) => _buildExamItem(
+            context,
+            exam,
+            subjectColor,
+            colors,
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildClassItem(
+    BuildContext context,
+    ClassTemplate classTemplate,
+    Color subjectColor,
+    ColorScheme colors,
+  ) {
+    final dayAbbreviations = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Colored circle
+          Container(
+            width: 12,
+            height: 12,
+            margin: const EdgeInsets.only(top: 4),
+            decoration: BoxDecoration(
+              color: subjectColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Time range
+                Text(
+                  '${classTemplate.startTime} - ${classTemplate.endTime}',
+                  style: AppTypography.bodyM.copyWith(
+                    color: colors.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+
+                // Days
+                Text(
+                  classTemplate.recurrence.selectedDays.map((day) {
+                    // day is 0-6 where 0=Sunday, adjust to get correct abbreviation
+                    final index = day == 0 ? 6 : day - 1; // Convert Sunday from 0 to 6
+                    return dayAbbreviations[index];
+                  }).join('  '),
+                  style: AppTypography.bodyS.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExamItem(
+    BuildContext context,
+    Exam exam,
+    Color subjectColor,
+    ColorScheme colors,
+  ) {
+    final dateFormat = DateFormat('MMM d, yyyy');
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Colored circle
+          Container(
+            width: 12,
+            height: 12,
+            margin: const EdgeInsets.only(top: 4),
+            decoration: BoxDecoration(
+              color: subjectColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Time range
+                Text(
+                  '${exam.startTime} - ${exam.endTime}',
+                  style: AppTypography.bodyM.copyWith(
+                    color: colors.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+
+                // Date
+                Text(
+                  dateFormat.format(exam.date),
+                  style: AppTypography.bodyS.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -360,7 +521,7 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      assignment.subjectName,
+                      assignment.subjectName ?? 'Unknown Subject',
                       style: AppTypography.h5.copyWith(
                         color: colors.onSecondary,
                       ),
@@ -374,7 +535,7 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      assignment.description,
+                      assignment.description ?? '',
                       style: AppTypography.bodyS.copyWith(
                         color: colors.onPrimaryContainer,
                       ),
@@ -467,7 +628,8 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
           Switch(
             value: viewModel.useGrades,
             onChanged: (value) => viewModel.toggleUseGrades(),
-            activeColor: colors.primary,
+            activeTrackColor: colors.primary,
+            activeThumbColor: colors.onPrimary,
           ),
         ],
       ),

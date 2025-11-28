@@ -259,7 +259,8 @@ class AcademicRepository {
   /// Get assignments for subject
   Future<List<model.Assignment>> getAssignmentsForSubject(String subjectId) async {
     final entities = await _db.assignmentDao.getAssignmentsForSubject(subjectId);
-    return entities.map(_assignmentEntityToModel).toList();
+    final assignments = entities.map(_assignmentEntityToModel).toList();
+    return enrichAssignmentsWithSubjectInfo(assignments);
   }
 
   /// Watch assignments for subject (stream)
@@ -279,37 +280,43 @@ class AcademicRepository {
   /// Get all assignments for user
   Future<List<model.Assignment>> getAssignmentsForUser(String userId) async {
     final entities = await _db.assignmentDao.getAssignmentsForUser(userId);
-    return entities.map(_assignmentEntityToModel).toList();
+    final assignments = entities.map(_assignmentEntityToModel).toList();
+    return enrichAssignmentsWithSubjectInfo(assignments);
   }
 
   /// Get pending assignments for user
   Future<List<model.Assignment>> getPendingAssignments(String userId) async {
     final entities = await _db.assignmentDao.getPendingAssignmentsForUser(userId);
-    return entities.map(_assignmentEntityToModel).toList();
+    final assignments = entities.map(_assignmentEntityToModel).toList();
+    return enrichAssignmentsWithSubjectInfo(assignments);
   }
 
   /// Get completed assignments for user
   Future<List<model.Assignment>> getCompletedAssignments(String userId) async {
     final entities = await _db.assignmentDao.getCompletedAssignmentsForUser(userId);
-    return entities.map(_assignmentEntityToModel).toList();
+    final assignments = entities.map(_assignmentEntityToModel).toList();
+    return enrichAssignmentsWithSubjectInfo(assignments);
   }
 
   /// Get assignments due today
   Future<List<model.Assignment>> getAssignmentsDueToday(String userId, DateTime today) async {
     final entities = await _db.assignmentDao.getAssignmentsDueToday(userId, today);
-    return entities.map(_assignmentEntityToModel).toList();
+    final assignments = entities.map(_assignmentEntityToModel).toList();
+    return enrichAssignmentsWithSubjectInfo(assignments);
   }
 
   /// Get upcoming assignments
   Future<List<model.Assignment>> getUpcomingAssignments(String userId) async {
     final entities = await _db.assignmentDao.getUpcomingAssignments(userId);
-    return entities.map(_assignmentEntityToModel).toList();
+    final assignments = entities.map(_assignmentEntityToModel).toList();
+    return enrichAssignmentsWithSubjectInfo(assignments);
   }
 
   /// Get overdue assignments
   Future<List<model.Assignment>> getOverdueAssignments(String userId) async {
     final entities = await _db.assignmentDao.getOverdueAssignments(userId);
-    return entities.map(_assignmentEntityToModel).toList();
+    final assignments = entities.map(_assignmentEntityToModel).toList();
+    return enrichAssignmentsWithSubjectInfo(assignments);
   }
 
   /// Save assignment locally and queue for sync
@@ -370,6 +377,28 @@ class AcademicRepository {
       data: {},
       documentPath: 'users/$userId/terms/$termId/subjects/$subjectId/assignments/$assignmentId',
     );
+  }
+
+  /// Enrich assignments with subject and term information
+  Future<List<model.Assignment>> enrichAssignmentsWithSubjectInfo(List<model.Assignment> assignments) async {
+    final enriched = <model.Assignment>[];
+
+    for (final assignment in assignments) {
+      if (assignment.subjectId == null) {
+        enriched.add(assignment);
+        continue;
+      }
+
+      // Get subject to retrieve subject name and term ID
+      final subject = await _db.subjectDao.getSubjectById(assignment.subjectId!);
+
+      enriched.add(assignment.copyWith(
+        subjectName: subject?.name,
+        termId: subject?.termId,
+      ));
+    }
+
+    return enriched;
   }
 
   /// Fetch all assignments from Firebase for a specific subject
@@ -749,6 +778,8 @@ class AcademicRepository {
       alerts: alerts,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      subjectId: entity.subjectId,
+      // Note: termId and subjectName need to be enriched separately via enrichAssignmentsWithSubjectInfo
     );
   }
 

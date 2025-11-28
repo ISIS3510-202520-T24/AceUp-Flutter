@@ -5,6 +5,7 @@ import '../../services/auth/biometric_service.dart';
 import '../../services/auth/secure_store.dart';
 import '../../services/auth/offline_auth_service.dart';
 import '../../services/auth/session_prefs.dart';
+import '../../services/data/initial_load_service.dart';
 
 /// Resultado genérico de acciones de autenticación (login normal, biométrico,
 /// forgot password, etc.). Incluye bandera para "verifique su correo".
@@ -91,8 +92,10 @@ class LoginForm {
 class LoginViewModel extends ChangeNotifier {
   final AuthService _auth;
   final BiometricService _bio;
+  final InitialLoadService? _initialLoadService;
 
-  LoginViewModel(this._auth, this._bio);
+  LoginViewModel(this._auth, this._bio, {InitialLoadService? initialLoadService})
+      : _initialLoadService = initialLoadService;
 
   LoginForm _form = const LoginForm();
   bool _loading = false;
@@ -242,6 +245,17 @@ class LoginViewModel extends ChangeNotifier {
       // (opcional) flag offline para fallback sin red
       await SessionPrefs.setWasLoggedIn(true);
 
+      // --------- Load initial data from Firebase ---------
+      if (uid != null && _initialLoadService != null) {
+        try {
+          await _initialLoadService.loadEssentialData(uid);
+          print('✅ Initial data load triggered after login');
+        } catch (e) {
+          print('⚠️  Error loading initial data: $e');
+          // Don't fail login if data load fails
+        }
+      }
+
       _setLoading(false);
       _setError(null);
       return AuthResult.success('Logged in');
@@ -383,6 +397,17 @@ class LoginViewModel extends ChangeNotifier {
       // ======= NUEVO: persistimos credenciales sesión =======
       await SecureStore.setSessionCredentials(email: email, password: pass);
       await SessionPrefs.setWasLoggedIn(true);
+
+      // --------- Load initial data from Firebase ---------
+      if (uid != null && _initialLoadService != null) {
+        try {
+          await _initialLoadService.loadEssentialData(uid);
+          print('✅ Initial data load triggered after biometric login');
+        } catch (e) {
+          print('⚠️  Error loading initial data: $e');
+          // Don't fail login if data load fails
+        }
+      }
 
       _setLoading(false);
       _setError(null);

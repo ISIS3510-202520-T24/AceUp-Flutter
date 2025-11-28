@@ -245,8 +245,7 @@ class _EditAssignmentContent extends StatelessWidget {
 
             // Validation hint for create mode
             if (viewModel.isCreateMode && !viewModel.canSave) ...[
-            const SizedBox(height: 16),
-
+              const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -259,7 +258,7 @@ class _EditAssignmentContent extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        viewModel.errorMessage!,
+                        viewModel.validationMessage,
                         style: AppTypography.bodyS.copyWith(color: colors.secondary),
                       ),
                     ),

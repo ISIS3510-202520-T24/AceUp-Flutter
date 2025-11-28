@@ -54,7 +54,7 @@ class InitialLoadService extends ChangeNotifier {
       print('🚀 User ID: $userId');
 
       // Total steps for progress tracking
-      const totalSteps = 7;
+      const totalSteps = 10;
       var completedSteps = 0;
 
       // 1. Load user data
@@ -137,7 +137,49 @@ class InitialLoadService extends ChangeNotifier {
       _progress = completedSteps / totalSteps;
       notifyListeners();
 
-      // 6. Load teachers
+      // 6. Load class templates (for each subject in each term)
+      _currentStep = 'Loading class templates...';
+      notifyListeners();
+      try {
+        final terms = await _academicRepository.getTermsForUser(userId);
+        var totalClassTemplates = 0;
+        for (final term in terms) {
+          final subjects = await _academicRepository.getSubjectsForTerm(term.id);
+          for (final subject in subjects) {
+            final classTemplates = await _academicRepository.fetchClassTemplatesFromFirebase(userId, term.id, subject.id);
+            totalClassTemplates += classTemplates.length;
+          }
+        }
+        print('✅ Loaded $totalClassTemplates class templates');
+      } catch (e) {
+        print('⚠️  Error loading class templates: $e');
+      }
+      completedSteps++;
+      _progress = completedSteps / totalSteps;
+      notifyListeners();
+
+      // 7. Load exams (for each subject in each term)
+      _currentStep = 'Loading exams...';
+      notifyListeners();
+      try {
+        final terms = await _academicRepository.getTermsForUser(userId);
+        var totalExams = 0;
+        for (final term in terms) {
+          final subjects = await _academicRepository.getSubjectsForTerm(term.id);
+          for (final subject in subjects) {
+            final exams = await _academicRepository.fetchExamsFromFirebase(userId, term.id, subject.id);
+            totalExams += exams.length;
+          }
+        }
+        print('✅ Loaded $totalExams exams');
+      } catch (e) {
+        print('⚠️  Error loading exams: $e');
+      }
+      completedSteps++;
+      _progress = completedSteps / totalSteps;
+      notifyListeners();
+
+      // 8. Load teachers
       _currentStep = 'Loading teachers...';
       notifyListeners();
       try {
@@ -150,7 +192,20 @@ class InitialLoadService extends ChangeNotifier {
       _progress = completedSteps / totalSteps;
       notifyListeners();
 
-      // 7. Load groups
+      // 9. Load holidays
+      _currentStep = 'Loading holidays...';
+      notifyListeners();
+      try {
+        final holidays = await _holidayRepository.fetchHolidaysFromFirebase(userId);
+        print('✅ Loaded ${holidays.length} holidays');
+      } catch (e) {
+        print('⚠️  Error loading holidays: $e');
+      }
+      completedSteps++;
+      _progress = completedSteps / totalSteps;
+      notifyListeners();
+
+      // 10. Load groups
       _currentStep = 'Loading groups...';
       notifyListeners();
       try {
@@ -233,16 +288,21 @@ class InitialLoadService extends ChangeNotifier {
         await _academicRepository.fetchSubjectsFromFirebase(userId, term.id);
       }
 
-      // Load assignments (for each subject in each term)
+      // Load assignments, class templates, and exams (for each subject in each term)
       for (final term in terms) {
         final subjects = await _academicRepository.getSubjectsForTerm(term.id);
         for (final subject in subjects) {
           await _academicRepository.fetchAssignmentsFromFirebase(userId, term.id, subject.id);
+          await _academicRepository.fetchClassTemplatesFromFirebase(userId, term.id, subject.id);
+          await _academicRepository.fetchExamsFromFirebase(userId, term.id, subject.id);
         }
       }
 
       // Load teachers
       await _teacherRepository.fetchTeachersFromFirebase(userId);
+
+      // Load holidays
+      await _holidayRepository.fetchHolidaysFromFirebase(userId);
 
       // Load groups
       await _groupRepository.fetchGroupsOwnedByUserFromFirebase(userId);
