@@ -424,7 +424,7 @@ class LoginViewModel extends ChangeNotifier {
           _quickLoginPass = pass;
 
           // ======= NUEVO: persistimos también en offline biométrico =======
-          await SecureStore.setSessionCredentials(email: email!, password: pass!);
+          await SecureStore.setSessionCredentials(email: email, password: pass);
           await SessionPrefs.setWasLoggedIn(true);
 
           _setLoading(false);

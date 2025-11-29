@@ -7212,6 +7212,1379 @@ class WeeklyAvailabilitiesCompanion
   }
 }
 
+class $UserEventsTable extends UserEvents
+    with TableInfo<$UserEventsTable, UserEventEntity> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserEventsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+      'user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _startDateTimeMeta =
+      const VerificationMeta('startDateTime');
+  @override
+  late final GeneratedColumn<DateTime> startDateTime =
+      GeneratedColumn<DateTime>('start_date_time', aliasedName, false,
+          type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _endDateTimeMeta =
+      const VerificationMeta('endDateTime');
+  @override
+  late final GeneratedColumn<DateTime> endDateTime = GeneratedColumn<DateTime>(
+      'end_date_time', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _locationMeta =
+      const VerificationMeta('location');
+  @override
+  late final GeneratedColumn<String> location = GeneratedColumn<String>(
+      'location', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _imageUrlMeta =
+      const VerificationMeta('imageUrl');
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+      'image_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _eventUrlMeta =
+      const VerificationMeta('eventUrl');
+  @override
+  late final GeneratedColumn<String> eventUrl = GeneratedColumn<String>(
+      'event_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _categoryMeta =
+      const VerificationMeta('category');
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+      'category', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _userNotesMeta =
+      const VerificationMeta('userNotes');
+  @override
+  late final GeneratedColumn<String> userNotes = GeneratedColumn<String>(
+      'user_notes', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _userLocationMeta =
+      const VerificationMeta('userLocation');
+  @override
+  late final GeneratedColumn<String> userLocation = GeneratedColumn<String>(
+      'user_location', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _addedAtMeta =
+      const VerificationMeta('addedAt');
+  @override
+  late final GeneratedColumn<DateTime> addedAt = GeneratedColumn<DateTime>(
+      'added_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _syncStatusMeta =
+      const VerificationMeta('syncStatus');
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+      'sync_status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('synced'));
+  static const VerificationMeta _lastSyncedAtMeta =
+      const VerificationMeta('lastSyncedAt');
+  @override
+  late final GeneratedColumn<DateTime> lastSyncedAt = GeneratedColumn<DateTime>(
+      'last_synced_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        userId,
+        title,
+        description,
+        startDateTime,
+        endDateTime,
+        location,
+        imageUrl,
+        eventUrl,
+        category,
+        userNotes,
+        userLocation,
+        addedAt,
+        createdAt,
+        updatedAt,
+        syncStatus,
+        lastSyncedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_events';
+  @override
+  VerificationContext validateIntegrity(Insertable<UserEventEntity> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(_userIdMeta,
+          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('start_date_time')) {
+      context.handle(
+          _startDateTimeMeta,
+          startDateTime.isAcceptableOrUnknown(
+              data['start_date_time']!, _startDateTimeMeta));
+    } else if (isInserting) {
+      context.missing(_startDateTimeMeta);
+    }
+    if (data.containsKey('end_date_time')) {
+      context.handle(
+          _endDateTimeMeta,
+          endDateTime.isAcceptableOrUnknown(
+              data['end_date_time']!, _endDateTimeMeta));
+    }
+    if (data.containsKey('location')) {
+      context.handle(_locationMeta,
+          location.isAcceptableOrUnknown(data['location']!, _locationMeta));
+    }
+    if (data.containsKey('image_url')) {
+      context.handle(_imageUrlMeta,
+          imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta));
+    }
+    if (data.containsKey('event_url')) {
+      context.handle(_eventUrlMeta,
+          eventUrl.isAcceptableOrUnknown(data['event_url']!, _eventUrlMeta));
+    }
+    if (data.containsKey('category')) {
+      context.handle(_categoryMeta,
+          category.isAcceptableOrUnknown(data['category']!, _categoryMeta));
+    }
+    if (data.containsKey('user_notes')) {
+      context.handle(_userNotesMeta,
+          userNotes.isAcceptableOrUnknown(data['user_notes']!, _userNotesMeta));
+    }
+    if (data.containsKey('user_location')) {
+      context.handle(
+          _userLocationMeta,
+          userLocation.isAcceptableOrUnknown(
+              data['user_location']!, _userLocationMeta));
+    }
+    if (data.containsKey('added_at')) {
+      context.handle(_addedAtMeta,
+          addedAt.isAcceptableOrUnknown(data['added_at']!, _addedAtMeta));
+    } else if (isInserting) {
+      context.missing(_addedAtMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+          _syncStatusMeta,
+          syncStatus.isAcceptableOrUnknown(
+              data['sync_status']!, _syncStatusMeta));
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+          _lastSyncedAtMeta,
+          lastSyncedAt.isAcceptableOrUnknown(
+              data['last_synced_at']!, _lastSyncedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id, userId};
+  @override
+  UserEventEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UserEventEntity(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      userId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      startDateTime: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}start_date_time'])!,
+      endDateTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}end_date_time']),
+      location: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}location']),
+      imageUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}image_url']),
+      eventUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}event_url']),
+      category: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category']),
+      userNotes: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_notes']),
+      userLocation: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}user_location']),
+      addedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}added_at'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      syncStatus: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sync_status'])!,
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_synced_at']),
+    );
+  }
+
+  @override
+  $UserEventsTable createAlias(String alias) {
+    return $UserEventsTable(attachedDatabase, alias);
+  }
+}
+
+class UserEventEntity extends DataClass implements Insertable<UserEventEntity> {
+  final String id;
+  final String userId;
+  final String title;
+  final String description;
+  final DateTime startDateTime;
+  final DateTime? endDateTime;
+  final String? location;
+  final String? imageUrl;
+  final String? eventUrl;
+  final String? category;
+  final String? userNotes;
+  final String? userLocation;
+  final DateTime addedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final String syncStatus;
+  final DateTime? lastSyncedAt;
+  const UserEventEntity(
+      {required this.id,
+      required this.userId,
+      required this.title,
+      required this.description,
+      required this.startDateTime,
+      this.endDateTime,
+      this.location,
+      this.imageUrl,
+      this.eventUrl,
+      this.category,
+      this.userNotes,
+      this.userLocation,
+      required this.addedAt,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.syncStatus,
+      this.lastSyncedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['title'] = Variable<String>(title);
+    map['description'] = Variable<String>(description);
+    map['start_date_time'] = Variable<DateTime>(startDateTime);
+    if (!nullToAbsent || endDateTime != null) {
+      map['end_date_time'] = Variable<DateTime>(endDateTime);
+    }
+    if (!nullToAbsent || location != null) {
+      map['location'] = Variable<String>(location);
+    }
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
+    if (!nullToAbsent || eventUrl != null) {
+      map['event_url'] = Variable<String>(eventUrl);
+    }
+    if (!nullToAbsent || category != null) {
+      map['category'] = Variable<String>(category);
+    }
+    if (!nullToAbsent || userNotes != null) {
+      map['user_notes'] = Variable<String>(userNotes);
+    }
+    if (!nullToAbsent || userLocation != null) {
+      map['user_location'] = Variable<String>(userLocation);
+    }
+    map['added_at'] = Variable<DateTime>(addedAt);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    }
+    return map;
+  }
+
+  UserEventsCompanion toCompanion(bool nullToAbsent) {
+    return UserEventsCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      title: Value(title),
+      description: Value(description),
+      startDateTime: Value(startDateTime),
+      endDateTime: endDateTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endDateTime),
+      location: location == null && nullToAbsent
+          ? const Value.absent()
+          : Value(location),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
+      eventUrl: eventUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(eventUrl),
+      category: category == null && nullToAbsent
+          ? const Value.absent()
+          : Value(category),
+      userNotes: userNotes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userNotes),
+      userLocation: userLocation == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userLocation),
+      addedAt: Value(addedAt),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      syncStatus: Value(syncStatus),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+    );
+  }
+
+  factory UserEventEntity.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UserEventEntity(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String>(json['description']),
+      startDateTime: serializer.fromJson<DateTime>(json['startDateTime']),
+      endDateTime: serializer.fromJson<DateTime?>(json['endDateTime']),
+      location: serializer.fromJson<String?>(json['location']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
+      eventUrl: serializer.fromJson<String?>(json['eventUrl']),
+      category: serializer.fromJson<String?>(json['category']),
+      userNotes: serializer.fromJson<String?>(json['userNotes']),
+      userLocation: serializer.fromJson<String?>(json['userLocation']),
+      addedAt: serializer.fromJson<DateTime>(json['addedAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String>(description),
+      'startDateTime': serializer.toJson<DateTime>(startDateTime),
+      'endDateTime': serializer.toJson<DateTime?>(endDateTime),
+      'location': serializer.toJson<String?>(location),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
+      'eventUrl': serializer.toJson<String?>(eventUrl),
+      'category': serializer.toJson<String?>(category),
+      'userNotes': serializer.toJson<String?>(userNotes),
+      'userLocation': serializer.toJson<String?>(userLocation),
+      'addedAt': serializer.toJson<DateTime>(addedAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
+    };
+  }
+
+  UserEventEntity copyWith(
+          {String? id,
+          String? userId,
+          String? title,
+          String? description,
+          DateTime? startDateTime,
+          Value<DateTime?> endDateTime = const Value.absent(),
+          Value<String?> location = const Value.absent(),
+          Value<String?> imageUrl = const Value.absent(),
+          Value<String?> eventUrl = const Value.absent(),
+          Value<String?> category = const Value.absent(),
+          Value<String?> userNotes = const Value.absent(),
+          Value<String?> userLocation = const Value.absent(),
+          DateTime? addedAt,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          String? syncStatus,
+          Value<DateTime?> lastSyncedAt = const Value.absent()}) =>
+      UserEventEntity(
+        id: id ?? this.id,
+        userId: userId ?? this.userId,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        startDateTime: startDateTime ?? this.startDateTime,
+        endDateTime: endDateTime.present ? endDateTime.value : this.endDateTime,
+        location: location.present ? location.value : this.location,
+        imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
+        eventUrl: eventUrl.present ? eventUrl.value : this.eventUrl,
+        category: category.present ? category.value : this.category,
+        userNotes: userNotes.present ? userNotes.value : this.userNotes,
+        userLocation:
+            userLocation.present ? userLocation.value : this.userLocation,
+        addedAt: addedAt ?? this.addedAt,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        syncStatus: syncStatus ?? this.syncStatus,
+        lastSyncedAt:
+            lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+      );
+  UserEventEntity copyWithCompanion(UserEventsCompanion data) {
+    return UserEventEntity(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      title: data.title.present ? data.title.value : this.title,
+      description:
+          data.description.present ? data.description.value : this.description,
+      startDateTime: data.startDateTime.present
+          ? data.startDateTime.value
+          : this.startDateTime,
+      endDateTime:
+          data.endDateTime.present ? data.endDateTime.value : this.endDateTime,
+      location: data.location.present ? data.location.value : this.location,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
+      eventUrl: data.eventUrl.present ? data.eventUrl.value : this.eventUrl,
+      category: data.category.present ? data.category.value : this.category,
+      userNotes: data.userNotes.present ? data.userNotes.value : this.userNotes,
+      userLocation: data.userLocation.present
+          ? data.userLocation.value
+          : this.userLocation,
+      addedAt: data.addedAt.present ? data.addedAt.value : this.addedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      syncStatus:
+          data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserEventEntity(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('startDateTime: $startDateTime, ')
+          ..write('endDateTime: $endDateTime, ')
+          ..write('location: $location, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('eventUrl: $eventUrl, ')
+          ..write('category: $category, ')
+          ..write('userNotes: $userNotes, ')
+          ..write('userLocation: $userLocation, ')
+          ..write('addedAt: $addedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncedAt: $lastSyncedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      userId,
+      title,
+      description,
+      startDateTime,
+      endDateTime,
+      location,
+      imageUrl,
+      eventUrl,
+      category,
+      userNotes,
+      userLocation,
+      addedAt,
+      createdAt,
+      updatedAt,
+      syncStatus,
+      lastSyncedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UserEventEntity &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.startDateTime == this.startDateTime &&
+          other.endDateTime == this.endDateTime &&
+          other.location == this.location &&
+          other.imageUrl == this.imageUrl &&
+          other.eventUrl == this.eventUrl &&
+          other.category == this.category &&
+          other.userNotes == this.userNotes &&
+          other.userLocation == this.userLocation &&
+          other.addedAt == this.addedAt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.syncStatus == this.syncStatus &&
+          other.lastSyncedAt == this.lastSyncedAt);
+}
+
+class UserEventsCompanion extends UpdateCompanion<UserEventEntity> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> title;
+  final Value<String> description;
+  final Value<DateTime> startDateTime;
+  final Value<DateTime?> endDateTime;
+  final Value<String?> location;
+  final Value<String?> imageUrl;
+  final Value<String?> eventUrl;
+  final Value<String?> category;
+  final Value<String?> userNotes;
+  final Value<String?> userLocation;
+  final Value<DateTime> addedAt;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<String> syncStatus;
+  final Value<DateTime?> lastSyncedAt;
+  final Value<int> rowid;
+  const UserEventsCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.startDateTime = const Value.absent(),
+    this.endDateTime = const Value.absent(),
+    this.location = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.eventUrl = const Value.absent(),
+    this.category = const Value.absent(),
+    this.userNotes = const Value.absent(),
+    this.userLocation = const Value.absent(),
+    this.addedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserEventsCompanion.insert({
+    required String id,
+    required String userId,
+    required String title,
+    required String description,
+    required DateTime startDateTime,
+    this.endDateTime = const Value.absent(),
+    this.location = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.eventUrl = const Value.absent(),
+    this.category = const Value.absent(),
+    this.userNotes = const Value.absent(),
+    this.userLocation = const Value.absent(),
+    required DateTime addedAt,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.syncStatus = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        userId = Value(userId),
+        title = Value(title),
+        description = Value(description),
+        startDateTime = Value(startDateTime),
+        addedAt = Value(addedAt),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<UserEventEntity> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<DateTime>? startDateTime,
+    Expression<DateTime>? endDateTime,
+    Expression<String>? location,
+    Expression<String>? imageUrl,
+    Expression<String>? eventUrl,
+    Expression<String>? category,
+    Expression<String>? userNotes,
+    Expression<String>? userLocation,
+    Expression<DateTime>? addedAt,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<String>? syncStatus,
+    Expression<DateTime>? lastSyncedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (startDateTime != null) 'start_date_time': startDateTime,
+      if (endDateTime != null) 'end_date_time': endDateTime,
+      if (location != null) 'location': location,
+      if (imageUrl != null) 'image_url': imageUrl,
+      if (eventUrl != null) 'event_url': eventUrl,
+      if (category != null) 'category': category,
+      if (userNotes != null) 'user_notes': userNotes,
+      if (userLocation != null) 'user_location': userLocation,
+      if (addedAt != null) 'added_at': addedAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserEventsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? userId,
+      Value<String>? title,
+      Value<String>? description,
+      Value<DateTime>? startDateTime,
+      Value<DateTime?>? endDateTime,
+      Value<String?>? location,
+      Value<String?>? imageUrl,
+      Value<String?>? eventUrl,
+      Value<String?>? category,
+      Value<String?>? userNotes,
+      Value<String?>? userLocation,
+      Value<DateTime>? addedAt,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<String>? syncStatus,
+      Value<DateTime?>? lastSyncedAt,
+      Value<int>? rowid}) {
+    return UserEventsCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      startDateTime: startDateTime ?? this.startDateTime,
+      endDateTime: endDateTime ?? this.endDateTime,
+      location: location ?? this.location,
+      imageUrl: imageUrl ?? this.imageUrl,
+      eventUrl: eventUrl ?? this.eventUrl,
+      category: category ?? this.category,
+      userNotes: userNotes ?? this.userNotes,
+      userLocation: userLocation ?? this.userLocation,
+      addedAt: addedAt ?? this.addedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (startDateTime.present) {
+      map['start_date_time'] = Variable<DateTime>(startDateTime.value);
+    }
+    if (endDateTime.present) {
+      map['end_date_time'] = Variable<DateTime>(endDateTime.value);
+    }
+    if (location.present) {
+      map['location'] = Variable<String>(location.value);
+    }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
+    }
+    if (eventUrl.present) {
+      map['event_url'] = Variable<String>(eventUrl.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (userNotes.present) {
+      map['user_notes'] = Variable<String>(userNotes.value);
+    }
+    if (userLocation.present) {
+      map['user_location'] = Variable<String>(userLocation.value);
+    }
+    if (addedAt.present) {
+      map['added_at'] = Variable<DateTime>(addedAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserEventsCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('startDateTime: $startDateTime, ')
+          ..write('endDateTime: $endDateTime, ')
+          ..write('location: $location, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('eventUrl: $eventUrl, ')
+          ..write('category: $category, ')
+          ..write('userNotes: $userNotes, ')
+          ..write('userLocation: $userLocation, ')
+          ..write('addedAt: $addedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CachedEventsTable extends CachedEvents
+    with TableInfo<$CachedEventsTable, CachedEventEntity> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedEventsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _startDateTimeMeta =
+      const VerificationMeta('startDateTime');
+  @override
+  late final GeneratedColumn<DateTime> startDateTime =
+      GeneratedColumn<DateTime>('start_date_time', aliasedName, false,
+          type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _endDateTimeMeta =
+      const VerificationMeta('endDateTime');
+  @override
+  late final GeneratedColumn<DateTime> endDateTime = GeneratedColumn<DateTime>(
+      'end_date_time', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _locationMeta =
+      const VerificationMeta('location');
+  @override
+  late final GeneratedColumn<String> location = GeneratedColumn<String>(
+      'location', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _imageUrlMeta =
+      const VerificationMeta('imageUrl');
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+      'image_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _eventUrlMeta =
+      const VerificationMeta('eventUrl');
+  @override
+  late final GeneratedColumn<String> eventUrl = GeneratedColumn<String>(
+      'event_url', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _categoryMeta =
+      const VerificationMeta('category');
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+      'category', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _cachedAtMeta =
+      const VerificationMeta('cachedAt');
+  @override
+  late final GeneratedColumn<DateTime> cachedAt = GeneratedColumn<DateTime>(
+      'cached_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _expiresAtMeta =
+      const VerificationMeta('expiresAt');
+  @override
+  late final GeneratedColumn<DateTime> expiresAt = GeneratedColumn<DateTime>(
+      'expires_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        title,
+        description,
+        startDateTime,
+        endDateTime,
+        location,
+        imageUrl,
+        eventUrl,
+        category,
+        cachedAt,
+        expiresAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_events';
+  @override
+  VerificationContext validateIntegrity(Insertable<CachedEventEntity> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('start_date_time')) {
+      context.handle(
+          _startDateTimeMeta,
+          startDateTime.isAcceptableOrUnknown(
+              data['start_date_time']!, _startDateTimeMeta));
+    } else if (isInserting) {
+      context.missing(_startDateTimeMeta);
+    }
+    if (data.containsKey('end_date_time')) {
+      context.handle(
+          _endDateTimeMeta,
+          endDateTime.isAcceptableOrUnknown(
+              data['end_date_time']!, _endDateTimeMeta));
+    }
+    if (data.containsKey('location')) {
+      context.handle(_locationMeta,
+          location.isAcceptableOrUnknown(data['location']!, _locationMeta));
+    }
+    if (data.containsKey('image_url')) {
+      context.handle(_imageUrlMeta,
+          imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta));
+    }
+    if (data.containsKey('event_url')) {
+      context.handle(_eventUrlMeta,
+          eventUrl.isAcceptableOrUnknown(data['event_url']!, _eventUrlMeta));
+    }
+    if (data.containsKey('category')) {
+      context.handle(_categoryMeta,
+          category.isAcceptableOrUnknown(data['category']!, _categoryMeta));
+    }
+    if (data.containsKey('cached_at')) {
+      context.handle(_cachedAtMeta,
+          cachedAt.isAcceptableOrUnknown(data['cached_at']!, _cachedAtMeta));
+    } else if (isInserting) {
+      context.missing(_cachedAtMeta);
+    }
+    if (data.containsKey('expires_at')) {
+      context.handle(_expiresAtMeta,
+          expiresAt.isAcceptableOrUnknown(data['expires_at']!, _expiresAtMeta));
+    } else if (isInserting) {
+      context.missing(_expiresAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CachedEventEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedEventEntity(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      startDateTime: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}start_date_time'])!,
+      endDateTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}end_date_time']),
+      location: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}location']),
+      imageUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}image_url']),
+      eventUrl: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}event_url']),
+      category: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category']),
+      cachedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}cached_at'])!,
+      expiresAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}expires_at'])!,
+    );
+  }
+
+  @override
+  $CachedEventsTable createAlias(String alias) {
+    return $CachedEventsTable(attachedDatabase, alias);
+  }
+}
+
+class CachedEventEntity extends DataClass
+    implements Insertable<CachedEventEntity> {
+  final String id;
+  final String title;
+  final String description;
+  final DateTime startDateTime;
+  final DateTime? endDateTime;
+  final String? location;
+  final String? imageUrl;
+  final String? eventUrl;
+  final String? category;
+  final DateTime cachedAt;
+  final DateTime expiresAt;
+  const CachedEventEntity(
+      {required this.id,
+      required this.title,
+      required this.description,
+      required this.startDateTime,
+      this.endDateTime,
+      this.location,
+      this.imageUrl,
+      this.eventUrl,
+      this.category,
+      required this.cachedAt,
+      required this.expiresAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['title'] = Variable<String>(title);
+    map['description'] = Variable<String>(description);
+    map['start_date_time'] = Variable<DateTime>(startDateTime);
+    if (!nullToAbsent || endDateTime != null) {
+      map['end_date_time'] = Variable<DateTime>(endDateTime);
+    }
+    if (!nullToAbsent || location != null) {
+      map['location'] = Variable<String>(location);
+    }
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
+    if (!nullToAbsent || eventUrl != null) {
+      map['event_url'] = Variable<String>(eventUrl);
+    }
+    if (!nullToAbsent || category != null) {
+      map['category'] = Variable<String>(category);
+    }
+    map['cached_at'] = Variable<DateTime>(cachedAt);
+    map['expires_at'] = Variable<DateTime>(expiresAt);
+    return map;
+  }
+
+  CachedEventsCompanion toCompanion(bool nullToAbsent) {
+    return CachedEventsCompanion(
+      id: Value(id),
+      title: Value(title),
+      description: Value(description),
+      startDateTime: Value(startDateTime),
+      endDateTime: endDateTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endDateTime),
+      location: location == null && nullToAbsent
+          ? const Value.absent()
+          : Value(location),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
+      eventUrl: eventUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(eventUrl),
+      category: category == null && nullToAbsent
+          ? const Value.absent()
+          : Value(category),
+      cachedAt: Value(cachedAt),
+      expiresAt: Value(expiresAt),
+    );
+  }
+
+  factory CachedEventEntity.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedEventEntity(
+      id: serializer.fromJson<String>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String>(json['description']),
+      startDateTime: serializer.fromJson<DateTime>(json['startDateTime']),
+      endDateTime: serializer.fromJson<DateTime?>(json['endDateTime']),
+      location: serializer.fromJson<String?>(json['location']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
+      eventUrl: serializer.fromJson<String?>(json['eventUrl']),
+      category: serializer.fromJson<String?>(json['category']),
+      cachedAt: serializer.fromJson<DateTime>(json['cachedAt']),
+      expiresAt: serializer.fromJson<DateTime>(json['expiresAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String>(description),
+      'startDateTime': serializer.toJson<DateTime>(startDateTime),
+      'endDateTime': serializer.toJson<DateTime?>(endDateTime),
+      'location': serializer.toJson<String?>(location),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
+      'eventUrl': serializer.toJson<String?>(eventUrl),
+      'category': serializer.toJson<String?>(category),
+      'cachedAt': serializer.toJson<DateTime>(cachedAt),
+      'expiresAt': serializer.toJson<DateTime>(expiresAt),
+    };
+  }
+
+  CachedEventEntity copyWith(
+          {String? id,
+          String? title,
+          String? description,
+          DateTime? startDateTime,
+          Value<DateTime?> endDateTime = const Value.absent(),
+          Value<String?> location = const Value.absent(),
+          Value<String?> imageUrl = const Value.absent(),
+          Value<String?> eventUrl = const Value.absent(),
+          Value<String?> category = const Value.absent(),
+          DateTime? cachedAt,
+          DateTime? expiresAt}) =>
+      CachedEventEntity(
+        id: id ?? this.id,
+        title: title ?? this.title,
+        description: description ?? this.description,
+        startDateTime: startDateTime ?? this.startDateTime,
+        endDateTime: endDateTime.present ? endDateTime.value : this.endDateTime,
+        location: location.present ? location.value : this.location,
+        imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
+        eventUrl: eventUrl.present ? eventUrl.value : this.eventUrl,
+        category: category.present ? category.value : this.category,
+        cachedAt: cachedAt ?? this.cachedAt,
+        expiresAt: expiresAt ?? this.expiresAt,
+      );
+  CachedEventEntity copyWithCompanion(CachedEventsCompanion data) {
+    return CachedEventEntity(
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      description:
+          data.description.present ? data.description.value : this.description,
+      startDateTime: data.startDateTime.present
+          ? data.startDateTime.value
+          : this.startDateTime,
+      endDateTime:
+          data.endDateTime.present ? data.endDateTime.value : this.endDateTime,
+      location: data.location.present ? data.location.value : this.location,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
+      eventUrl: data.eventUrl.present ? data.eventUrl.value : this.eventUrl,
+      category: data.category.present ? data.category.value : this.category,
+      cachedAt: data.cachedAt.present ? data.cachedAt.value : this.cachedAt,
+      expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedEventEntity(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('startDateTime: $startDateTime, ')
+          ..write('endDateTime: $endDateTime, ')
+          ..write('location: $location, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('eventUrl: $eventUrl, ')
+          ..write('category: $category, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('expiresAt: $expiresAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, title, description, startDateTime,
+      endDateTime, location, imageUrl, eventUrl, category, cachedAt, expiresAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedEventEntity &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.startDateTime == this.startDateTime &&
+          other.endDateTime == this.endDateTime &&
+          other.location == this.location &&
+          other.imageUrl == this.imageUrl &&
+          other.eventUrl == this.eventUrl &&
+          other.category == this.category &&
+          other.cachedAt == this.cachedAt &&
+          other.expiresAt == this.expiresAt);
+}
+
+class CachedEventsCompanion extends UpdateCompanion<CachedEventEntity> {
+  final Value<String> id;
+  final Value<String> title;
+  final Value<String> description;
+  final Value<DateTime> startDateTime;
+  final Value<DateTime?> endDateTime;
+  final Value<String?> location;
+  final Value<String?> imageUrl;
+  final Value<String?> eventUrl;
+  final Value<String?> category;
+  final Value<DateTime> cachedAt;
+  final Value<DateTime> expiresAt;
+  final Value<int> rowid;
+  const CachedEventsCompanion({
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.startDateTime = const Value.absent(),
+    this.endDateTime = const Value.absent(),
+    this.location = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.eventUrl = const Value.absent(),
+    this.category = const Value.absent(),
+    this.cachedAt = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CachedEventsCompanion.insert({
+    required String id,
+    required String title,
+    required String description,
+    required DateTime startDateTime,
+    this.endDateTime = const Value.absent(),
+    this.location = const Value.absent(),
+    this.imageUrl = const Value.absent(),
+    this.eventUrl = const Value.absent(),
+    this.category = const Value.absent(),
+    required DateTime cachedAt,
+    required DateTime expiresAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        title = Value(title),
+        description = Value(description),
+        startDateTime = Value(startDateTime),
+        cachedAt = Value(cachedAt),
+        expiresAt = Value(expiresAt);
+  static Insertable<CachedEventEntity> custom({
+    Expression<String>? id,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<DateTime>? startDateTime,
+    Expression<DateTime>? endDateTime,
+    Expression<String>? location,
+    Expression<String>? imageUrl,
+    Expression<String>? eventUrl,
+    Expression<String>? category,
+    Expression<DateTime>? cachedAt,
+    Expression<DateTime>? expiresAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (startDateTime != null) 'start_date_time': startDateTime,
+      if (endDateTime != null) 'end_date_time': endDateTime,
+      if (location != null) 'location': location,
+      if (imageUrl != null) 'image_url': imageUrl,
+      if (eventUrl != null) 'event_url': eventUrl,
+      if (category != null) 'category': category,
+      if (cachedAt != null) 'cached_at': cachedAt,
+      if (expiresAt != null) 'expires_at': expiresAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CachedEventsCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? title,
+      Value<String>? description,
+      Value<DateTime>? startDateTime,
+      Value<DateTime?>? endDateTime,
+      Value<String?>? location,
+      Value<String?>? imageUrl,
+      Value<String?>? eventUrl,
+      Value<String?>? category,
+      Value<DateTime>? cachedAt,
+      Value<DateTime>? expiresAt,
+      Value<int>? rowid}) {
+    return CachedEventsCompanion(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      startDateTime: startDateTime ?? this.startDateTime,
+      endDateTime: endDateTime ?? this.endDateTime,
+      location: location ?? this.location,
+      imageUrl: imageUrl ?? this.imageUrl,
+      eventUrl: eventUrl ?? this.eventUrl,
+      category: category ?? this.category,
+      cachedAt: cachedAt ?? this.cachedAt,
+      expiresAt: expiresAt ?? this.expiresAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (startDateTime.present) {
+      map['start_date_time'] = Variable<DateTime>(startDateTime.value);
+    }
+    if (endDateTime.present) {
+      map['end_date_time'] = Variable<DateTime>(endDateTime.value);
+    }
+    if (location.present) {
+      map['location'] = Variable<String>(location.value);
+    }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
+    }
+    if (eventUrl.present) {
+      map['event_url'] = Variable<String>(eventUrl.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (cachedAt.present) {
+      map['cached_at'] = Variable<DateTime>(cachedAt.value);
+    }
+    if (expiresAt.present) {
+      map['expires_at'] = Variable<DateTime>(expiresAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedEventsCompanion(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('startDateTime: $startDateTime, ')
+          ..write('endDateTime: $endDateTime, ')
+          ..write('location: $location, ')
+          ..write('imageUrl: $imageUrl, ')
+          ..write('eventUrl: $eventUrl, ')
+          ..write('category: $category, ')
+          ..write('cachedAt: $cachedAt, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $SyncQueueTable extends SyncQueue
     with TableInfo<$SyncQueueTable, SyncQueueEntity> {
   @override
@@ -7701,6 +9074,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $GroupsTable groups = $GroupsTable(this);
   late final $WeeklyAvailabilitiesTable weeklyAvailabilities =
       $WeeklyAvailabilitiesTable(this);
+  late final $UserEventsTable userEvents = $UserEventsTable(this);
+  late final $CachedEventsTable cachedEvents = $CachedEventsTable(this);
   late final $SyncQueueTable syncQueue = $SyncQueueTable(this);
   late final UserDao userDao = UserDao(this as AppDatabase);
   late final TermDao termDao = TermDao(this as AppDatabase);
@@ -7712,6 +9087,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final HolidayDao holidayDao = HolidayDao(this as AppDatabase);
   late final SettingsDao settingsDao = SettingsDao(this as AppDatabase);
   late final GroupDao groupDao = GroupDao(this as AppDatabase);
+  late final UserEventDao userEventDao = UserEventDao(this as AppDatabase);
+  late final CachedEventDao cachedEventDao =
+      CachedEventDao(this as AppDatabase);
   late final SyncDao syncDao = SyncDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -7730,6 +9108,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         settings,
         groups,
         weeklyAvailabilities,
+        userEvents,
+        cachedEvents,
         syncQueue
       ];
 }
@@ -11053,6 +12433,624 @@ typedef $$WeeklyAvailabilitiesTableProcessedTableManager
         ),
         WeeklyAvailabilityEntity,
         PrefetchHooks Function()>;
+typedef $$UserEventsTableCreateCompanionBuilder = UserEventsCompanion Function({
+  required String id,
+  required String userId,
+  required String title,
+  required String description,
+  required DateTime startDateTime,
+  Value<DateTime?> endDateTime,
+  Value<String?> location,
+  Value<String?> imageUrl,
+  Value<String?> eventUrl,
+  Value<String?> category,
+  Value<String?> userNotes,
+  Value<String?> userLocation,
+  required DateTime addedAt,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<String> syncStatus,
+  Value<DateTime?> lastSyncedAt,
+  Value<int> rowid,
+});
+typedef $$UserEventsTableUpdateCompanionBuilder = UserEventsCompanion Function({
+  Value<String> id,
+  Value<String> userId,
+  Value<String> title,
+  Value<String> description,
+  Value<DateTime> startDateTime,
+  Value<DateTime?> endDateTime,
+  Value<String?> location,
+  Value<String?> imageUrl,
+  Value<String?> eventUrl,
+  Value<String?> category,
+  Value<String?> userNotes,
+  Value<String?> userLocation,
+  Value<DateTime> addedAt,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<String> syncStatus,
+  Value<DateTime?> lastSyncedAt,
+  Value<int> rowid,
+});
+
+class $$UserEventsTableFilterComposer
+    extends Composer<_$AppDatabase, $UserEventsTable> {
+  $$UserEventsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get startDateTime => $composableBuilder(
+      column: $table.startDateTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get endDateTime => $composableBuilder(
+      column: $table.endDateTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get location => $composableBuilder(
+      column: $table.location, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+      column: $table.imageUrl, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get eventUrl => $composableBuilder(
+      column: $table.eventUrl, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get category => $composableBuilder(
+      column: $table.category, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get userNotes => $composableBuilder(
+      column: $table.userNotes, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get userLocation => $composableBuilder(
+      column: $table.userLocation, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get addedAt => $composableBuilder(
+      column: $table.addedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$UserEventsTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserEventsTable> {
+  $$UserEventsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+      column: $table.userId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get startDateTime => $composableBuilder(
+      column: $table.startDateTime,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get endDateTime => $composableBuilder(
+      column: $table.endDateTime, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get location => $composableBuilder(
+      column: $table.location, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+      column: $table.imageUrl, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get eventUrl => $composableBuilder(
+      column: $table.eventUrl, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get category => $composableBuilder(
+      column: $table.category, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get userNotes => $composableBuilder(
+      column: $table.userNotes, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get userLocation => $composableBuilder(
+      column: $table.userLocation,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get addedAt => $composableBuilder(
+      column: $table.addedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$UserEventsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserEventsTable> {
+  $$UserEventsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startDateTime => $composableBuilder(
+      column: $table.startDateTime, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endDateTime => $composableBuilder(
+      column: $table.endDateTime, builder: (column) => column);
+
+  GeneratedColumn<String> get location =>
+      $composableBuilder(column: $table.location, builder: (column) => column);
+
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get eventUrl =>
+      $composableBuilder(column: $table.eventUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get userNotes =>
+      $composableBuilder(column: $table.userNotes, builder: (column) => column);
+
+  GeneratedColumn<String> get userLocation => $composableBuilder(
+      column: $table.userLocation, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get addedAt =>
+      $composableBuilder(column: $table.addedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => column);
+}
+
+class $$UserEventsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $UserEventsTable,
+    UserEventEntity,
+    $$UserEventsTableFilterComposer,
+    $$UserEventsTableOrderingComposer,
+    $$UserEventsTableAnnotationComposer,
+    $$UserEventsTableCreateCompanionBuilder,
+    $$UserEventsTableUpdateCompanionBuilder,
+    (
+      UserEventEntity,
+      BaseReferences<_$AppDatabase, $UserEventsTable, UserEventEntity>
+    ),
+    UserEventEntity,
+    PrefetchHooks Function()> {
+  $$UserEventsTableTableManager(_$AppDatabase db, $UserEventsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserEventsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserEventsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserEventsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> userId = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<DateTime> startDateTime = const Value.absent(),
+            Value<DateTime?> endDateTime = const Value.absent(),
+            Value<String?> location = const Value.absent(),
+            Value<String?> imageUrl = const Value.absent(),
+            Value<String?> eventUrl = const Value.absent(),
+            Value<String?> category = const Value.absent(),
+            Value<String?> userNotes = const Value.absent(),
+            Value<String?> userLocation = const Value.absent(),
+            Value<DateTime> addedAt = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<String> syncStatus = const Value.absent(),
+            Value<DateTime?> lastSyncedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              UserEventsCompanion(
+            id: id,
+            userId: userId,
+            title: title,
+            description: description,
+            startDateTime: startDateTime,
+            endDateTime: endDateTime,
+            location: location,
+            imageUrl: imageUrl,
+            eventUrl: eventUrl,
+            category: category,
+            userNotes: userNotes,
+            userLocation: userLocation,
+            addedAt: addedAt,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            syncStatus: syncStatus,
+            lastSyncedAt: lastSyncedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String userId,
+            required String title,
+            required String description,
+            required DateTime startDateTime,
+            Value<DateTime?> endDateTime = const Value.absent(),
+            Value<String?> location = const Value.absent(),
+            Value<String?> imageUrl = const Value.absent(),
+            Value<String?> eventUrl = const Value.absent(),
+            Value<String?> category = const Value.absent(),
+            Value<String?> userNotes = const Value.absent(),
+            Value<String?> userLocation = const Value.absent(),
+            required DateTime addedAt,
+            required DateTime createdAt,
+            required DateTime updatedAt,
+            Value<String> syncStatus = const Value.absent(),
+            Value<DateTime?> lastSyncedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              UserEventsCompanion.insert(
+            id: id,
+            userId: userId,
+            title: title,
+            description: description,
+            startDateTime: startDateTime,
+            endDateTime: endDateTime,
+            location: location,
+            imageUrl: imageUrl,
+            eventUrl: eventUrl,
+            category: category,
+            userNotes: userNotes,
+            userLocation: userLocation,
+            addedAt: addedAt,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            syncStatus: syncStatus,
+            lastSyncedAt: lastSyncedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$UserEventsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $UserEventsTable,
+    UserEventEntity,
+    $$UserEventsTableFilterComposer,
+    $$UserEventsTableOrderingComposer,
+    $$UserEventsTableAnnotationComposer,
+    $$UserEventsTableCreateCompanionBuilder,
+    $$UserEventsTableUpdateCompanionBuilder,
+    (
+      UserEventEntity,
+      BaseReferences<_$AppDatabase, $UserEventsTable, UserEventEntity>
+    ),
+    UserEventEntity,
+    PrefetchHooks Function()>;
+typedef $$CachedEventsTableCreateCompanionBuilder = CachedEventsCompanion
+    Function({
+  required String id,
+  required String title,
+  required String description,
+  required DateTime startDateTime,
+  Value<DateTime?> endDateTime,
+  Value<String?> location,
+  Value<String?> imageUrl,
+  Value<String?> eventUrl,
+  Value<String?> category,
+  required DateTime cachedAt,
+  required DateTime expiresAt,
+  Value<int> rowid,
+});
+typedef $$CachedEventsTableUpdateCompanionBuilder = CachedEventsCompanion
+    Function({
+  Value<String> id,
+  Value<String> title,
+  Value<String> description,
+  Value<DateTime> startDateTime,
+  Value<DateTime?> endDateTime,
+  Value<String?> location,
+  Value<String?> imageUrl,
+  Value<String?> eventUrl,
+  Value<String?> category,
+  Value<DateTime> cachedAt,
+  Value<DateTime> expiresAt,
+  Value<int> rowid,
+});
+
+class $$CachedEventsTableFilterComposer
+    extends Composer<_$AppDatabase, $CachedEventsTable> {
+  $$CachedEventsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get startDateTime => $composableBuilder(
+      column: $table.startDateTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get endDateTime => $composableBuilder(
+      column: $table.endDateTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get location => $composableBuilder(
+      column: $table.location, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+      column: $table.imageUrl, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get eventUrl => $composableBuilder(
+      column: $table.eventUrl, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get category => $composableBuilder(
+      column: $table.category, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get expiresAt => $composableBuilder(
+      column: $table.expiresAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$CachedEventsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CachedEventsTable> {
+  $$CachedEventsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get startDateTime => $composableBuilder(
+      column: $table.startDateTime,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get endDateTime => $composableBuilder(
+      column: $table.endDateTime, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get location => $composableBuilder(
+      column: $table.location, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+      column: $table.imageUrl, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get eventUrl => $composableBuilder(
+      column: $table.eventUrl, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get category => $composableBuilder(
+      column: $table.category, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get cachedAt => $composableBuilder(
+      column: $table.cachedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get expiresAt => $composableBuilder(
+      column: $table.expiresAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CachedEventsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CachedEventsTable> {
+  $$CachedEventsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startDateTime => $composableBuilder(
+      column: $table.startDateTime, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endDateTime => $composableBuilder(
+      column: $table.endDateTime, builder: (column) => column);
+
+  GeneratedColumn<String> get location =>
+      $composableBuilder(column: $table.location, builder: (column) => column);
+
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get eventUrl =>
+      $composableBuilder(column: $table.eventUrl, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cachedAt =>
+      $composableBuilder(column: $table.cachedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get expiresAt =>
+      $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+}
+
+class $$CachedEventsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CachedEventsTable,
+    CachedEventEntity,
+    $$CachedEventsTableFilterComposer,
+    $$CachedEventsTableOrderingComposer,
+    $$CachedEventsTableAnnotationComposer,
+    $$CachedEventsTableCreateCompanionBuilder,
+    $$CachedEventsTableUpdateCompanionBuilder,
+    (
+      CachedEventEntity,
+      BaseReferences<_$AppDatabase, $CachedEventsTable, CachedEventEntity>
+    ),
+    CachedEventEntity,
+    PrefetchHooks Function()> {
+  $$CachedEventsTableTableManager(_$AppDatabase db, $CachedEventsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedEventsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedEventsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedEventsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<DateTime> startDateTime = const Value.absent(),
+            Value<DateTime?> endDateTime = const Value.absent(),
+            Value<String?> location = const Value.absent(),
+            Value<String?> imageUrl = const Value.absent(),
+            Value<String?> eventUrl = const Value.absent(),
+            Value<String?> category = const Value.absent(),
+            Value<DateTime> cachedAt = const Value.absent(),
+            Value<DateTime> expiresAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedEventsCompanion(
+            id: id,
+            title: title,
+            description: description,
+            startDateTime: startDateTime,
+            endDateTime: endDateTime,
+            location: location,
+            imageUrl: imageUrl,
+            eventUrl: eventUrl,
+            category: category,
+            cachedAt: cachedAt,
+            expiresAt: expiresAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String title,
+            required String description,
+            required DateTime startDateTime,
+            Value<DateTime?> endDateTime = const Value.absent(),
+            Value<String?> location = const Value.absent(),
+            Value<String?> imageUrl = const Value.absent(),
+            Value<String?> eventUrl = const Value.absent(),
+            Value<String?> category = const Value.absent(),
+            required DateTime cachedAt,
+            required DateTime expiresAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CachedEventsCompanion.insert(
+            id: id,
+            title: title,
+            description: description,
+            startDateTime: startDateTime,
+            endDateTime: endDateTime,
+            location: location,
+            imageUrl: imageUrl,
+            eventUrl: eventUrl,
+            category: category,
+            cachedAt: cachedAt,
+            expiresAt: expiresAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CachedEventsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CachedEventsTable,
+    CachedEventEntity,
+    $$CachedEventsTableFilterComposer,
+    $$CachedEventsTableOrderingComposer,
+    $$CachedEventsTableAnnotationComposer,
+    $$CachedEventsTableCreateCompanionBuilder,
+    $$CachedEventsTableUpdateCompanionBuilder,
+    (
+      CachedEventEntity,
+      BaseReferences<_$AppDatabase, $CachedEventsTable, CachedEventEntity>
+    ),
+    CachedEventEntity,
+    PrefetchHooks Function()>;
 typedef $$SyncQueueTableCreateCompanionBuilder = SyncQueueCompanion Function({
   Value<int> id,
   required String entityType,
@@ -11308,6 +13306,10 @@ class $AppDatabaseManager {
       $$GroupsTableTableManager(_db, _db.groups);
   $$WeeklyAvailabilitiesTableTableManager get weeklyAvailabilities =>
       $$WeeklyAvailabilitiesTableTableManager(_db, _db.weeklyAvailabilities);
+  $$UserEventsTableTableManager get userEvents =>
+      $$UserEventsTableTableManager(_db, _db.userEvents);
+  $$CachedEventsTableTableManager get cachedEvents =>
+      $$CachedEventsTableTableManager(_db, _db.cachedEvents);
   $$SyncQueueTableTableManager get syncQueue =>
       $$SyncQueueTableTableManager(_db, _db.syncQueue);
 }

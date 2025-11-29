@@ -18,6 +18,8 @@ import 'dao/teacher_dao.dart';
 import 'dao/holiday_dao.dart';
 import 'dao/settings_dao.dart';
 import 'dao/group_dao.dart';
+import 'dao/user_event_dao.dart';
+import 'dao/cached_event_dao.dart';
 import 'dao/sync_dao.dart';
 
 part 'app_database.g.dart';
@@ -36,6 +38,8 @@ part 'app_database.g.dart';
     Settings,
     Groups,
     WeeklyAvailabilities,
+    UserEvents,
+    CachedEvents,
     SyncQueue,
   ],
   daos: [
@@ -49,6 +53,8 @@ part 'app_database.g.dart';
     HolidayDao,
     SettingsDao,
     GroupDao,
+    UserEventDao,
+    CachedEventDao,
     SyncDao,
   ],
 )

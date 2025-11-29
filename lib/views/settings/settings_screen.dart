@@ -5,6 +5,7 @@ import '../../core/constants/enums.dart';
 import '../../data/local/database/app_database.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../services/auth/auth_service.dart';
+import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/settings/settings_viewmodel.dart';
 import '../../widgets/dropdown_field.dart';
@@ -65,7 +66,7 @@ class SettingsScreenContent extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, size: 64, color: colors.error),
+                Icon(AppIcons.error, size: 64, color: colors.error),
                 const SizedBox(height: 16),
                 Text(
                   'Failed to load settings',

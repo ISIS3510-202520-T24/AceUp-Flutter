@@ -6,8 +6,8 @@ import 'package:cached_network_image/cached_network_image.dart'; // ignore: uri_
 import '../../core/connectivity/connectivity_manager.dart';
 import '../../data/repositories/group_repository.dart';
 import '../../data/repositories/user_repository.dart';
-import '../../models/shared/group_model.dart';
 import '../../services/storage/group_image_service.dart';
+import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/shared/edit_group_viewmodel.dart';
 import '../../widgets/top_bar.dart';
@@ -171,7 +171,7 @@ class _EditGroupScreenContent extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline, color: colors.error),
+                          Icon(AppIcons.error, color: colors.error),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(

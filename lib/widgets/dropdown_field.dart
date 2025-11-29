@@ -24,7 +24,7 @@ class AppDropdownField<T> extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: AppTypography.h5.copyWith(color: colors.onSecondary),

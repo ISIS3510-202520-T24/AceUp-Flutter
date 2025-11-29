@@ -255,7 +255,7 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
+            Icon(AppIcons.error, size: 64, color: Colors.red.shade400),
             const SizedBox(height: 16),
             Text(
               vm.errorMessage ?? 'Failed to load group data',

@@ -21,6 +21,7 @@ class AppIcons {
   static IconData edit = FontAwesomeIcons.pen;
   static IconData add = FontAwesomeIcons.plus;
   static IconData delete = FontAwesomeIcons.trashCan;
+  static IconData error = FontAwesomeIcons.solidCircleXmark;
 
 
   /// Menu items
@@ -36,6 +37,8 @@ class AppIcons {
   static IconData holidays = FontAwesomeIcons.umbrellaBeach;
   // Settings
   static IconData settings = FontAwesomeIcons.gear;
+
+  static IconData location = FontAwesomeIcons.locationDot;
 
   /// Class details
   static IconData priority = FontAwesomeIcons.circleExclamation;

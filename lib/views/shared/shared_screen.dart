@@ -225,7 +225,7 @@ class _SharedScreenState extends State<SharedScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: colors.error),
+            Icon(AppIcons.error, size: 64, color: colors.error),
             const SizedBox(height: 16),
             Text(
               'Failed to load groups',

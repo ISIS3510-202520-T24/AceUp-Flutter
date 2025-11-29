@@ -300,6 +300,58 @@ class WeeklyAvailabilities extends Table {
 }
 
 // ============================================
+// EVENT TABLE
+// ============================================
+
+@DataClassName('UserEventEntity')
+class UserEvents extends Table {
+  TextColumn get id => text()();
+  TextColumn get userId => text()();
+  TextColumn get title => text()();
+  TextColumn get description => text()();
+  DateTimeColumn get startDateTime => dateTime()();
+  DateTimeColumn get endDateTime => dateTime().nullable()();
+  TextColumn get location => text().nullable()();
+  TextColumn get imageUrl => text().nullable()();
+  TextColumn get eventUrl => text().nullable()();
+  TextColumn get category => text().nullable()();
+  TextColumn get userNotes => text().nullable()();
+  TextColumn get userLocation => text().nullable()();
+  DateTimeColumn get addedAt => dateTime()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  // Sync metadata
+  TextColumn get syncStatus => text().withDefault(const Constant('synced'))();
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id, userId};
+}
+
+// ============================================
+// CACHED EVENT TABLE (for offline viewing)
+// ============================================
+
+@DataClassName('CachedEventEntity')
+class CachedEvents extends Table {
+  TextColumn get id => text()();
+  TextColumn get title => text()();
+  TextColumn get description => text()();
+  DateTimeColumn get startDateTime => dateTime()();
+  DateTimeColumn get endDateTime => dateTime().nullable()();
+  TextColumn get location => text().nullable()();
+  TextColumn get imageUrl => text().nullable()();
+  TextColumn get eventUrl => text().nullable()();
+  TextColumn get category => text().nullable()();
+  DateTimeColumn get cachedAt => dateTime()();
+  DateTimeColumn get expiresAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+// ============================================
 // SYNC QUEUE TABLE
 // ============================================
 

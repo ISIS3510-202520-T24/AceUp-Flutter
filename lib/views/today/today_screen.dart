@@ -161,7 +161,7 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                AppIcons.priority,
+                AppIcons.error,
                 size: 48,
                 color: colors.error,
               ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth; // ignore: uri_does_not_exist
 import 'package:provider/provider.dart';
 
-import '../models/user_model.dart';
 import '../services/auth/secure_store.dart';
 import '../services/auth/session_prefs.dart';
 import '../services/auth/auth_service.dart';

@@ -565,6 +565,81 @@
             }
           }
         },
+        "calendar_events": {
+          "description": "University events that user has added to their personal calendar",
+          "document_structure": {
+            "id": {
+              "type": "string",
+              "description": "Event ID from university events API",
+              "required": true
+            },
+            "userId": {
+              "type": "string",
+              "description": "User ID (matches parent document)",
+              "required": true
+            },
+            "title": {
+              "type": "string",
+              "description": "Event title",
+              "required": true
+            },
+            "description": {
+              "type": "string",
+              "description": "Event description",
+              "required": true
+            },
+            "startDateTime": {
+              "type": "timestamp",
+              "description": "Event start date and time",
+              "required": true
+            },
+            "endDateTime": {
+              "type": "timestamp",
+              "description": "Event end date and time",
+              "required": false
+            },
+            "location": {
+              "type": "string",
+              "description": "Original event location",
+              "required": false
+            },
+            "imageUrl": {
+              "type": "string",
+              "description": "Event image URL",
+              "required": false
+            },
+            "eventUrl": {
+              "type": "string",
+              "description": "URL to event details page",
+              "required": false
+            },
+            "category": {
+              "type": "string",
+              "description": "Event category (e.g., Academic, Cultural, Sports)",
+              "required": false
+            },
+            "userNotes": {
+              "type": "string",
+              "description": "User's personal notes about the event",
+              "required": false
+            },
+            "userLocation": {
+              "type": "string",
+              "description": "User's custom location override",
+              "required": false
+            },
+            "addedAt": {
+              "type": "timestamp",
+              "description": "When user added event to calendar",
+              "required": true
+            },
+            "updatedAt": {
+              "type": "timestamp",
+              "description": "Last update timestamp",
+              "required": true
+            }
+          }
+        },
         "settings": {
           "description": "User preferences and settings (single document)",
           "document_id": "preferences",
@@ -813,6 +888,7 @@
     "users/terms/subjects": "Users can only access subjects within their terms",
     "users/teachers": "Users can only access their own teachers",
     "users/holidays": "Users can only access their own holidays",
+    "users/calendar_events": "Users can only access their own calendar events",
     "users/settings": "Users can only access their own settings",
     "groups": "Users can only access groups they are members of",
     "groups/weeklyAvailability": "Users can only access availability from groups they belong to"

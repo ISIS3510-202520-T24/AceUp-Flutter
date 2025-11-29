@@ -135,7 +135,7 @@ class GroupDetailViewModel extends ChangeNotifier {
     } catch (e, stackTrace) {
       print('Error loading events: $e');
       print('Stack trace: $stackTrace');
-      throw e;
+      rethrow;
     }
   }
 
