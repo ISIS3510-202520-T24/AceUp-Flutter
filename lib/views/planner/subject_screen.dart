@@ -763,7 +763,7 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
                       ],
                     ),
                   );
-                }).toList(),
+                }),
             ],
           ),
         ),

@@ -129,7 +129,7 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                AppIcons.priority,
+                AppIcons.error,
                 size: 48,
                 color: colors.error,
               ),

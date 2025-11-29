@@ -162,6 +162,13 @@ class BurgerMenu extends StatelessWidget {
                   ),
                   _menuItem(
                     context: context,
+                    title: "Uni Events",
+                    icon: AppIcons.icons,
+                    route: '/uni-events',
+                    isSelected: currentRoute == '/uni-events',
+                  ),
+                  _menuItem(
+                    context: context,
                     title: "Storage Stats",
                     icon: Icons.storage,
                     route: '/group-stats',

@@ -230,7 +230,7 @@ class _EditAssignmentContent extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.error_outline, color: colors.error),
+                    Icon(AppIcons.error, color: colors.error),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(

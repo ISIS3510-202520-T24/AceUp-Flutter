@@ -7,12 +7,11 @@ import '../../core/constants/enums.dart';
 import '../../data/repositories/academic_repository.dart';
 import '../../data/repositories/teacher_repository.dart';
 import '../../models/planner/class_template_model.dart';
+import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/planner/edit_class_viewmodel.dart';
 import '../../widgets/dropdown_field.dart';
 import '../../widgets/top_bar.dart';
-
-// ignore_for_file: undefined_identifier
 
 class EditClassScreen extends StatelessWidget {
   final ClassTemplate? classTemplate;
@@ -349,7 +348,7 @@ class _EditClassContent extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.error_outline, color: colors.error),
+                          Icon(AppIcons.error, color: colors.error),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(

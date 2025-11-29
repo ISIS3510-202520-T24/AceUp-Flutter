@@ -239,7 +239,7 @@ class AnalyticsService {
         'completion_rate': completionRate,
         'total_users': userStats.length,
         'users_with_complete_subjects': userStats.values.where((s) => (s['completed'] ?? 0) > 0).length,
-        'avg_subjects_per_user': totalCreatedSubjects / (userStats.length > 0 ? userStats.length : 1),
+        'avg_subjects_per_user': totalCreatedSubjects / (userStats.isNotEmpty ? userStats.length : 1),
         'generated_at': DateTime.now().toIso8601String(),
       };
     } catch (e) {

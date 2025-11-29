@@ -12,7 +12,7 @@ class EditExamScreen extends StatelessWidget {
   final String? subjectId;
   final String? termId;
 
-  EditExamScreen({
+  const EditExamScreen({
     super.key,
     this.exam,
     this.subjectId,

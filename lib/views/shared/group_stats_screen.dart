@@ -344,7 +344,7 @@ class _GroupStatsScreenState extends State<GroupStatsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: colors.primary,
+            activeThumbColor: colors.primary,
           ),
         ],
       ),

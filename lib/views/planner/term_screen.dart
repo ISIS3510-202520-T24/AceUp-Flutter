@@ -95,7 +95,7 @@ class _TermContent extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(AppIcons.priority, size: 48, color: colors.error),
+              Icon(AppIcons.error, size: 48, color: colors.error),
               const SizedBox(height: 16),
               Text(
                 viewModel.errorMessage ?? 'An error occurred',

@@ -158,7 +158,7 @@ Future<void> generateAnalyticsEventsFromExistingSubjects() async {
     totalEvents++;
     
     // Resumen final
-    print('\n' + '=' * 60);
+    print('\n${'=' * 60}');
     print('✅ MIGRACIÓN COMPLETADA');
     print('=' * 60);
     print('📚 Total subjects procesados: $totalSubjects');

@@ -63,7 +63,7 @@ class HolidaysScreenContent extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.error_outline,
+                  AppIcons.error,
                   size: 64,
                   color: colors.error,
                 ),

@@ -1,7 +1,6 @@
 import '../../data/repositories/academic_repository.dart';
 import '../../models/planner/subject_model.dart';
 import '../../models/assignments/assignment_model.dart';
-import '../../models/helpers/weight_model.dart';
 
 /// Service for calculating GPA values from assignments and subject data
 ///

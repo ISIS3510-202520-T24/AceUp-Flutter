@@ -21,11 +21,13 @@ import 'services/shared/sync_service.dart';
 import 'services/storage/hive_service.dart';
 import 'services/storage/app_preferences.dart';
 import 'services/data/initial_load_service.dart';
+import 'services/uni_events/university_events_service.dart';
 
 // ViewModels
 import 'viewmodels/auth/login_viewmodel.dart';
 import 'viewmodels/auth/signup_viewmodel.dart';
 import 'viewmodels/holidays/holidays_viewmodel.dart';
+import 'viewmodels/uni_events/university_events_viewmodel.dart';
 
 // Vistas
 import 'views/auth/login_screen.dart';
@@ -39,6 +41,7 @@ import 'views/assignments/assignments_screen.dart';
 import 'views/shared/shared_screen.dart';
 import 'views/shared/group_stats_screen.dart';
 import 'views/settings/settings_screen.dart';
+import 'views/uni_events/university_events_screen.dart';
 
 // Core
 import 'core/observer/vm_scope.dart';
@@ -53,6 +56,7 @@ import 'data/repositories/teacher_repository.dart';
 import 'data/repositories/holiday_repository.dart';
 import 'data/repositories/settings_repository.dart';
 import 'data/repositories/sync_repository.dart';
+import 'data/repositories/event_repository.dart';
 
 // Tema
 import 'themes/app_theme.dart';
@@ -114,9 +118,14 @@ Future<void> main() async {
     database: database,
     firestore: firestore,
   );
+  final eventRepository = EventRepository(
+    database: database,
+    firestore: firestore,
+  );
 
   // 6) Initialize services with repositories
   final gpaService = GpaCalculationService(repository: academicRepository);
+  final eventsService = UniversityEventsService();
 
   final initialLoadService = InitialLoadService(
     userRepository: userRepository,
@@ -165,8 +174,10 @@ Future<void> main() async {
     ..put<HolidayRepository>(holidayRepository)
     ..put<SettingsRepository>(settingsRepository)
     ..put<SyncRepository>(syncRepository)
+    ..put<EventRepository>(eventRepository)
     ..put<GpaCalculationService>(gpaService)
     ..put<InitialLoadService>(initialLoadService)
+    ..put<UniversityEventsService>(eventsService)
     ..put<LoginViewModel>(loginVM);
 
   // (debug opcional)
@@ -199,9 +210,11 @@ Future<void> main() async {
           Provider<HolidayRepository>.value(value: holidayRepository),
           Provider<SettingsRepository>.value(value: settingsRepository),
           Provider<SyncRepository>.value(value: syncRepository),
+          Provider<EventRepository>.value(value: eventRepository),
 
           // Services
           Provider<GpaCalculationService>.value(value: gpaService),
+          Provider<UniversityEventsService>.value(value: eventsService),
           ChangeNotifierProvider<InitialLoadService>.value(value: initialLoadService),
           Provider<AuthService>.value(value: authService),
           Provider<BiometricService>.value(value: bioService),
@@ -269,6 +282,17 @@ class AceUpApp extends StatelessWidget {
     '/shared': (context) => const SharedScreenWrapper(),
     '/planner' : (context) => const PlannerScreen(),
     '/assignments': (context) => const AssignmentsScreen(),
+    '/uni-events': (context) {
+      return ChangeNotifierProvider(
+        create: (context) => UniversityEventsViewModel(
+          eventsService: context.read<UniversityEventsService>(),
+          eventRepository: context.read<EventRepository>(),
+          connectivity: context.read<ConnectivityManager>(),
+          authService: context.read<AuthService>(),
+        ),
+        child: const UniversityEventsScreen(),
+      );
+    },
     '/settings': (context) => const SettingsScreen(),
     '/group-stats': (context) => const GroupStatsScreen(),
     '/account': (context) => AccountScreen(),

@@ -151,7 +151,7 @@ class HolidaysViewModel extends ChangeNotifier {
     }
 
     try {
-      await _holidayRepository!.deleteHoliday(holiday.id, userId);
+      await _holidayRepository.deleteHoliday(holiday.id, userId);
       await fetchHolidays();
     } catch (e) {
       _errorMessage = 'Failed to delete holiday: $e';
