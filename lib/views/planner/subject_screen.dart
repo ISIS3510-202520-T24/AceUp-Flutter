@@ -629,7 +629,7 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
             value: viewModel.useGrades,
             onChanged: (value) => viewModel.toggleUseGrades(),
             activeTrackColor: colors.primary,
-            activeThumbColor: colors.onPrimary,
+            activeColor: colors.onPrimary,
           ),
         ],
       ),

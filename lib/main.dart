@@ -42,6 +42,10 @@ import 'views/shared/shared_screen.dart';
 import 'views/shared/group_stats_screen.dart';
 import 'views/settings/settings_screen.dart';
 import 'views/uni_events/university_events_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'services/schedule_repository.dart';
+import 'views/schedule/schedule_screen_wrapper.dart';
 
 // Core
 import 'core/observer/vm_scope.dart';
@@ -222,6 +226,15 @@ Future<void> main() async {
 
           // SyncService es ChangeNotifier, debe usar ChangeNotifierProvider
           ChangeNotifierProvider<SyncService>.value(value: syncService),
+          // 🔹 NUEVO: ScheduleRepository (repositorio de clases)
+          ChangeNotifierProvider<ScheduleRepository>(
+          create: (_) {
+            final repo = ScheduleRepository();
+            // Cargar el horario guardado en segundo plano.
+            repo.loadFromLocal();
+            return repo;
+          },
+          ),
 
           // Stream de auth (FirebaseAuth) para saber si hay usuario logeado
           StreamProvider<User?>(
@@ -278,6 +291,9 @@ class AceUpApp extends StatelessWidget {
           vm: VmScope.of(context).get<LoginViewModel>(),
         ),
     '/today': (context) => const TodayScreen(),
+    
+    // 🔹 NUEVA RUTA: Week View (Schedule con calendario)
+    '/schedule': (context) => const ScheduleScreenWrapper(),
     '/holidays': (context) => const HolidaysScreen(),
     '/shared': (context) => const SharedScreenWrapper(),
     '/planner' : (context) => const PlannerScreen(),
