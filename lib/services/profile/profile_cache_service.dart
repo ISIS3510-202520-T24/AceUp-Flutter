@@ -14,6 +14,11 @@ class ProfileCacheService {
 
   // cache en RAM por email
   final Map<String, UserProfile> _memoryCache = {};
+    // toggle: activar o desactivar optimización de caché de compresión
+  bool enableAvatarCompressionCache = false;
+
+  // cache en RAM: originalPath -> avatar comprimido en disco
+  final Map<String, String> _avatarCacheByOriginalPath = {};
 
   Future<Directory> _profilesDir() async {
     final base = await getApplicationDocumentsDirectory();
@@ -62,21 +67,56 @@ class ProfileCacheService {
 
   /// Comprime y guarda avatar local estable para ESTE email.
   /// Devuelve la ruta guardada en disco lista para poner en `avatarLocalPath`.
-  Future<String?> saveCompressedAvatarForEmail({
+    Future<String?> saveCompressedAvatarForEmail({
     required String email,
     required String originalPath,
   }) async {
     if (email.isEmpty) return null;
 
+    // === MÉTRICA: tiempo de compresión de avatar ===
+    final sw = Stopwatch()..start();
+    print(
+      '[METRIC][AVATAR] start email=$email original=$originalPath cacheEnabled=$enableAvatarCompressionCache',
+    );
+
+    String? resultPath;
+
+    // 1) Si la optimización está activada, intentamos leer de caché
+    if (enableAvatarCompressionCache) {
+      final cached = _avatarCacheByOriginalPath[originalPath];
+      if (cached != null && File(cached).existsSync()) {
+        sw.stop();
+        print(
+          '[METRIC][AVATAR] cache_hit email=$email ms=${sw.elapsedMilliseconds} cached=$cached',
+        );
+        return cached;
+      }
+    }
+
+    // 2) Compresión "real"
     final dir = await _profilesDir();
     final outPath = '${dir.path}/${_safeEmail(email)}_avatar.jpg';
 
-    final resultPath = await ImageCompressor.compressAndSave(
+    resultPath = await ImageCompressor.compressAndSave(
       inputPath: originalPath,
       outputPath: outPath,
     );
 
-    if (resultPath.isEmpty) return null;
+    sw.stop();
+    print(
+      '[METRIC][AVATAR] done email=$email ms=${sw.elapsedMilliseconds} result=$resultPath',
+    );
+
+    if (resultPath == null || resultPath.isEmpty) {
+      return null;
+    }
+
+    // 3) Si la optimización está activada, guardamos en caché
+    if (enableAvatarCompressionCache) {
+      _avatarCacheByOriginalPath[originalPath] = resultPath;
+    }
+
     return resultPath;
   }
+
 }

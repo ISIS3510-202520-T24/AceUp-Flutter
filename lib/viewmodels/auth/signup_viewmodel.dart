@@ -178,12 +178,20 @@ class SignUpViewModel extends ChangeNotifier {
   // Si tú quieres además guardar hash offline en SQLite para login offline,
   // ese paso iría aquí también.
   //
-  Future<SignupResult> signup() async {
+    Future<SignupResult> signup() async {
+    // === MÉTRICA: tiempo total de registro ===
+    final sw = Stopwatch()..start();
+    print('[METRIC][SIGNUP] start email=${form.email}');
+
     // refrescamos validaciones
     final valid = _isFormValidBeforeSignup();
     notifyListeners();
 
     if (!valid) {
+      sw.stop();
+      print(
+        '[METRIC][SIGNUP] invalid_form total_ms=${sw.elapsedMilliseconds}',
+      );
       return SignupResult(
         ok: false,
         message: 'Please fix the highlighted fields.',
@@ -216,6 +224,11 @@ class SignUpViewModel extends ChangeNotifier {
       _loading = false;
       notifyListeners();
 
+      sw.stop();
+      print(
+        '[METRIC][SIGNUP] success total_ms=${sw.elapsedMilliseconds}',
+      );
+
       return const SignupResult(
         ok: true,
         message: 'Account created.',
@@ -241,12 +254,24 @@ class SignUpViewModel extends ChangeNotifier {
       }
 
       notifyListeners();
+
+      sw.stop();
+      print(
+        '[METRIC][SIGNUP] firebase_error total_ms=${sw.elapsedMilliseconds} code=${e.code}',
+      );
+
       return SignupResult(ok: false, message: msg);
     } catch (e) {
       // error inesperado (sin internet, etc.)
       _loading = false;
       _errorGlobal = 'Unexpected error. Please try again.';
       notifyListeners();
+
+      sw.stop();
+      print(
+        '[METRIC][SIGNUP] unexpected_error total_ms=${sw.elapsedMilliseconds}',
+      );
+
       return const SignupResult(
         ok: false,
         message: 'Unexpected error. Please try again.',

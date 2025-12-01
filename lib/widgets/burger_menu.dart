@@ -9,6 +9,8 @@ import '../themes/app_icons.dart';
 import '../services/auth/auth_service.dart';
 import '../services/profile/profile_notifier.dart';
 
+import '../views/schedule/schedule_screen.dart';
+
 class BurgerMenu extends StatelessWidget {
   const BurgerMenu({super.key});
 
@@ -107,20 +109,12 @@ class BurgerMenu extends StatelessWidget {
                   ),
                   _menuItem(
                     context: context,
-                    title: "Week View",
+                    title: "Schedule",
                     icon: AppIcons.calendarWeek,
-                    route: null,
-                    isSelected: false,
-                    isComingSoon: true,
+                    route: '/schedule',                    // <- va a tu pantalla
+                    isSelected: currentRoute == '/schedule',
                   ),
-                  _menuItem(
-                    context: context,
-                    title: "Calendar",
-                    icon: AppIcons.calendarMonth,
-                    route: null,
-                    isSelected: false,
-                    isComingSoon: true,
-                  ),
+
                   _menuItem(
                     context: context,
                     title: "Shared",
