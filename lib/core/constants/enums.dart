@@ -96,3 +96,82 @@ enum SyncOperation {
     );
   }
 }
+
+// ==================== VIEW STATES ====================
+
+/// Generic view state for screens that only need basic states
+enum ViewState {
+  idle,
+  loading,
+  error;
+
+  String get value => name;
+
+  bool get isIdle => this == ViewState.idle;
+  bool get isLoading => this == ViewState.loading;
+  bool get isError => this == ViewState.error;
+}
+
+/// View state for screens with success state (e.g., after saving)
+enum ViewStateWithSuccess {
+  idle,
+  loading,
+  success,
+  error;
+
+  String get value => name;
+
+  bool get isIdle => this == ViewStateWithSuccess.idle;
+  bool get isLoading => this == ViewStateWithSuccess.loading;
+  bool get isSuccess => this == ViewStateWithSuccess.success;
+  bool get isError => this == ViewStateWithSuccess.error;
+}
+
+/// View state for edit/form screens with saving state
+enum EditViewState {
+  idle,
+  loading,
+  saving,
+  error;
+
+  String get value => name;
+
+  bool get isIdle => this == EditViewState.idle;
+  bool get isLoading => this == EditViewState.loading;
+  bool get isSaving => this == EditViewState.saving;
+  bool get isError => this == EditViewState.error;
+}
+
+/// View state for screens with offline capability
+enum OfflineViewState {
+  idle,
+  loading,
+  success,
+  error,
+  offline;
+
+  String get value => name;
+
+  bool get isIdle => this == OfflineViewState.idle;
+  bool get isLoading => this == OfflineViewState.loading;
+  bool get isSuccess => this == OfflineViewState.success;
+  bool get isError => this == OfflineViewState.error;
+  bool get isOffline => this == OfflineViewState.offline;
+}
+
+/// View state for edit screens with image upload
+enum EditViewStateWithUpload {
+  idle,
+  loading,
+  saving,
+  uploadingImage,
+  error;
+
+  String get value => name;
+
+  bool get isIdle => this == EditViewStateWithUpload.idle;
+  bool get isLoading => this == EditViewStateWithUpload.loading;
+  bool get isSaving => this == EditViewStateWithUpload.saving;
+  bool get isUploadingImage => this == EditViewStateWithUpload.uploadingImage;
+  bool get isError => this == EditViewStateWithUpload.error;
+}

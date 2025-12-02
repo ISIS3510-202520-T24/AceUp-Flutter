@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart'; // ignore: uri_does_not_exist
 
+import '../../core/constants/enums.dart';
 import '../../themes/app_typography.dart';
 import '../../themes/app_icons.dart';
 import '../../widgets/burger_menu.dart';
@@ -64,22 +65,22 @@ class UniversityEventsScreen extends StatelessWidget {
 
   Widget _buildBody(BuildContext context, UniversityEventsViewModel viewModel) {
     switch (viewModel.state) {
-      case EventsViewState.loading:
+      case OfflineViewState.loading:
         return _buildLoading(context);
 
-      case EventsViewState.error:
+      case OfflineViewState.error:
         return _buildError(context, viewModel);
 
-      case EventsViewState.offline:
+      case OfflineViewState.offline:
         return _buildOffline(context, viewModel);
 
-      case EventsViewState.success:
+      case OfflineViewState.success:
         if (viewModel.filteredEvents.isEmpty) {
           return _buildEmpty(context, viewModel);
         }
         return _buildEventsList(context, viewModel);
 
-      case EventsViewState.idle:
+      case OfflineViewState.idle:
         return _buildLoading(context);
     }
   }

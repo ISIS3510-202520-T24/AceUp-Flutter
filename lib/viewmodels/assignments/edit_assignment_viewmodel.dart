@@ -10,8 +10,6 @@ import '../../core/constants/enums.dart';
 
 // ignore_for_file: creation_with_non_type
 
-enum EditAssignmentViewState { idle, loading, saving, error }
-
 class EditAssignmentViewModel extends ChangeNotifier {
   final AuthService _authService;
   final AcademicRepository _repository;
@@ -20,8 +18,8 @@ class EditAssignmentViewModel extends ChangeNotifier {
   final String? subjectId;
   final String? assignmentId;
 
-  EditAssignmentViewState _state = EditAssignmentViewState.idle;
-  EditAssignmentViewState get state => _state;
+  EditViewState _state = EditViewState.idle;
+  EditViewState get state => _state;
 
   Assignment? _assignment;
   Assignment? get assignment => _assignment;
@@ -124,13 +122,13 @@ class EditAssignmentViewModel extends ChangeNotifier {
   Future<void> _loadExistingAssignment() async {
     if (assignmentId == null) return;
 
-    _state = EditAssignmentViewState.loading;
+    _state = EditViewState.loading;
     notifyListeners();
 
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = EditAssignmentViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return;
     }
@@ -159,15 +157,15 @@ class EditAssignmentViewModel extends ChangeNotifier {
           await _loadWeightOptionsForSubject(_selectedSubjectId!);
         }
 
-        _state = EditAssignmentViewState.idle;
+        _state = EditViewState.idle;
         _errorMessage = null;
       } else {
         _errorMessage = 'Assignment not found';
-        _state = EditAssignmentViewState.error;
+        _state = EditViewState.error;
       }
     } catch (e) {
       _errorMessage = 'Failed to load assignment: $e';
-      _state = EditAssignmentViewState.error;
+      _state = EditViewState.error;
       print('Error loading assignment: $e');
     }
 
@@ -345,21 +343,21 @@ class EditAssignmentViewModel extends ChangeNotifier {
       return false;
     }
 
-    _state = EditAssignmentViewState.saving;
+    _state = EditViewState.saving;
     _errorMessage = null;
     notifyListeners();
 
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = EditAssignmentViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
 
     if (_selectedTermId == null || _selectedSubjectId == null) {
       _errorMessage = 'Please select a valid subject';
-      _state = EditAssignmentViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
@@ -373,12 +371,12 @@ class EditAssignmentViewModel extends ChangeNotifier {
         await _updateAssignment(userId);
       }
 
-      _state = EditAssignmentViewState.idle;
+      _state = EditViewState.idle;
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = 'Failed to save assignment: $e';
-      _state = EditAssignmentViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
@@ -443,7 +441,7 @@ class EditAssignmentViewModel extends ChangeNotifier {
     // Title is required
     if (titleController.text.trim().isEmpty) {
       _errorMessage = 'Title is required';
-      _state = EditAssignmentViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
@@ -451,7 +449,7 @@ class EditAssignmentViewModel extends ChangeNotifier {
     // Subject is required
     if (_selectedSubject == null || _selectedSubject!.isEmpty) {
       _errorMessage = 'Subject is required';
-      _state = EditAssignmentViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }

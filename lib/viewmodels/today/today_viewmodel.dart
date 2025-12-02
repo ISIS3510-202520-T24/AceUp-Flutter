@@ -3,10 +3,9 @@ import '../../models/assignments/assignment_model.dart';
 import '../../data/repositories/academic_repository.dart';
 import '../../services/auth/auth_service.dart';
 import '../../themes/app_icons.dart';
+import '../../core/constants/enums.dart';
 
 enum TodayTab { timetable, assignments }
-
-enum TodayViewState { idle, loading, error }
 
 class TodayViewModel extends ChangeNotifier {
   final AcademicRepository _repository;
@@ -15,8 +14,8 @@ class TodayViewModel extends ChangeNotifier {
   TodayTab _selectedTab = TodayTab.timetable;
   TodayTab get selectedTab => _selectedTab;
 
-  TodayViewState _state = TodayViewState.idle;
-  TodayViewState get state => _state;
+  ViewState _state = ViewState.idle;
+  ViewState get state => _state;
 
   List<Assignment> _assignmentsDueToday = [];
   List<Assignment> get assignmentsDueToday => _assignmentsDueToday;
@@ -49,12 +48,12 @@ class TodayViewModel extends ChangeNotifier {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = TodayViewState.error;
+      _state = ViewState.error;
       notifyListeners();
       return;
     }
 
-    _state = TodayViewState.loading;
+    _state = ViewState.loading;
     notifyListeners();
 
     try {
@@ -67,11 +66,11 @@ class TodayViewModel extends ChangeNotifier {
         return 0;
       });
 
-      _state = TodayViewState.idle;
+      _state = ViewState.idle;
       _errorMessage = null;
     } catch (e) {
       _errorMessage = e.toString();
-      _state = TodayViewState.error;
+      _state = ViewState.error;
       print('Error loading assignments due today: $e');
     }
 
@@ -92,7 +91,7 @@ class TodayViewModel extends ChangeNotifier {
       await _loadAssignmentsDueToday();
     } catch (e) {
       _errorMessage = 'Failed to update assignment: $e';
-      _state = TodayViewState.error;
+      _state = ViewState.error;
       notifyListeners();
     }
   }

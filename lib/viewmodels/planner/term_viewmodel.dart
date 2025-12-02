@@ -5,8 +5,7 @@ import '../../services/auth/auth_service.dart';
 import '../../services/grades/gpa_calculation_service.dart';
 import '../../services/cache/memory_cache_service.dart';
 import '../../data/repositories/academic_repository.dart';
-
-enum TermViewState { idle, loading, error }
+import '../../core/constants/enums.dart';
 
 class TermViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -15,8 +14,8 @@ class TermViewModel extends ChangeNotifier {
   final MemoryCacheService _cache = MemoryCacheService();
   final String termId;
 
-  TermViewState _state = TermViewState.idle;
-  TermViewState get state => _state;
+  ViewState _state = ViewState.idle;
+  ViewState get state => _state;
 
   Term? _term;
   Term? get term => _term;
@@ -49,12 +48,12 @@ class TermViewModel extends ChangeNotifier {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = TermViewState.error;
+      _state = ViewState.error;
       notifyListeners();
       return;
     }
 
-    _state = TermViewState.loading;
+    _state = ViewState.loading;
     notifyListeners();
 
     try {
@@ -64,7 +63,7 @@ class TermViewModel extends ChangeNotifier {
 
       if (_term == null) {
         _errorMessage = 'Term not found';
-        _state = TermViewState.error;
+        _state = ViewState.error;
         notifyListeners();
         return;
       }
@@ -73,11 +72,11 @@ class TermViewModel extends ChangeNotifier {
 
       await _loadSubjects();
 
-      _state = TermViewState.idle;
+      _state = ViewState.idle;
       _errorMessage = null;
     } catch (e) {
       _errorMessage = e.toString();
-      _state = TermViewState.error;
+      _state = ViewState.error;
       print('❌ Error loading term: $e');
     }
     notifyListeners();

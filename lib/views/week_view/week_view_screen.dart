@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants/enums.dart';
 import '../../data/repositories/academic_repository.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
@@ -63,13 +64,13 @@ class _WeekViewScreenContent extends StatelessWidget {
   Widget _buildBody(BuildContext context, WeekViewViewModel viewModel) {
     final colors = Theme.of(context).colorScheme;
 
-    if (viewModel.state == WeekViewViewState.loading) {
+    if (viewModel.state == ViewState.loading) {
       return Center(
         child: CircularProgressIndicator(color: colors.primary),
       );
     }
 
-    if (viewModel.state == WeekViewViewState.error) {
+    if (viewModel.state == ViewState.error) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -94,27 +95,11 @@ class _WeekViewScreenContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Header with info
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text(
-            'Your Weekly Schedule',
-            style: AppTypography.h3.copyWith(
-              color: colors.onSurface,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Classes from Monday to Friday (7:00 a.m. – 10:00 p.m.)',
-            style: AppTypography.bodyS.copyWith(
-              color: colors.onSurfaceVariant,
-            ),
-          ),
-        ),
+        // Week navigation
+        _buildWeekNavigation(context, viewModel),
+
         const SizedBox(height: 16),
-        
+
         // Weekly calendar view
         Expanded(
           child: Padding(
@@ -130,6 +115,99 @@ class _WeekViewScreenContent extends StatelessWidget {
       ],
     );
   }
+
+  Widget _buildWeekNavigation(BuildContext context, WeekViewViewModel viewModel) {
+    final colors = Theme.of(context).colorScheme;
+    final weekStart = viewModel.currentWeekStart;
+    final weekEnd = viewModel.currentWeekEnd;
+
+    // Format date range
+    final startFormatted = '${_monthName(weekStart.month)} ${weekStart.day}';
+    final endFormatted = '${_monthName(weekEnd.month)} ${weekEnd.day}, ${weekEnd.year}';
+    final dateRange = '$startFormatted - $endFormatted';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title
+          Text(
+            'Your Weekly Schedule',
+            style: AppTypography.h3.copyWith(
+              color: colors.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Week navigation controls
+          Row(
+            children: [
+              // Previous week button
+              IconButton(
+                onPressed: viewModel.goToPreviousWeek,
+                icon: Icon(AppIcons.arrowLeft),
+                color: colors.primary,
+                tooltip: 'Previous week',
+              ),
+
+              // Current week date range
+              Expanded(
+                child: Text(
+                  dateRange,
+                  style: AppTypography.bodyM.copyWith(
+                    color: colors.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+
+              // Next week button
+              IconButton(
+                onPressed: viewModel.goToNextWeek,
+                icon: Icon(AppIcons.arrowRight),
+                color: colors.primary,
+                tooltip: 'Next week',
+              ),
+            ],
+          ),
+
+          // Today button (if not current week)
+          if (!_isCurrentWeek(viewModel.currentWeekStart)) ...[
+            const SizedBox(height: 8),
+            Center(
+              child: TextButton(
+                onPressed: viewModel.goToCurrentWeek,
+                child: Text(
+                  'Go to current week',
+                  style: AppTypography.bodyS.copyWith(
+                    color: colors.primary,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _monthName(int month) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month - 1];
+  }
+
+  bool _isCurrentWeek(DateTime weekStart) {
+    final now = DateTime.now();
+    final currentMonday = now.subtract(Duration(days: now.weekday - 1));
+    return weekStart.year == currentMonday.year &&
+           weekStart.month == currentMonday.month &&
+           weekStart.day == currentMonday.day;
+  }
   
   void _showClassDetails(
     BuildContext context,
@@ -138,6 +216,10 @@ class _WeekViewScreenContent extends StatelessWidget {
   ) {
     final colors = Theme.of(context).colorScheme;
     final classTemplate = occurrence.classTemplate;
+
+    // Format date
+    final date = occurrence.date;
+    final dateFormatted = '${_dayName(date.weekday)}, ${_monthName(date.month)} ${date.day}, ${date.year}';
 
     showModalBottomSheet(
       context: context,
@@ -156,7 +238,7 @@ class _WeekViewScreenContent extends StatelessWidget {
                 ),
               ),
             const SizedBox(height: 8),
-            
+
             // Class name
             Text(
               classTemplate.name,
@@ -165,12 +247,31 @@ class _WeekViewScreenContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            
-            // Time
+
+            // Date
             Row(
               children: [
                 Icon(
                   AppIcons.calendarDay,
+                  size: 18,
+                  color: colors.onSurfaceVariant,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  dateFormatted,
+                  style: AppTypography.bodyM.copyWith(
+                    color: colors.onSurface,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Time
+            Row(
+              children: [
+                Icon(
+                  Icons.access_time,
                   size: 18,
                   color: colors.onSurfaceVariant,
                 ),
@@ -183,7 +284,7 @@ class _WeekViewScreenContent extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             // Location
             if (classTemplate.location.isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -204,14 +305,50 @@ class _WeekViewScreenContent extends StatelessWidget {
                 ],
               ),
             ],
-            
+
+            // Notes from exception
+            if (occurrence.hasNotes) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.note_outlined,
+                      size: 18,
+                      color: colors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        occurrence.notes!,
+                        style: AppTypography.bodyM.copyWith(
+                          color: colors.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             const SizedBox(height: 24),
-            
+
             // Actions
           ],
         ),
       ),
     );
+  }
+
+  String _dayName(int weekday) {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return days[weekday - 1];
   }
 
   Future<void> _handleAddHolidayAction(BuildContext context, WeekViewViewModel viewModel) async {

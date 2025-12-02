@@ -15,6 +15,7 @@ import '../../widgets/content_switcher.dart';
 
 import '../../viewmodels/today/today_viewmodel.dart';
 import '../../data/repositories/academic_repository.dart';
+import '../../core/constants/enums.dart';
 import '../assignments/edit_assignment_screen.dart';
 import '../planner/edit_class_screen.dart';
 import '../planner/edit_exam_screen.dart';
@@ -145,7 +146,7 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
   Widget _buildTabContent(BuildContext context, TodayViewModel viewModel, TodayTab tab) {
     final colors = Theme.of(context).colorScheme;
 
-    if (viewModel.state == TodayViewState.loading) {
+    if (viewModel.state == ViewState.loading) {
       return Center(
         child: CircularProgressIndicator(
           color: colors.primary,
@@ -153,7 +154,7 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
       );
     }
 
-    if (viewModel.state == TodayViewState.error) {
+    if (viewModel.state == ViewState.error) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),

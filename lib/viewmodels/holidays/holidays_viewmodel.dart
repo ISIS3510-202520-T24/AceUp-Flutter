@@ -5,8 +5,7 @@ import '../../models/holidays/holiday_model.dart';
 import '../../services/holidays/holiday_service.dart';
 import '../../data/repositories/holiday_repository.dart';
 import '../../services/auth/auth_service.dart';
-
-enum HolidayViewState { idle, loading, error, success }
+import '../../core/constants/enums.dart';
 
 class HolidaysViewModel extends ChangeNotifier {
   final HolidayService _holidayService = HolidayService();
@@ -16,8 +15,8 @@ class HolidaysViewModel extends ChangeNotifier {
   List<Holiday> _holidays = [];
   List<Holiday> get holidays => _holidays;
 
-  HolidayViewState _state = HolidayViewState.idle;
-  HolidayViewState get state => _state;
+  ViewStateWithSuccess _state = ViewStateWithSuccess.idle;
+  ViewStateWithSuccess get state => _state;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
@@ -34,15 +33,15 @@ class HolidaysViewModel extends ChangeNotifier {
 
   /// Fetches holidays for the current year and next year
   Future<void> fetchHolidays() async {
-    _setState(HolidayViewState.loading);
+    _setState(ViewStateWithSuccess.loading);
     _errorMessage = null;
 
     try {
       _holidays = await _holidayService.getHolidaysForCurrentAndNextYear(_countryCode);
-      _setState(HolidayViewState.success);
+      _setState(ViewStateWithSuccess.success);
     } catch (e) {
       _errorMessage = e.toString();
-      _setState(HolidayViewState.error);
+      _setState(ViewStateWithSuccess.error);
       console.log('Error fetching holidays: $e');
     }
   }
@@ -106,7 +105,7 @@ class HolidaysViewModel extends ChangeNotifier {
   }
 
   /// Private method to update state and notify listeners
-  void _setState(HolidayViewState newState) {
+  void _setState(ViewStateWithSuccess newState) {
     _state = newState;
     notifyListeners();
   }
@@ -129,7 +128,7 @@ class HolidaysViewModel extends ChangeNotifier {
   Future<void> deleteHoliday(Holiday holiday) async {
     if (_holidayRepository == null) {
       _errorMessage = 'Holiday repository not available';
-      _setState(HolidayViewState.error);
+      _setState(ViewStateWithSuccess.error);
       notifyListeners();
       return;
     }
@@ -137,7 +136,7 @@ class HolidaysViewModel extends ChangeNotifier {
     // Only allow deleting user-created holidays
     if (!holiday.isUserCreated) {
       _errorMessage = 'Cannot delete API holidays';
-      _setState(HolidayViewState.error);
+      _setState(ViewStateWithSuccess.error);
       notifyListeners();
       return;
     }
@@ -145,7 +144,7 @@ class HolidaysViewModel extends ChangeNotifier {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _setState(HolidayViewState.error);
+      _setState(ViewStateWithSuccess.error);
       notifyListeners();
       return;
     }
@@ -155,7 +154,7 @@ class HolidaysViewModel extends ChangeNotifier {
       await fetchHolidays();
     } catch (e) {
       _errorMessage = 'Failed to delete holiday: $e';
-      _setState(HolidayViewState.error);
+      _setState(ViewStateWithSuccess.error);
       notifyListeners();
     }
   }

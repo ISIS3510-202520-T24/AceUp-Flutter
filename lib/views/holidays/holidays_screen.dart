@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/enums.dart';
 import '../../data/repositories/holiday_repository.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
@@ -50,12 +51,12 @@ class HolidaysScreenContent extends StatelessWidget {
 
   Widget _buildBody(BuildContext context, HolidaysViewModel viewModel, ColorScheme colors) {
     switch (viewModel.state) {
-      case HolidayViewState.loading:
+      case ViewStateWithSuccess.loading:
         return const Center(
           child: CircularProgressIndicator(),
         );
 
-      case HolidayViewState.error:
+      case ViewStateWithSuccess.error:
         return Center(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
@@ -100,8 +101,8 @@ class HolidaysScreenContent extends StatelessWidget {
           ),
         );
 
-      case HolidayViewState.success:
-      case HolidayViewState.idle:
+      case ViewStateWithSuccess.success:
+      case ViewStateWithSuccess.idle:
         if (viewModel.holidays.isEmpty) {
           return Center(
             child: Column(

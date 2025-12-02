@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants/enums.dart';
 import '../../data/repositories/academic_repository.dart';
 import '../../models/planner/class_template_model.dart';
 import '../../models/planner/exam_model.dart';
@@ -98,13 +99,13 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
           }
         },
       ),
-      body: viewModel.state == SubjectViewState.loading
+      body: viewModel.state == ViewState.loading
           ? Center(
         child: CircularProgressIndicator(
           color: Theme.of(context).colorScheme.primary,
         ),
       )
-          : viewModel.state == SubjectViewState.error
+          : viewModel.state == ViewState.error
           ? Center(
         child: Text(
           viewModel.errorMessage ?? 'An error occurred',
@@ -133,9 +134,13 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
     );
   }
 
-  Widget _buildFAB(BuildContext context, SubjectViewModel viewModel) {
-    switch (viewModel.selectedTab) {
+  Widget? _buildFAB(BuildContext context, SubjectViewModel viewModel) {
+    // Ensure the FAB rebuilds when the tab changes
+    final currentTab = viewModel.selectedTab;
+
+    switch (currentTab) {
       case SubjectTab.assignments:
+        // Show only Assignment FAB
         return FAB(
           options: [
             FabOption(
@@ -145,7 +150,11 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => EditAssignmentScreen(assignment: null, subjectId: viewModel.subjectId, termId: viewModel.subjectId),
+                    builder: (_) => EditAssignmentScreen(
+                      assignment: null,
+                      subjectId: viewModel.subjectId,
+                      termId: viewModel.termId,
+                    ),
                   ),
                 );
                 if (result == true) {
@@ -155,7 +164,9 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
             ),
           ],
         );
+
       case SubjectTab.timetable:
+        // Show Class and Exam FABs
         return FAB(
           options: [
             FabOption(
@@ -165,11 +176,15 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => EditClassScreen(classTemplate: null, subjectId: viewModel.subjectId, termId: viewModel.subjectId),
+                    builder: (_) => EditClassScreen(
+                      classTemplate: null,
+                      subjectId: viewModel.subjectId,
+                      termId: viewModel.termId,
+                    ),
                   ),
                 );
                 if (result == true) {
-                  viewModel.refreshAssignments();
+                  viewModel.refreshSubject();
                 }
               },
             ),
@@ -180,18 +195,24 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => EditExamScreen(exam: null, subjectId: viewModel.subjectId, termId: viewModel.subjectId),
+                    builder: (_) => EditExamScreen(
+                      exam: null,
+                      subjectId: viewModel.subjectId,
+                      termId: viewModel.termId,
+                    ),
                   ),
                 );
                 if (result == true) {
-                  viewModel.refreshAssignments();
+                  viewModel.refreshSubject();
                 }
               },
             ),
           ],
         );
+
       case SubjectTab.grades:
-        return const SizedBox.shrink();
+        // Hide FAB on grades tab
+        return null;
     }
   }
 
@@ -469,12 +490,12 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
       dueDateText = 'Due Today';
     } else if (dueDate.isBefore(today)) {
       final difference = today.difference(dueDate).inDays;
-      if (assignment.isPending) {
+      if (assignment.isCompleted) {
+        dueDateText = DateFormat('MMM d, yyyy').format(assignment.dueDate);
+      } else {
         dueDateText = difference == 1
             ? 'Overdue by 1 day'
             : 'Overdue by $difference days';
-      } else {
-        dueDateText = DateFormat('MMM d, yyyy').format(assignment.dueDate);
       }
     } else {
       final difference = dueDate.difference(today).inDays;
@@ -552,7 +573,7 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
                   Text(
                     dueDateText,
                     style: AppTypography.bodyS.copyWith(
-                      color: dueDate.isBefore(today) && assignment.isPending
+                      color: dueDate.isBefore(today) && !assignment.isCompleted
                           ? colors.error
                           : colors.onPrimaryContainer,
                     ),

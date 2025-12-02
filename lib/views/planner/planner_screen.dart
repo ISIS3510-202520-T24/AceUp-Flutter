@@ -9,6 +9,7 @@ import '../../widgets/burger_menu.dart';
 import '../../widgets/content_counter.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
+import '../../core/constants/enums.dart';
 import 'term_screen.dart';
 import 'edit_term_screen.dart';
 
@@ -62,13 +63,13 @@ class _PlannerScreenContent extends StatelessWidget {
   }
 
   Widget _buildBody(BuildContext context, PlannerViewModel viewModel, ColorScheme colors) {
-    if (viewModel.state == PlannerViewState.loading) {
+    if (viewModel.state == ViewState.loading) {
       return Center(
         child: CircularProgressIndicator(color: colors.primary),
       );
     }
 
-    if (viewModel.state == PlannerViewState.error) {
+    if (viewModel.state == ViewState.error) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -200,7 +201,7 @@ class _PlannerScreenContent extends StatelessWidget {
                 ],
               ),
               const SizedBox(width: 8),
-              Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
+              Icon(AppIcons.arrowRight, color: colors.onSurfaceVariant),
             ],
           ),
         ),

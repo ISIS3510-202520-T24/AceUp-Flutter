@@ -16,6 +16,7 @@ import '../../widgets/top_bar.dart';
 
 import '../../viewmodels/assignments/assignments_viewmodel.dart';
 import '../../data/repositories/academic_repository.dart';
+import '../../core/constants/enums.dart';
 import 'edit_assignment_screen.dart';
 
 class AssignmentsScreen extends StatelessWidget {
@@ -115,13 +116,13 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
       ) {
     final colors = Theme.of(context).colorScheme;
 
-    if (viewModel.state == AssignmentsViewState.loading) {
+    if (viewModel.state == ViewState.loading) {
       return Center(
         child: CircularProgressIndicator(),
       );
     }
 
-    if (viewModel.state == AssignmentsViewState.error) {
+    if (viewModel.state == ViewState.error) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -220,12 +221,12 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
       dueDateText = 'Due Today';
     } else if (dueDate.isBefore(today)) {
       final difference = today.difference(dueDate).inDays;
-      if (assignment.isPending) {
+      if (assignment.isCompleted) {
+        dueDateText = DateFormat('MMM d, yyyy').format(assignment.dueDate);
+      } else {
         dueDateText = difference == 1
             ? 'Overdue by 1 day'
             : 'Overdue by $difference days';
-      } else {
-        dueDateText = DateFormat('MMM d, yyyy').format(assignment.dueDate);
       }
     } else {
       final difference = dueDate.difference(today).inDays;
@@ -311,7 +312,7 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
                   Text(
                     dueDateText,
                     style: AppTypography.bodyS.copyWith(
-                      color: dueDate.isBefore(today) && assignment.isPending
+                      color: dueDate.isBefore(today) && !assignment.isCompleted
                           ? colors.onError
                           : colors.onPrimaryContainer,
                     ),

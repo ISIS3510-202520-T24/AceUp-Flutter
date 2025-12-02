@@ -3,150 +3,268 @@ import 'package:flutter/material.dart';
 import '../../core/constants/enums.dart';
 import '../../data/repositories/academic_repository.dart';
 import '../../models/planner/class_template_model.dart';
+import '../../models/planner/class_exception_model.dart';
 import '../../services/auth/auth_service.dart';
-
-
-enum WeekViewViewState { idle, loading, error}
 
 class WeekViewViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final AcademicRepository _repository;
 
-  WeekViewViewState _state = WeekViewViewState.idle;
-  WeekViewViewState get state => _state;
-
+  ViewState _state = ViewState.idle;
+  ViewState get state => _state;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
   List<ClassTemplate> _classes = [];
+  Map<String, List<ClassException>> _exceptionsByTemplate = {};
 
-  List<WeeklyClassOccurrence> get weeklyOccurrences {
-    final occurrences = <WeeklyClassOccurrence>[];
-    
-    for (final classTemplate in _classes) {
-      final classOccurrences = _generateOccurrencesForClass(classTemplate);
-      occurrences.addAll(classOccurrences);
-    }
-    
-    return occurrences;
-  }
+  // Current week being displayed (Monday of the week)
+  DateTime _currentWeekStart = _getMonday(DateTime.now());
+  DateTime get currentWeekStart => _currentWeekStart;
+
+  // Get the end of the current week (Friday)
+  DateTime get currentWeekEnd => _currentWeekStart.add(const Duration(days: 4));
 
   WeekViewViewModel({
     required AcademicRepository repository,
-  })  : _repository = repository {
+  }) : _repository = repository {
     _loadWeekView();
+  }
+
+  /// Get Monday of the week containing the given date
+  static DateTime _getMonday(DateTime date) {
+    // DateTime.weekday: Monday = 1, Sunday = 7
+    final daysFromMonday = date.weekday - 1;
+    return DateTime(date.year, date.month, date.day).subtract(Duration(days: daysFromMonday));
+  }
+
+  /// Navigate to previous week
+  void goToPreviousWeek() {
+    _currentWeekStart = _currentWeekStart.subtract(const Duration(days: 7));
+    notifyListeners();
+  }
+
+  /// Navigate to next week
+  void goToNextWeek() {
+    _currentWeekStart = _currentWeekStart.add(const Duration(days: 7));
+    notifyListeners();
+  }
+
+  /// Navigate to current week
+  void goToCurrentWeek() {
+    _currentWeekStart = _getMonday(DateTime.now());
+    notifyListeners();
+  }
+
+  /// Get all class occurrences for the current week
+  List<WeeklyClassOccurrence> get weeklyOccurrences {
+    final occurrences = <WeeklyClassOccurrence>[];
+
+    for (final classTemplate in _classes) {
+      // Generate occurrences for this template for the current week
+      final templateOccurrences = _generateOccurrencesForTemplate(
+        classTemplate,
+        _currentWeekStart,
+        currentWeekEnd,
+      );
+      occurrences.addAll(templateOccurrences);
+    }
+
+    return occurrences;
   }
 
   Future<void> _loadWeekView() async {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = WeekViewViewState.error;
+      _state = ViewState.error;
       notifyListeners();
       return;
     }
 
-    _state = WeekViewViewState.loading;
+    _state = ViewState.loading;
     notifyListeners();
 
     try {
       final terms = await _repository.getTermsForUser(userId);
-      final classes = <ClassTemplate>[];
+      final allClasses = <ClassTemplate>[];
+      final allExceptions = <String, List<ClassException>>{};
 
       for (final term in terms) {
         final subjects = await _repository.getSubjectsForTerm(term.id);
-        
+
         for (final subject in subjects) {
-          final classes = await _repository.getClassTemplatesForSubject(subject.id);
+          // Fetch class templates for this subject
+          final subjectClasses = await _repository.getClassTemplatesForSubject(subject.id);
 
           // Add subject name to each class for display
-          final classesWithSubject = classes.map((c) => 
+          final classesWithSubject = subjectClasses.map((c) =>
             c.copyWith(
               subjectName: subject.name,
               subjectId: subject.id,
               termId: term.id,
             )
           ).toList();
-          
-          classes.addAll(classesWithSubject);
+
+          allClasses.addAll(classesWithSubject);
+
+          // Fetch class exceptions for each template
+          for (final classTemplate in subjectClasses) {
+            final exceptions = await _repository.getClassExceptionsForTemplate(classTemplate.id);
+            if (exceptions.isNotEmpty) {
+              allExceptions[classTemplate.id] = exceptions;
+            }
+          }
         }
       }
 
-      _classes = classes;
-      _state = WeekViewViewState.idle;
+      _classes = allClasses;
+      _exceptionsByTemplate = allExceptions;
+      _state = ViewState.idle;
+      notifyListeners();
     } catch (e) {
-      _errorMessage = 'Failed to load classes';
-      _state = WeekViewViewState.error;
+      _errorMessage = 'Failed to load classes: $e';
+      _state = ViewState.error;
+      notifyListeners();
     }
   }
 
-  List<WeeklyClassOccurrence> _generateOccurrencesForClass(ClassTemplate classTemplate) {
+  /// Generate class occurrences for a specific date range
+  List<WeeklyClassOccurrence> _generateOccurrencesForTemplate(
+    ClassTemplate template,
+    DateTime rangeStart,
+    DateTime rangeEnd,
+  ) {
     final occurrences = <WeeklyClassOccurrence>[];
-    final recurrence = classTemplate.recurrence;
+    final recurrence = template.recurrence;
 
-    switch (recurrence.unit) {
-      case RecurrenceUnit.weeks:
-        // For weekly recurrence, create occurrences for selected days
-        for (final day in recurrence.selectedDays) {
+    // Only generate occurrences if the template's date range overlaps with the requested range
+    if (template.endDate.isBefore(rangeStart) || template.startDate.isAfter(rangeEnd)) {
+      return occurrences;
+    }
+
+    // Generate dates based on recurrence pattern
+    DateTime currentDate = rangeStart.isAfter(template.startDate) ? rangeStart : template.startDate;
+    final effectiveEndDate = rangeEnd.isBefore(template.endDate) ? rangeEnd : template.endDate;
+
+    while (currentDate.isBefore(effectiveEndDate) || _isSameDay(currentDate, effectiveEndDate)) {
+      bool shouldInclude = false;
+
+      switch (recurrence.unit) {
+        case RecurrenceUnit.weeks:
+          // Check if current day of week is in selected days
+          final weekday = currentDate.weekday == 7 ? 0 : currentDate.weekday; // Convert Sunday to 0
+          shouldInclude = recurrence.selectedDays.contains(weekday);
+          break;
+
+        case RecurrenceUnit.days:
+          // Every N days from start date
+          final daysDiff = currentDate.difference(template.startDate).inDays;
+          shouldInclude = daysDiff % recurrence.interval == 0;
+          break;
+
+        case RecurrenceUnit.workingDays:
+          // Monday to Friday, every N working days
+          if (currentDate.weekday >= 1 && currentDate.weekday <= 5) {
+            final workingDaysSinceStart = _countWorkingDays(template.startDate, currentDate);
+            shouldInclude = workingDaysSinceStart % recurrence.interval == 0;
+          }
+          break;
+
+        case RecurrenceUnit.oddDays:
+          // Only odd calendar days
+          shouldInclude = currentDate.day % 2 == 1;
+          break;
+
+        case RecurrenceUnit.evenDays:
+          // Only even calendar days
+          shouldInclude = currentDate.day % 2 == 0;
+          break;
+
+        case RecurrenceUnit.oddWorkingDays:
+          // Only odd calendar days, Monday-Friday
+          shouldInclude = (currentDate.weekday >= 1 && currentDate.weekday <= 5) &&
+                         (currentDate.day % 2 == 1);
+          break;
+
+        case RecurrenceUnit.evenWorkingDays:
+          // Only even calendar days, Monday-Friday
+          shouldInclude = (currentDate.weekday >= 1 && currentDate.weekday <= 5) &&
+                         (currentDate.day % 2 == 0);
+          break;
+      }
+
+      if (shouldInclude) {
+        // Check if this occurrence is cancelled by an exception
+        final exception = _getExceptionForDate(template.id, currentDate);
+
+        if (exception == null || !exception.isCancelled) {
+          // Create occurrence
           occurrences.add(WeeklyClassOccurrence(
-            weekday: day == 0 ? 7 : day, // Convert Sunday from 0 to 7
-            classTemplate: classTemplate,
+            date: currentDate,
+            weekday: currentDate.weekday,
+            classTemplate: template,
+            notes: exception?.notes,
           ));
         }
-        break;
+      }
 
-      case RecurrenceUnit.days:
-        // Every N days - show all 7 days
-        for (int day = 1; day <= 7; day++) {
-          occurrences.add(WeeklyClassOccurrence(
-            weekday: day,
-            classTemplate: classTemplate,
-          ));
-        }
-        break;
-
-      case RecurrenceUnit.workingDays:
-        // Monday to Friday
-        for (int day = 1; day <= 5; day++) {
-          occurrences.add(WeeklyClassOccurrence(
-            weekday: day,
-            classTemplate: classTemplate,
-          ));
-        }
-        break;
-
-      case RecurrenceUnit.oddDays:
-      case RecurrenceUnit.evenDays:
-      case RecurrenceUnit.oddWorkingDays:
-      case RecurrenceUnit.evenWorkingDays:
-        // For odd/even patterns, show Monday to Friday
-        // The actual filtering would require date context
-        for (int day = 1; day <= 5; day++) {
-          occurrences.add(WeeklyClassOccurrence(
-            weekday: day,
-            classTemplate: classTemplate,
-          ));
-        }
-        break;
+      currentDate = currentDate.add(const Duration(days: 1));
     }
 
     return occurrences;
   }
 
+  /// Get class exception for a specific date
+  ClassException? _getExceptionForDate(String templateId, DateTime date) {
+    final exceptions = _exceptionsByTemplate[templateId];
+    if (exceptions == null) return null;
+
+    for (final exception in exceptions) {
+      if (_isSameDay(exception.date, date)) {
+        return exception;
+      }
+    }
+    return null;
+  }
+
+  /// Check if two dates are the same day
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  /// Count working days between two dates
+  int _countWorkingDays(DateTime start, DateTime end) {
+    int count = 0;
+    DateTime current = start;
+
+    while (current.isBefore(end) || _isSameDay(current, end)) {
+      if (current.weekday >= 1 && current.weekday <= 5) {
+        count++;
+      }
+      current = current.add(const Duration(days: 1));
+    }
+
+    return count;
+  }
+
   Future<void> refreshWeekView() async {
     await _loadWeekView();
-    notifyListeners();
   }
 }
 
 class WeeklyClassOccurrence {
+  final DateTime date;
   final int weekday; // 1 = Monday, 7 = Sunday
   final ClassTemplate classTemplate;
+  final String? notes; // Notes from class exception
 
   WeeklyClassOccurrence({
+    required this.date,
     required this.weekday,
     required this.classTemplate,
+    this.notes,
   });
 
   /// Parse start time to minutes since midnight
@@ -164,4 +282,7 @@ class WeeklyClassOccurrence {
   String get title => classTemplate.name;
   String? get subjectName => classTemplate.subjectName;
   String get location => classTemplate.location;
+
+  /// Check if this occurrence has notes from an exception
+  bool get hasNotes => notes != null && notes!.isNotEmpty;
 }

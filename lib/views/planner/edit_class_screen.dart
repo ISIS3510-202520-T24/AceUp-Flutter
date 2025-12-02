@@ -54,7 +54,7 @@ class _EditClassScreenContent extends StatelessWidget {
         rightControlType: RightControlType.save,
         onRightPressed: () => _saveClassTemplate(context, viewModel),
       ),
-      body: viewModel.state == EditClassViewState.loading
+      body: viewModel.state == EditViewState.loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20.0),
@@ -337,7 +337,7 @@ class _EditClassScreenContent extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Error message
-                  if (viewModel.state == EditClassViewState.error &&
+                  if (viewModel.state == EditViewState.error &&
                       viewModel.errorMessage != null)
                     Container(
                       padding: const EdgeInsets.all(12),

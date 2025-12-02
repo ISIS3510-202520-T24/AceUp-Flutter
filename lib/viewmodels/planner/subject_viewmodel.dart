@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/enums.dart';
 import '../../data/repositories/academic_repository.dart';
 import '../../models/planner/subject_model.dart';
 import '../../models/planner/class_template_model.dart';
@@ -9,19 +10,17 @@ import '../../models/assignments/assignment_model.dart';
 
 enum SubjectTab { timetable, assignments, grades }
 
-enum SubjectViewState { idle, loading, error }
-
 class SubjectViewModel extends ChangeNotifier {
   final AcademicRepository _repository;
   final AuthService _authService = AuthService();
   final String subjectId;
   final String termId;
-  
+
   SubjectTab _selectedTab = SubjectTab.assignments;
   SubjectTab get selectedTab => _selectedTab;
-  
-  SubjectViewState _state = SubjectViewState.idle;
-  SubjectViewState get state => _state;
+
+  ViewState _state = ViewState.idle;
+  ViewState get state => _state;
 
   Subject? _subject;
   Subject? get subject => _subject;
@@ -91,7 +90,7 @@ class SubjectViewModel extends ChangeNotifier {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = SubjectViewState.error;
+      _state = ViewState.error;
       notifyListeners();
       return;
     }
@@ -103,18 +102,18 @@ class SubjectViewModel extends ChangeNotifier {
 
       if (_subject == null) {
         _errorMessage = 'Term not found';
-        _state = SubjectViewState.error;
+        _state = ViewState.error;
         notifyListeners();
         return;
       }
 
       print('✅ Loaded subject: ${_subject!.name}');
 
-      _state = SubjectViewState.idle;
+      _state = ViewState.idle;
       _errorMessage = null;
     } catch (e) {
       _errorMessage = e.toString();
-      _state = SubjectViewState.error;
+      _state = ViewState.error;
       print('❌ Error loading subject: $e');
     }
     notifyListeners();
@@ -124,23 +123,23 @@ class SubjectViewModel extends ChangeNotifier {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = SubjectViewState.error;
+      _state = ViewState.error;
       notifyListeners();
       return;
     }
 
-    _state = SubjectViewState.loading;
+    _state = ViewState.loading;
     notifyListeners();
 
     try {
       // Load all assignments for this subject
       _subjectAssignments = await _repository.getAssignmentsForSubject(subjectId);
       
-      _state = SubjectViewState.idle;
+      _state = ViewState.idle;
       _errorMessage = null;
     } catch (e) {
       _errorMessage = e.toString();
-      _state = SubjectViewState.error;
+      _state = ViewState.error;
       print('Error loading subject assignments: $e');
     }
 
@@ -183,7 +182,7 @@ class SubjectViewModel extends ChangeNotifier {
       await _loadSubjectAssignments();
     } catch (e) {
       _errorMessage = 'Failed to update assignment: $e';
-      _state = SubjectViewState.error;
+      _state = ViewState.error;
       notifyListeners();
     }
   }

@@ -6,6 +6,7 @@ import '../../viewmodels/planner/edit_subject_viewmodel.dart';
 import '../../themes/app_typography.dart';
 import '../../widgets/top_bar.dart';
 import '../../widgets/form_field.dart';
+import '../../core/constants/enums.dart';
 
 class EditSubjectScreen extends StatelessWidget {
   final Subject? subject;
@@ -46,7 +47,7 @@ class _EditSubjectScreenContent extends StatelessWidget {
         rightControlType: RightControlType.save,
         onRightPressed: () => _saveSubject(context, viewModel),
       ),
-      body: viewModel.state == EditSubjectViewState.loading
+      body: viewModel.state == EditViewState.loading
           ? Center(
         child: CircularProgressIndicator(color: colors.primary),
       )
@@ -67,7 +68,7 @@ class _EditSubjectScreenContent extends StatelessWidget {
             const SizedBox(height: 12),
             _buildColorPicker(context, viewModel, colors),
             const SizedBox(height: 32),
-            if (viewModel.state == EditSubjectViewState.saving)
+            if (viewModel.state == EditViewState.saving)
               Center(
                 child: CircularProgressIndicator(color: colors.primary),
               ),

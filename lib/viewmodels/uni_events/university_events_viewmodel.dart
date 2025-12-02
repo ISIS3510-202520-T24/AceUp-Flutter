@@ -5,8 +5,7 @@ import '../../services/uni_events/university_events_service.dart';
 import '../../services/auth/auth_service.dart';
 import '../../data/repositories/event_repository.dart';
 import '../../core/connectivity/connectivity_manager.dart';
-
-enum EventsViewState { idle, loading, success, error, offline }
+import '../../core/constants/enums.dart';
 
 class UniversityEventsViewModel extends ChangeNotifier {
   final UniversityEventsService _eventsService;
@@ -29,8 +28,8 @@ class UniversityEventsViewModel extends ChangeNotifier {
   }
 
   // State
-  EventsViewState _state = EventsViewState.idle;
-  EventsViewState get state => _state;
+  OfflineViewState _state = OfflineViewState.idle;
+  OfflineViewState get state => _state;
 
   List<UniversityEvent> _events = [];
   List<UniversityEvent> get events => _events;
@@ -55,7 +54,7 @@ class UniversityEventsViewModel extends ChangeNotifier {
 
     // Listen to connectivity changes
     _connectivitySubscription = _connectivity.onConnectivityChanged.listen((isOnline) {
-      if (isOnline && _state == EventsViewState.offline) {
+      if (isOnline && _state == OfflineViewState.offline) {
         fetchEvents();
       }
     });
@@ -66,7 +65,7 @@ class UniversityEventsViewModel extends ChangeNotifier {
   /// Load events (from cache if offline, fetch if online)
   Future<void> _loadEvents() async {
     if (_userId == null) {
-      _state = EventsViewState.error;
+      _state = OfflineViewState.error;
       _errorMessage = 'User not authenticated';
       notifyListeners();
       return;
@@ -82,7 +81,7 @@ class UniversityEventsViewModel extends ChangeNotifier {
 
   /// Load events from cache (offline mode)
   Future<void> _loadOfflineEvents() async {
-    _state = EventsViewState.loading;
+    _state = OfflineViewState.loading;
     notifyListeners();
 
     try {
@@ -90,14 +89,14 @@ class UniversityEventsViewModel extends ChangeNotifier {
       _filteredEvents = _events;
       
       if (_events.isEmpty) {
-        _state = EventsViewState.offline;
+        _state = OfflineViewState.offline;
         _errorMessage = 'No cached events available offline';
       } else {
-        _state = EventsViewState.success;
+        _state = OfflineViewState.success;
         _errorMessage = null;
       }
     } catch (e) {
-      _state = EventsViewState.error;
+      _state = OfflineViewState.error;
       _errorMessage = 'Failed to load cached events: ${e.toString()}';
       print('Error loading offline events: $e');
     }
@@ -108,7 +107,7 @@ class UniversityEventsViewModel extends ChangeNotifier {
   /// Fetch events from the university website
   Future<void> fetchEvents() async {
     if (_userId == null) {
-      _state = EventsViewState.error;
+      _state = OfflineViewState.error;
       _errorMessage = 'User not authenticated';
       notifyListeners();
       return;
@@ -119,7 +118,7 @@ class UniversityEventsViewModel extends ChangeNotifier {
       return;
     }
 
-    _state = EventsViewState.loading;
+    _state = OfflineViewState.loading;
     _errorMessage = null;
     notifyListeners();
 
@@ -137,7 +136,7 @@ class UniversityEventsViewModel extends ChangeNotifier {
       );
       
       _filteredEvents = _events;
-      _state = EventsViewState.success;
+      _state = OfflineViewState.success;
       _errorMessage = null;
       
       // Clean up old cache
@@ -147,10 +146,10 @@ class UniversityEventsViewModel extends ChangeNotifier {
       try {
         _events = await _eventRepository.getOfflineEvents(_userId!);
         _filteredEvents = _events;
-        _state = _events.isEmpty ? EventsViewState.error : EventsViewState.success;
+        _state = _events.isEmpty ? OfflineViewState.error : OfflineViewState.success;
         _errorMessage = _events.isEmpty ? 'Failed to load events: ${e.toString()}' : null;
       } catch (cacheError) {
-        _state = EventsViewState.error;
+        _state = OfflineViewState.error;
         _errorMessage = 'Failed to load events: ${e.toString()}';
       }
       print('Error fetching events: $e');

@@ -6,6 +6,7 @@ import '../../data/repositories/academic_repository.dart';
 import '../../themes/app_typography.dart';
 import '../../widgets/top_bar.dart';
 import '../../widgets/form_field.dart';
+import '../../core/constants/enums.dart';
 
 class EditTermScreen extends StatelessWidget {
   final String? termId;
@@ -40,7 +41,7 @@ class _EditTermScreenContent extends StatelessWidget {
         rightControlType: RightControlType.save,
         onRightPressed: () => _saveTerm(context, viewModel),
       ),
-      body: viewModel.state == EditTermViewState.loading
+      body: viewModel.state == EditViewState.loading
           ? Center(
               child: CircularProgressIndicator(color: colors.primary),
             )
@@ -70,7 +71,7 @@ class _EditTermScreenContent extends StatelessWidget {
                     colors: colors,
                   ),
                   const SizedBox(height: 32),
-                  if (viewModel.state == EditTermViewState.saving)
+                  if (viewModel.state == EditViewState.saving)
                     Center(
                       child: CircularProgressIndicator(color: colors.primary),
                     ),

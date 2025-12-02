@@ -12,10 +12,9 @@ import '../../models/user_model.dart' as user_model;
 import '../../services/auth/auth_service.dart';
 import '../../services/storage/group_image_service.dart';
 import '../../core/connectivity/connectivity_manager.dart';
+import '../../core/constants/enums.dart';
 
 // ignore_for_file: undefined_identifier,
-
-enum EditGroupViewState { idle, loading, saving, error, uploadingImage }
 
 class MemberInput {
   final TextEditingController userIdController;
@@ -41,8 +40,8 @@ class EditGroupViewModel extends ChangeNotifier {
   final ConnectivityManager? _connectivity;
   final String? groupId;
 
-  EditGroupViewState _state = EditGroupViewState.idle;
-  EditGroupViewState get state => _state;
+  EditViewStateWithUpload _state = EditViewStateWithUpload.idle;
+  EditViewStateWithUpload get state => _state;
 
   Group? _group;
   Group? get group => _group;
@@ -147,7 +146,7 @@ class EditGroupViewModel extends ChangeNotifier {
   Future<void> _loadExistingGroup() async {
     if (groupId == null) return;
 
-    _state = EditGroupViewState.loading;
+    _state = EditViewStateWithUpload.loading;
     notifyListeners();
 
     try {
@@ -167,15 +166,15 @@ class EditGroupViewModel extends ChangeNotifier {
           ));
         }
 
-        _state = EditGroupViewState.idle;
+        _state = EditViewStateWithUpload.idle;
         _errorMessage = null;
       } else {
         _errorMessage = 'Group not found';
-        _state = EditGroupViewState.error;
+        _state = EditViewStateWithUpload.error;
       }
     } catch (e) {
       _errorMessage = 'Failed to load group: $e';
-      _state = EditGroupViewState.error;
+      _state = EditViewStateWithUpload.error;
       print('Error loading group: $e');
     }
 
@@ -221,7 +220,7 @@ class EditGroupViewModel extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = 'Failed to pick image: $e';
-      _state = EditGroupViewState.error;
+      _state = EditViewStateWithUpload.error;
       notifyListeners();
     }
   }
@@ -261,7 +260,7 @@ class EditGroupViewModel extends ChangeNotifier {
       return false;
     }
 
-    _state = EditGroupViewState.saving;
+    _state = EditViewStateWithUpload.saving;
     _errorMessage = null;
     notifyListeners();
 
@@ -269,7 +268,7 @@ class EditGroupViewModel extends ChangeNotifier {
 
     if (currentUserId == null) {
       _errorMessage = 'User not logged in';
-      _state = EditGroupViewState.error;
+      _state = EditViewStateWithUpload.error;
       notifyListeners();
       return false;
     }
@@ -309,12 +308,12 @@ class EditGroupViewModel extends ChangeNotifier {
         await _updateGroup(members, imageUrl);
       }
 
-      _state = EditGroupViewState.idle;
+      _state = EditViewStateWithUpload.idle;
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = 'Failed to save group: $e';
-      _state = EditGroupViewState.error;
+      _state = EditViewStateWithUpload.error;
       notifyListeners();
       return false;
     }
@@ -347,7 +346,7 @@ class EditGroupViewModel extends ChangeNotifier {
 
     // Upload file if available
     if (fileToUpload != null) {
-      _state = EditGroupViewState.uploadingImage;
+      _state = EditViewStateWithUpload.uploadingImage;
       notifyListeners();
 
       try {
@@ -418,7 +417,7 @@ class EditGroupViewModel extends ChangeNotifier {
     // Validate name
     if (nameController.text.trim().isEmpty) {
       _errorMessage = 'Group name is required';
-      _state = EditGroupViewState.error;
+      _state = EditViewStateWithUpload.error;
       notifyListeners();
       return false;
     }
@@ -430,7 +429,7 @@ class EditGroupViewModel extends ChangeNotifier {
 
     if (validMembers.isEmpty) {
       _errorMessage = 'At least one member is required';
-      _state = EditGroupViewState.error;
+      _state = EditViewStateWithUpload.error;
       notifyListeners();
       return false;
     }

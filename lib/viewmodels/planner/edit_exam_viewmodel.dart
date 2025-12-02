@@ -5,10 +5,9 @@ import '../../data/repositories/academic_repository.dart';
 import '../../data/repositories/teacher_repository.dart';
 import '../../models/planner/exam_model.dart';
 import '../../services/auth/auth_service.dart';
+import '../../core/constants/enums.dart';
 
 // ignore_for_file: creation_with_non_type
-
-enum EditExamViewState { idle, loading, saving, error }
 
 class EditExamViewModel extends ChangeNotifier {
   final AuthService _authService;
@@ -19,8 +18,8 @@ class EditExamViewModel extends ChangeNotifier {
   final String? subjectId;
   final String? examId;
 
-  EditExamViewState _state = EditExamViewState.idle;
-  EditExamViewState get state => _state;
+  EditViewState _state = EditViewState.idle;
+  EditViewState get state => _state;
 
   Exam? _exam;
   Exam? get exam => _exam;
@@ -113,13 +112,13 @@ class EditExamViewModel extends ChangeNotifier {
   Future<void> _loadExistingExam() async {
     if (examId == null) return;
 
-    _state = EditExamViewState.loading;
+    _state = EditViewState.loading;
     notifyListeners();
 
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = EditExamViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return;
     }
@@ -155,15 +154,15 @@ class EditExamViewModel extends ChangeNotifier {
           await _loadWeightOptionsForSubject(_selectedSubjectId!);
         }
 
-        _state = EditExamViewState.idle;
+        _state = EditViewState.idle;
         _errorMessage = null;
       } else {
         _errorMessage = 'Exam not found';
-        _state = EditExamViewState.error;
+        _state = EditViewState.error;
       }
     } catch (e) {
       _errorMessage = 'Failed to load exam: $e';
-      _state = EditExamViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       print('Error loading exam: $e');
     }
@@ -369,21 +368,21 @@ class EditExamViewModel extends ChangeNotifier {
       return false;
     }
 
-    _state = EditExamViewState.saving;
+    _state = EditViewState.saving;
     _errorMessage = null;
     notifyListeners();
 
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = EditExamViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
 
     if (_selectedTermId == null || _selectedSubjectId == null) {
       _errorMessage = 'Please select a valid subject';
-      _state = EditExamViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
@@ -395,12 +394,12 @@ class EditExamViewModel extends ChangeNotifier {
         await _updateExam(userId);
       }
 
-      _state = EditExamViewState.idle;
+      _state = EditViewState.idle;
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = 'Failed to save exam: $e';
-      _state = EditExamViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
@@ -469,14 +468,14 @@ class EditExamViewModel extends ChangeNotifier {
   bool _validateForm() {
     if (titleController.text.trim().isEmpty) {
       _errorMessage = 'Title is required';
-      _state = EditExamViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
 
     if (_selectedSubject == null || _selectedSubject!.isEmpty) {
       _errorMessage = 'Subject is required';
-      _state = EditExamViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
@@ -487,7 +486,7 @@ class EditExamViewModel extends ChangeNotifier {
 
     if (endMinutes <= startMinutes) {
       _errorMessage = 'End time must be after start time';
-      _state = EditExamViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }

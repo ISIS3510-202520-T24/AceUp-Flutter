@@ -9,6 +9,7 @@ import '../../widgets/burger_menu.dart';
 import '../../widgets/content_counter.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
+import '../../core/constants/enums.dart';
 import 'subject_screen.dart';
 import 'edit_subject_screen.dart';
 import 'edit_term_screen.dart';
@@ -82,13 +83,13 @@ class _TermScreenContent extends StatelessWidget {
   }
 
   Widget _buildBody(BuildContext context, TermViewModel viewModel, ColorScheme colors) {
-    if (viewModel.state == TermViewState.loading) {
+    if (viewModel.state == ViewState.loading) {
       return Center(
         child: CircularProgressIndicator(color: colors.primary),
       );
     }
 
-    if (viewModel.state == TermViewState.error) {
+    if (viewModel.state == ViewState.error) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
