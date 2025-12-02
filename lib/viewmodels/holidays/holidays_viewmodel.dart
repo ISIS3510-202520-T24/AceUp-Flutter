@@ -2,14 +2,14 @@ import 'dart:developer' as console;
 
 import 'package:flutter/material.dart';
 import '../../models/holidays/holiday_model.dart';
-import '../../services/holidays/holiday_service.dart';
 import '../../data/repositories/holiday_repository.dart';
+import '../../data/repositories/settings_repository.dart';
 import '../../services/auth/auth_service.dart';
 import '../../core/constants/enums.dart';
 
 class HolidaysViewModel extends ChangeNotifier {
-  final HolidayService _holidayService = HolidayService();
-  final HolidayRepository? _holidayRepository;
+  final HolidayRepository _holidayRepository;
+  final SettingsRepository _settingsRepository;
   final AuthService _authService = AuthService();
 
   List<Holiday> _holidays = [];
@@ -21,34 +21,87 @@ class HolidaysViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
-  // TODO: Make this dynamic based on user preference
-  final String _countryCode = 'CO';
+  String _countryCode = 'CO';
   String get countryCode => _countryCode;
 
-  HolidaysViewModel({HolidayRepository? holidayRepository})
-      : _holidayRepository = holidayRepository {
-    // Automatically fetch holidays when ViewModel is created
-    fetchHolidays();
+  HolidaysViewModel({
+    required HolidayRepository holidayRepository,
+    required SettingsRepository settingsRepository,
+  })  : _holidayRepository = holidayRepository,
+        _settingsRepository = settingsRepository {
+    // Automatically load holidays when ViewModel is created
+    loadHolidays();
   }
 
-  /// Fetches holidays for the current year and next year
-  Future<void> fetchHolidays() async {
+  /// Load holidays from local database (offline-first)
+  /// If no API holidays found, fetch from API
+  Future<void> loadHolidays() async {
     _setState(ViewStateWithSuccess.loading);
     _errorMessage = null;
 
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not logged in';
+      _setState(ViewStateWithSuccess.error);
+      notifyListeners();
+      return;
+    }
+
     try {
-      _holidays = await _holidayService.getHolidaysForCurrentAndNextYear(_countryCode);
+      // Get country code from settings
+      final settings = await _settingsRepository.getOrCreateSettings(userId);
+      _countryCode = settings.holidayCountry;
+
+      // Load holidays from local database (both API and user-created)
+      _holidays = await _holidayRepository.getHolidaysForUser(userId);
+
+      // If no API holidays found, fetch from API
+      final apiHolidays = _holidays.where((h) => h.isFromApi).toList();
+      if (apiHolidays.isEmpty) {
+        print('📥 No API holidays found locally, fetching from API...');
+        await fetchApiHolidays();
+      } else {
+        _setState(ViewStateWithSuccess.success);
+      }
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setState(ViewStateWithSuccess.error);
+      console.log('Error loading holidays: $e');
+    }
+  }
+
+  /// Fetch API holidays and save to repository
+  Future<void> fetchApiHolidays() async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'User not logged in';
+      _setState(ViewStateWithSuccess.error);
+      notifyListeners();
+      return;
+    }
+
+    try {
+      // Get country code from settings
+      final settings = await _settingsRepository.getOrCreateSettings(userId);
+      _countryCode = settings.holidayCountry;
+
+      // Fetch and save API holidays
+      await _holidayRepository.fetchAndSaveApiHolidays(userId, _countryCode);
+
+      // Reload all holidays from database
+      _holidays = await _holidayRepository.getHolidaysForUser(userId);
       _setState(ViewStateWithSuccess.success);
     } catch (e) {
       _errorMessage = e.toString();
       _setState(ViewStateWithSuccess.error);
-      console.log('Error fetching holidays: $e');
+      console.log('Error fetching API holidays: $e');
     }
   }
 
-  /// Refreshes the holidays list
+  /// Refreshes the holidays list by fetching from API
   Future<void> refreshHolidays() async {
-    await fetchHolidays();
+    _setState(ViewStateWithSuccess.loading);
+    await fetchApiHolidays();
   }
 
   /// Gets holidays grouped by year
@@ -126,13 +179,6 @@ class HolidaysViewModel extends ChangeNotifier {
 
   /// Delete a user-created holiday
   Future<void> deleteHoliday(Holiday holiday) async {
-    if (_holidayRepository == null) {
-      _errorMessage = 'Holiday repository not available';
-      _setState(ViewStateWithSuccess.error);
-      notifyListeners();
-      return;
-    }
-
     // Only allow deleting user-created holidays
     if (!holiday.isUserCreated) {
       _errorMessage = 'Cannot delete API holidays';
@@ -151,7 +197,8 @@ class HolidaysViewModel extends ChangeNotifier {
 
     try {
       await _holidayRepository.deleteHoliday(holiday.id, userId);
-      await fetchHolidays();
+      // Reload from database instead of fetching from API
+      await loadHolidays();
     } catch (e) {
       _errorMessage = 'Failed to delete holiday: $e';
       _setState(ViewStateWithSuccess.error);

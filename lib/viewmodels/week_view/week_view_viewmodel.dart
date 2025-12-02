@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/enums.dart';
 import '../../data/repositories/academic_repository.dart';
+import '../../data/repositories/holiday_repository.dart';
 import '../../models/planner/class_template_model.dart';
 import '../../models/planner/class_exception_model.dart';
+import '../../models/holidays/holiday_model.dart';
 import '../../services/auth/auth_service.dart';
 
 class WeekViewViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final AcademicRepository _repository;
+  final HolidayRepository? _holidayRepository;
 
   ViewState _state = ViewState.idle;
   ViewState get state => _state;
@@ -18,6 +21,7 @@ class WeekViewViewModel extends ChangeNotifier {
 
   List<ClassTemplate> _classes = [];
   Map<String, List<ClassException>> _exceptionsByTemplate = {};
+  List<Holiday> _holidays = [];
 
   // Current week being displayed (Monday of the week)
   DateTime _currentWeekStart = _getMonday(DateTime.now());
@@ -28,7 +32,9 @@ class WeekViewViewModel extends ChangeNotifier {
 
   WeekViewViewModel({
     required AcademicRepository repository,
-  }) : _repository = repository {
+    HolidayRepository? holidayRepository,
+  })  : _repository = repository,
+        _holidayRepository = holidayRepository {
     _loadWeekView();
   }
 
@@ -87,6 +93,17 @@ class WeekViewViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // Load holidays if repository is available
+      if (_holidayRepository != null) {
+        try {
+          _holidays = await _holidayRepository!.getHolidaysForUser(userId);
+          print('✅ Loaded ${_holidays.length} holidays for filtering');
+        } catch (e) {
+          print('⚠️ Failed to load holidays: $e');
+          _holidays = [];
+        }
+      }
+
       final terms = await _repository.getTermsForUser(userId);
       final allClasses = <ClassTemplate>[];
       final allExceptions = <String, List<ClassException>>{};
@@ -199,8 +216,11 @@ class WeekViewViewModel extends ChangeNotifier {
         // Check if this occurrence is cancelled by an exception
         final exception = _getExceptionForDate(template.id, currentDate);
 
-        if (exception == null || !exception.isCancelled) {
-          // Create occurrence
+        // Check if this date is a holiday
+        final isHoliday = _isDateInHoliday(currentDate);
+
+        if ((exception == null || !exception.isCancelled) && !isHoliday) {
+          // Create occurrence (only if not cancelled and not a holiday)
           occurrences.add(WeeklyClassOccurrence(
             date: currentDate,
             weekday: currentDate.weekday,
@@ -251,6 +271,16 @@ class WeekViewViewModel extends ChangeNotifier {
 
   Future<void> refreshWeekView() async {
     await _loadWeekView();
+  }
+
+  /// Check if a date falls on any holiday
+  bool _isDateInHoliday(DateTime date) {
+    for (final holiday in _holidays) {
+      if (holiday.containsDate(date)) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 

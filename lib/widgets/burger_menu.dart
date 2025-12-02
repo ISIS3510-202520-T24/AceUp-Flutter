@@ -196,7 +196,7 @@ class BurgerMenu extends StatelessWidget {
   Widget _sectionHeader(BuildContext context, String title) {
     final colors = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Text(
         title,
         style: AppTypography.h4.copyWith(color: colors.onSecondaryContainer),
@@ -215,6 +215,10 @@ class BurgerMenu extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return ListTile(
+      dense: true,
+      visualDensity: VisualDensity.compact,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      minLeadingWidth: 28,
       leading: Icon(
         icon,
         size: 20,
@@ -241,7 +245,11 @@ class BurgerMenu extends StatelessWidget {
             ),
           );
         } else if (route != null && !isSelected) {
-          Navigator.pushReplacementNamed(context, route);
+          if (route == '/settings') {
+            Navigator.pushNamed(context, route);
+          } else {
+            Navigator.pushReplacementNamed(context, route);
+          }
         }
       },
     );

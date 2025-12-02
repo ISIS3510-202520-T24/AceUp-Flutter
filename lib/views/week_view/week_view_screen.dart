@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/enums.dart';
 import '../../data/repositories/academic_repository.dart';
+import '../../data/repositories/holiday_repository.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/week_view/week_view_viewmodel.dart';
@@ -22,6 +23,7 @@ class WeekViewScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => WeekViewViewModel(
         repository: context.read<AcademicRepository>(),
+        holidayRepository: context.read<HolidayRepository>(),
       ),
       child: _WeekViewScreenContent(),
     );
