@@ -32,13 +32,13 @@ class EditAssignmentScreen extends StatelessWidget {
         subjectId: subjectId,
         termId: termId,
       ),
-      child: const _EditAssignmentContent(),
+      child: const _EditAssignmentScreenContent(),
     );
   }
 }
 
-class _EditAssignmentContent extends StatelessWidget {
-  const _EditAssignmentContent();
+class _EditAssignmentScreenContent extends StatelessWidget {
+  const _EditAssignmentScreenContent();
 
   @override
   Widget build(BuildContext context) {

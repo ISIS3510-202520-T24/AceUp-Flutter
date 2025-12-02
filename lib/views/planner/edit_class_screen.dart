@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // ignore: uri_does_not_exist
 import 'package:intl/intl.dart'; // ignore: uri_does_not_exist
 import 'package:provider/provider.dart';
 
@@ -35,13 +34,13 @@ class EditClassScreen extends StatelessWidget {
         subjectId: subjectId,
         termId: termId,
       ),
-      child: const _EditClassContent(),
+      child: const _EditClassScreenContent(),
     );
   }
 }
 
-class _EditClassContent extends StatelessWidget {
-  const _EditClassContent();
+class _EditClassScreenContent extends StatelessWidget {
+  const _EditClassScreenContent();
 
   @override
   Widget build(BuildContext context) {

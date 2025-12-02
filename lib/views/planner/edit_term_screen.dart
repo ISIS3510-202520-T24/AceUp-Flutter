@@ -19,13 +19,13 @@ class EditTermScreen extends StatelessWidget {
         termId: termId,
         repository: context.read<AcademicRepository>(),
       ),
-      child: const _EditTermContent(),
+      child: const _EditTermScreenContent(),
     );
   }
 }
 
-class _EditTermContent extends StatelessWidget {
-  const _EditTermContent();
+class _EditTermScreenContent extends StatelessWidget {
+  const _EditTermScreenContent();
 
   @override
   Widget build(BuildContext context) {

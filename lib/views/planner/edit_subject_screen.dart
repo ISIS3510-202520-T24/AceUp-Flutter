@@ -25,13 +25,13 @@ const EditSubjectScreen({
         subjectId: subject?.id,
         termId: termId,
       ),
-      child: const _EditSubjectContent(),
+      child: const _EditSubjectScreenContent(),
     );
   }
 }
 
-class _EditSubjectContent extends StatelessWidget {
-  const _EditSubjectContent();
+class _EditSubjectScreenContent extends StatelessWidget {
+  const _EditSubjectScreenContent();
 
   @override
   Widget build(BuildContext context) {

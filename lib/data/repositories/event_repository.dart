@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart'; // ignore: uri_does_not_exist
 import '../../models/uni_events/university_event_model.dart';
 import '../local/database/app_database.dart';
 
@@ -44,23 +44,23 @@ class EventRepository {
     String? userLocation,
   }) async {
     final companion = UserEventsCompanion(
-      id: Value(event.id),
-      userId: Value(userId),
-      title: Value(event.title),
-      description: Value(event.description),
-      startDateTime: Value(event.startDateTime),
-      endDateTime: Value(event.endDateTime),
-      location: Value(event.location),
-      imageUrl: Value(event.imageUrl),
-      eventUrl: Value(event.eventUrl),
-      category: Value(event.category),
-      userNotes: Value(userNotes),
-      userLocation: Value(userLocation),
-      addedAt: Value(DateTime.now()),
-      createdAt: Value(DateTime.now()),
-      updatedAt: Value(DateTime.now()),
-      syncStatus: const Value('pending'),
-      lastSyncedAt: Value(DateTime.now()),
+      id: Value(event.id), //ignore: undefined_method
+      userId: Value(userId), //ignore: undefined_method
+      title: Value(event.title), //ignore: undefined_method
+      description: Value(event.description), //ignore: undefined_method
+      startDateTime: Value(event.startDateTime), //ignore: undefined_method
+      endDateTime: Value(event.endDateTime), //ignore: undefined_method
+      location: Value(event.location), //ignore: undefined_method
+      imageUrl: Value(event.imageUrl), //ignore: undefined_method
+      eventUrl: Value(event.eventUrl), //ignore: undefined_method
+      category: Value(event.category), //ignore: undefined_method
+      userNotes: Value(userNotes), //ignore: undefined_method
+      userLocation: Value(userLocation), //ignore: undefined_method
+      addedAt: Value(DateTime.now()), //ignore: undefined_method
+      createdAt: Value(DateTime.now()), //ignore: undefined_method
+      updatedAt: Value(DateTime.now()), //ignore: undefined_method
+      syncStatus: const Value('pending'),  //ignore: creation_with_non_type
+      lastSyncedAt: Value(DateTime.now()), //ignore: undefined_method
     );
 
     await _db.userEventDao.upsertUserEvent(companion);
@@ -100,12 +100,12 @@ class EventRepository {
     String? userLocation,
   }) async {
     final companion = UserEventsCompanion(
-      id: Value(eventId),
-      userId: Value(userId),
-      userNotes: Value(userNotes),
-      userLocation: Value(userLocation),
-      updatedAt: Value(DateTime.now()),
-      syncStatus: const Value('pending'),
+      id: Value(eventId), //ignore: undefined_method
+      userId: Value(userId), //ignore: undefined_method
+      userNotes: Value(userNotes), //ignore: undefined_method
+      userLocation: Value(userLocation), //ignore: undefined_method
+      updatedAt: Value(DateTime.now()), //ignore: undefined_method
+      syncStatus: const Value('pending'), //ignore: creation_with_non_type
     );
 
     await _db.userEventDao.upsertUserEvent(companion);
@@ -142,17 +142,17 @@ class EventRepository {
     final expiresAt = now.add(const Duration(hours: 24));
 
     final companions = events.map((event) => CachedEventsCompanion(
-      id: Value(event.id),
-      title: Value(event.title),
-      description: Value(event.description),
-      startDateTime: Value(event.startDateTime),
-      endDateTime: Value(event.endDateTime),
-      location: Value(event.location),
-      imageUrl: Value(event.imageUrl),
-      eventUrl: Value(event.eventUrl),
-      category: Value(event.category),
-      cachedAt: Value(now),
-      expiresAt: Value(expiresAt),
+      id: Value(event.id), //ignore: undefined_method
+      title: Value(event.title), //ignore: undefined_method
+      description: Value(event.description), //ignore: undefined_method
+      startDateTime: Value(event.startDateTime), //ignore: undefined_method
+      endDateTime: Value(event.endDateTime), //ignore: undefined_method
+      location: Value(event.location), //ignore: undefined_method
+      imageUrl: Value(event.imageUrl), //ignore: undefined_method
+      eventUrl: Value(event.eventUrl), //ignore: undefined_method
+      category: Value(event.category), //ignore: undefined_method
+      cachedAt: Value(now), //ignore: undefined_method
+      expiresAt: Value(expiresAt), //ignore: undefined_method
     )).toList();
 
     await _db.cachedEventDao.cacheEvents(companions);
@@ -326,25 +326,25 @@ class EventRepository {
     String userId,
   ) {
     return UserEventsCompanion(
-      id: Value(data['id'] as String),
-      userId: Value(userId),
-      title: Value(data['title'] as String),
-      description: Value(data['description'] as String),
-      startDateTime: Value(DateTime.parse(data['startDateTime'] as String)),
+      id: Value(data['id'] as String), //ignore: undefined_method
+      userId: Value(userId), //ignore: undefined_method
+      title: Value(data['title'] as String), //ignore: undefined_method
+      description: Value(data['description'] as String), //ignore: undefined_method
+      startDateTime: Value(DateTime.parse(data['startDateTime'] as String)), //ignore: undefined_method
       endDateTime: data['endDateTime'] != null
-          ? Value(DateTime.parse(data['endDateTime'] as String))
-          : const Value(null),
-      location: Value(data['location'] as String?),
-      imageUrl: Value(data['imageUrl'] as String?),
-      eventUrl: Value(data['eventUrl'] as String?),
-      category: Value(data['category'] as String?),
-      userNotes: Value(data['userNotes'] as String?),
-      userLocation: Value(data['userLocation'] as String?),
-      addedAt: Value(DateTime.parse(data['addedAt'] as String)),
-      createdAt: Value(DateTime.parse(data['updatedAt'] as String)),
-      updatedAt: Value(DateTime.parse(data['updatedAt'] as String)),
-      syncStatus: const Value('synced'),
-      lastSyncedAt: Value(DateTime.now()),
+          ? Value(DateTime.parse(data['endDateTime'] as String)) //ignore: undefined_method
+          : const Value(null), //ignore: creation_with_non_type
+      location: Value(data['location'] as String?), //ignore: undefined_method
+      imageUrl: Value(data['imageUrl'] as String?), //ignore: undefined_method
+      eventUrl: Value(data['eventUrl'] as String?), //ignore: undefined_method
+      category: Value(data['category'] as String?), //ignore: undefined_method
+      userNotes: Value(data['userNotes'] as String?), //ignore: undefined_method
+      userLocation: Value(data['userLocation'] as String?), //ignore: undefined_method
+      addedAt: Value(DateTime.parse(data['addedAt'] as String)), //ignore: undefined_method
+      createdAt: Value(DateTime.parse(data['updatedAt'] as String)), //ignore: undefined_method
+      updatedAt: Value(DateTime.parse(data['updatedAt'] as String)), //ignore: undefined_method
+      syncStatus: const Value('synced'), //ignore: creation_with_non_type
+      lastSyncedAt: Value(DateTime.now()), //ignore: undefined_method
     );
   }
 

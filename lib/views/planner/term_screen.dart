@@ -26,15 +26,15 @@ class TermScreen extends StatelessWidget {
         repository: context.read<AcademicRepository>(),
         gpaService: context.read<GpaCalculationService>(),
         ),
-      child: _TermContent(termId: termId),
+      child: _TermScreenContent(termId: termId),
     );
   }
 }
 
-class _TermContent extends StatelessWidget {
+class _TermScreenContent extends StatelessWidget {
   final String termId;
   
-  const _TermContent({required this.termId});
+  const _TermScreenContent({required this.termId});
 
   @override
   Widget build(BuildContext context) {

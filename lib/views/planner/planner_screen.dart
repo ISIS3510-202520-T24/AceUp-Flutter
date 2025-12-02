@@ -22,13 +22,13 @@ class PlannerScreen extends StatelessWidget {
         repository: context.read<AcademicRepository>(),
         gpaService: context.read<GpaCalculationService>(), 
       ),
-      child: const _PlannerContent(),
+      child: const _PlannerScreenContent(),
     );
   }
 }
 
-class _PlannerContent extends StatelessWidget {
-  const _PlannerContent();
+class _PlannerScreenContent extends StatelessWidget {
+  const _PlannerScreenContent();
 
   @override
   Widget build(BuildContext context) {
