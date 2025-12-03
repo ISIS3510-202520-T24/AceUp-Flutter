@@ -424,6 +424,7 @@ class EditAssignmentViewModel extends ChangeNotifier {
       grade: _isGraded && gradeController.text.isNotEmpty
           ? double.tryParse(gradeController.text)
           : null,
+      isCompleted: _isCompleted,
       isGraded: _isGraded,
       updatedAt: DateTime.now(),
     );

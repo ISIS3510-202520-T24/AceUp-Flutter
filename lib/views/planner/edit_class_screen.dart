@@ -62,13 +62,26 @@ class _EditClassScreenContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Subject dropdown
-                  AppDropdownField<String>(
-                    value: viewModel.selectedSubject,
-                    items: viewModel.subjects.map((s) => s.name).toList(),
-                    getLabel: (name) => name,
-                    onChanged: viewModel.setSubject,
-                    label: 'Subject',
-                  ),
+                  if (viewModel.subjects.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: colors.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Loading subjects...',
+                        style: AppTypography.bodyM.copyWith(color: colors.onSurface),
+                      ),
+                    )
+                  else
+                    AppDropdownField<String>(
+                      value: viewModel.selectedSubject,
+                      items: viewModel.subjects.map((s) => s.name).toList(),
+                      getLabel: (name) => name,
+                      onChanged: viewModel.setSubject,
+                      label: 'Subject',
+                    ),
 
                   const SizedBox(height: 16),
 
@@ -395,9 +408,9 @@ class _EditClassScreenContent extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              DateFormat('Start Date of Term').format(selectedDate),
+              DateFormat('MMM d, yyyy').format(selectedDate),
               style: AppTypography.bodyM.copyWith(
-                color: colors.onSurfaceVariant.withValues(alpha: 0.5),
+                color: colors.onSurface,
               ),
             ),
             Icon(
@@ -437,9 +450,9 @@ class _EditClassScreenContent extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Start Time',
+              selectedTime.format(context),
               style: AppTypography.bodyM.copyWith(
-                color: colors.onSurfaceVariant.withValues(alpha: 0.5),
+                color: colors.onSurface,
               ),
             ),
             Icon(

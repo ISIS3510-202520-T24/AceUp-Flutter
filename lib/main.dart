@@ -195,7 +195,10 @@ Future<void> main() async {
 
           // HolidaysViewModel (ChangeNotifier con lógica de festivos)
           ChangeNotifierProvider<HolidaysViewModel>(
-            create: (_) => HolidaysViewModel(),
+            create: (context) => HolidaysViewModel(
+              holidayRepository: context.read<HolidayRepository>(),
+              settingsRepository: context.read<SettingsRepository>(),
+            ),
           ),
 
           // Database

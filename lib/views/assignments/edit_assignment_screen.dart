@@ -59,12 +59,26 @@ class _EditAssignmentScreenContent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Subject Dropdown
-            AppDropdownField<String>(
-              value: viewModel.selectedSubject,
-              items: viewModel.subjects.map((s) => s.name).toList(),
-              getLabel: (subject) => subject,
-              onChanged: (value) => viewModel.setSubject(value),
-            ),
+            if (viewModel.subjects.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Loading subjects...',
+                  style: AppTypography.bodyM.copyWith(color: colors.onSurface),
+                ),
+              )
+            else
+              AppDropdownField<String>(
+                label: 'Subject',
+                value: viewModel.selectedSubject,
+                items: viewModel.subjects.map((s) => s.name).toList(),
+                getLabel: (subject) => subject,
+                onChanged: (value) => viewModel.setSubject(value),
+              ),
             const SizedBox(height: 16),
 
             // Title Field with completion checkbox
@@ -164,16 +178,31 @@ class _EditAssignmentScreenContent extends StatelessWidget {
                   color: colors.outline,
                 ),
                 Expanded(
-                  child: AppDropdownField<String>(
-                    value: viewModel.selectedWeightDisplayName ,
-                    items: viewModel.weightOptions.map((w) => w.displayName).toList(),
-                    getLabel: (weight) => '$weight%',
-                    onChanged: (value) => viewModel.setWeightByDisplayName(value),
-                  ),
+                  child: viewModel.weightOptions.isEmpty
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: colors.outline),
+                          ),
+                          child: Text(
+                            'Select a subject first',
+                            style: AppTypography.bodyM.copyWith(color: colors.onSurfaceVariant),
+                          ),
+                        )
+                      : AppDropdownField<String>(
+                          label: 'Weight',
+                          value: viewModel.selectedWeightDisplayName,
+                          items: viewModel.weightOptions.map((w) => w.displayName).toList(),
+                          getLabel: (weight) => weight,
+                          onChanged: (value) => viewModel.setWeightByDisplayName(value),
+                        ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: AppDropdownField<String>(
+                    label: 'Priority',
                     value: viewModel.selectedPriority,
                     items: viewModel.priorities,
                     getLabel: (priority) => priority,

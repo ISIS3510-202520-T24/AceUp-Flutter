@@ -66,9 +66,9 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
     );
 
     _tabController.addListener(() {
-      if (_tabController.indexIsChanging) {
-        viewModel.selectTab(_tabController.index);
-      }
+      if (!mounted) return;
+      // Update whenever the index changes, not just during animation
+      viewModel.selectTab(_tabController.index);
     });
   }
 

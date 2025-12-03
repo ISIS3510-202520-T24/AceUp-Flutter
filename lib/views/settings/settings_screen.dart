@@ -178,24 +178,19 @@ class SettingsScreenContent extends StatelessWidget {
                 )
               : AppDropdownField<String>(
                   label: 'Holiday Country',
-                  hint: 'Select country',
                   value: viewModel.selectedCountryCode,
                   items: viewModel.availableCountries
-                      .map((country) => DropdownItem<String>(
-                            value: country['code']!,
-                            label: country['name']!,
-                          ))
+                      .map((country) => country['code']!)
                       .toList(),
+                  getLabel: (code) {
+                    final country = viewModel.availableCountries
+                        .firstWhere((c) => c['code'] == code);
+                    return country['name']!;
+                  },
                   onChanged: (value) {
                     if (value != null) {
                       viewModel.updateCountryCode(value);
                     }
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a country';
-                    }
-                    return null;
                   },
                 ),
           const SizedBox(height: 8),
