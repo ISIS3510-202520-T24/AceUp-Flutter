@@ -135,7 +135,7 @@ class TodayViewModel extends ChangeNotifier {
       case TodayTab.timetable:
         return 'Enjoy your free time!';
       case TodayTab.assignments:
-        return 'Great job staying ahead!';
+        return 'What a relief!';
     }
   }
 

@@ -12,6 +12,7 @@ import '../../themes/app_typography.dart';
 import '../../viewmodels/planner/subject_viewmodel.dart';
 import '../../widgets/content_counter.dart';
 import '../../widgets/content_switcher.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/keep_alive_wrapper.dart';
 import '../../widgets/top_bar.dart';
@@ -222,6 +223,14 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
         ? Color(int.parse('0xFF${viewModel.subject!.color.substring(1)}'))
         : colors.primary;
 
+    if (viewModel.classTemplates.isEmpty && viewModel.exams.isEmpty) {
+      return EmptyState(
+        message: 'No classes or exams yet',
+        subtitle: 'Tap the + button to create any',
+        icon: AppIcons.assignments,
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -390,33 +399,10 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
     final colors = Theme.of(context).colorScheme;
 
     if (viewModel.subjectAssignments.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                AppIcons.assignments,
-                size: 64,
-                color: colors.onPrimaryContainer,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No assignments yet',
-                style: AppTypography.h4.copyWith(color: colors.onSurface),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Add an assignment to get started',
-                style: AppTypography.bodyM.copyWith(
-                  color: colors.onPrimaryContainer,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+      return EmptyState(
+        message: 'No assignments yet',
+        subtitle: 'Tap the + button to create one',
+        icon: AppIcons.assignments,
       );
     }
 

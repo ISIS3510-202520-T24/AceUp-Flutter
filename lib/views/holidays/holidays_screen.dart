@@ -9,6 +9,7 @@ import '../../themes/app_typography.dart';
 import '../../viewmodels/holidays/holidays_viewmodel.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/deletable_list_item.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
 import 'edit_holiday_screen.dart';
@@ -108,34 +109,10 @@ class HolidaysScreenContent extends StatelessWidget {
       case ViewStateWithSuccess.success:
       case ViewStateWithSuccess.idle:
         if (viewModel.holidays.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  AppIcons.calendarDay,
-                  size: 64,
-                  color: colors.primary,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'No holidays found',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: colors.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Pull down to refresh',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: colors.onSurface,
-                  ),
-                ),
-              ],
-            ),
+          return EmptyState(
+            message: 'No holidays found',
+            subtitle: 'Will you ever take a break?',
+            icon: AppIcons.holidays
           );
         }
 
@@ -200,7 +177,7 @@ class HolidaysScreenContent extends StatelessWidget {
                 Icon(
                   AppIcons.edit,
                   size: 16,
-                  color: colors.primary,
+                  color: colors.inversePrimary,
                 ),
             ],
           ),

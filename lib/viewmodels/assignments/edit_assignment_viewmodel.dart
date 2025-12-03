@@ -150,7 +150,7 @@ class EditAssignmentViewModel extends ChangeNotifier {
         _selectedDueDate = _assignment!.dueDate;
         _selectedDueTime = TimeOfDay.fromDateTime(_assignment!.dueDate);
         _selectedWeightId = _assignment!.weightId;
-        _selectedPriority = _assignment!.priority.value;
+        _selectedPriority = _capitalizePriority(_assignment!.priority.value);
         _isGraded = _assignment!.grade != null && _assignment!.grade! > 0;
 
         if (_selectedSubjectId != null) {
@@ -456,6 +456,12 @@ class EditAssignmentViewModel extends ChangeNotifier {
     }
 
     return true;
+  }
+
+  /// Capitalize first letter of priority to match UI dropdown items
+  String _capitalizePriority(String priority) {
+    if (priority.isEmpty) return priority;
+    return priority[0].toUpperCase() + priority.substring(1);
   }
 
   @override

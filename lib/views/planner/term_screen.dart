@@ -7,6 +7,7 @@ import '../../themes/app_typography.dart';
 import '../../themes/app_icons.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/content_counter.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
 import '../../core/constants/enums.dart';
@@ -109,6 +110,14 @@ class _TermScreenContent extends StatelessWidget {
       );
     }
 
+    if (viewModel.subjects.isEmpty) {
+      return EmptyState(
+        message: 'No subjects for this term yet',
+        subtitle: 'Tap the + button to add one!',
+        icon: AppIcons.assignments,
+      );
+    }
+
     return RefreshIndicator(
       onRefresh: () => viewModel.refreshTerm(),
       child: Column(
@@ -164,16 +173,7 @@ class _TermScreenContent extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: viewModel.subjects.isEmpty
-                ? Center(
-              child: Text(
-                'No subjects yet. Add one to get started!',
-                style: AppTypography.bodyM.copyWith(
-                  color: colors.onPrimaryContainer,
-                ),
-              ),
-            )
-                : ListView.builder(
+            child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: viewModel.subjects.length,
               itemBuilder: (context, index) {

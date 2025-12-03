@@ -7,6 +7,7 @@ import '../../themes/app_typography.dart';
 import '../../themes/app_icons.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/content_counter.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
 import '../../core/constants/enums.dart';
@@ -89,6 +90,14 @@ class _PlannerScreenContent extends StatelessWidget {
       );
     }
 
+    if (viewModel.terms.isEmpty) {
+      return EmptyState(
+        message: 'No terms yet',
+        subtitle: 'Tap the + button to add one and get started!',
+        icon: AppIcons.assignments,
+      );
+    }
+
     return RefreshIndicator(
       onRefresh: () => viewModel.refreshTerms(),
       child: Column(
@@ -123,14 +132,7 @@ class _PlannerScreenContent extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: viewModel.terms.isEmpty
-                ? Center(
-              child: Text(
-                'No terms yet. Add one to get started!',
-                style: AppTypography.bodyM.copyWith(color: colors.onSurfaceVariant),
-              ),
-            )
-                : ListView.builder(
+            child: ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
               itemCount: viewModel.terms.length,
               itemBuilder: (context, index) {
