@@ -73,7 +73,6 @@ class _EditAssignmentScreenContent extends StatelessWidget {
               )
             else
               AppDropdownField<String>(
-                label: 'Subject',
                 value: viewModel.selectedSubject,
                 items: viewModel.subjects.map((s) => s.name).toList(),
                 getLabel: (subject) => subject,
@@ -91,16 +90,22 @@ class _EditAssignmentScreenContent extends StatelessWidget {
                     type: FormFieldType.text,
                   ),
                 ),
-                if (viewModel.isEditMode) ...[
-                  const SizedBox(width: 8),
-                  Checkbox(
-                    value: viewModel.isCompleted,
-                    onChanged: (value) => viewModel.toggleCompleted(),
-                    activeColor: colors.primary,
-                    checkColor: colors.onPrimary,
-                    side: BorderSide(color: colors.primary, width: 2),
-                  ),
-                ],
+                const SizedBox(width: 8),
+                Column(
+                  children: [
+                    Checkbox(
+                      value: viewModel.isCompleted,
+                      onChanged: (value) => viewModel.toggleCompleted(),
+                      activeColor: colors.primary,
+                      checkColor: colors.onPrimary,
+                      side: BorderSide(color: colors.primary, width: 2),
+                    ),
+                    Text(
+                      'Done',
+                      style: AppTypography.actionS.copyWith(color: colors.outline)
+                    ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -121,6 +126,7 @@ class _EditAssignmentScreenContent extends StatelessWidget {
                   size: 18,
                   color: colors.outline,
                 ),
+                SizedBox(width: 12),
                 Expanded(
                   child: _DatePickerField(
                     label: 'Due date',
@@ -149,6 +155,7 @@ class _EditAssignmentScreenContent extends StatelessWidget {
                     size: 18,
                     color: colors.outline,
                   ),
+                  SizedBox(width: 12),
                   Expanded(
                     child: _DatePickerField(
                       label: 'Reminder',
@@ -177,6 +184,7 @@ class _EditAssignmentScreenContent extends StatelessWidget {
                   size: 18,
                   color: colors.outline,
                 ),
+                SizedBox(width: 12),
                 Expanded(
                   child: viewModel.weightOptions.isEmpty
                       ? Container(
@@ -187,7 +195,7 @@ class _EditAssignmentScreenContent extends StatelessWidget {
                             border: Border.all(color: colors.outline),
                           ),
                           child: Text(
-                            'Select a subject first',
+                            'No weights',
                             style: AppTypography.bodyM.copyWith(color: colors.onSurfaceVariant),
                           ),
                         )
@@ -220,30 +228,37 @@ class _EditAssignmentScreenContent extends StatelessWidget {
                 Icon(
                   AppIcons.grade,
                   size: 18,
-                  color: colors.outline,
+                  color: viewModel.isCompleted ? colors.outline : colors.shadow,
                 ),
+                SizedBox(width: 12),
                 Expanded(
                   child: AppFormField(
                     controller: viewModel.gradeController,
-                    label: 'Grade',
-                    hint: 'Enter grade',
+                    hint: 'Grade',
                     type: FormFieldType.number,
                     enabled: viewModel.isCompleted,
                   ),
                 ),
                 const SizedBox(width: 8),
-
-                Checkbox(
-                  value: viewModel.isGraded,
-                  onChanged: viewModel.isCompleted ? (value) {
-                    viewModel.toggleGraded();
-                  } : null,
-                  activeColor: colors.primary,
-                  checkColor: colors.onPrimary,
-                  side: BorderSide(
-                    color: viewModel.isCompleted ? colors.primary : colors.shadow,
-                    width: 2,
-                  ),
+                Column(
+                  children: [
+                    Checkbox(
+                      value: viewModel.isGraded,
+                      onChanged: viewModel.isCompleted ? (value) {
+                        viewModel.toggleGraded();
+                      } : null,
+                      activeColor: colors.primary,
+                      checkColor: colors.onPrimary,
+                      side: BorderSide(
+                        color: viewModel.isCompleted ? colors.primary : colors.shadow,
+                        width: 2,
+                      ),
+                    ),
+                    Text(
+                      'Graded',
+                      style: AppTypography.actionS.copyWith(color: colors.outline)
+                    ),
+                  ],
                 ),
               ],
             ),

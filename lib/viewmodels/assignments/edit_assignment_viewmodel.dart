@@ -8,12 +8,10 @@ import '../../data/repositories/academic_repository.dart';
 import '../../services/auth/auth_service.dart';
 import '../../core/constants/enums.dart';
 
-// ignore_for_file: creation_with_non_type
-
 class EditAssignmentViewModel extends ChangeNotifier {
   final AuthService _authService;
   final AcademicRepository _repository;
-  final _uuid = const Uuid();
+  final _uuid = const Uuid(); // ignore: creation_with_non_type
   final String? termId;
   final String? subjectId;
   final String? assignmentId;
@@ -50,8 +48,11 @@ class EditAssignmentViewModel extends ChangeNotifier {
   String? _selectedSubject;
   String? get selectedSubject => _selectedSubject;
 
-  String? _selectedTermId;
   String? _selectedSubjectId;
+  String? get selectedSubjectId => _selectedSubjectId;
+
+  String? _selectedTermId;
+  String? get selectedTermId => _selectedTermId;
 
   DateTime _selectedDueDate = DateTime.now();
   DateTime get selectedDueDate => _selectedDueDate;

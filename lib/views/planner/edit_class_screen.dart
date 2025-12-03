@@ -10,6 +10,7 @@ import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/planner/edit_class_viewmodel.dart';
 import '../../widgets/dropdown_field.dart';
+import '../../widgets/form_field.dart';
 import '../../widgets/top_bar.dart';
 
 class EditClassScreen extends StatelessWidget {
@@ -49,7 +50,7 @@ class _EditClassScreenContent extends StatelessWidget {
 
     return Scaffold(
       appBar: TopBar(
-        title: 'Class',
+        title: viewModel.isCreateMode ? 'New Class' : 'Edit Class',
         leftControlType: LeftControlType.cancel,
         rightControlType: RightControlType.save,
         onRightPressed: () => _saveClassTemplate(context, viewModel),
@@ -80,7 +81,6 @@ class _EditClassScreenContent extends StatelessWidget {
                       items: viewModel.subjects.map((s) => s.name).toList(),
                       getLabel: (name) => name,
                       onChanged: viewModel.setSubject,
-                      label: 'Subject',
                     ),
 
                   const SizedBox(height: 16),
@@ -97,7 +97,8 @@ class _EditClassScreenContent extends StatelessWidget {
                           height: 48,
                           decoration: BoxDecoration(
                             color: colors.primary,
-                            shape: BoxShape.circle,
+                            shape: BoxShape.rectangle,
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
                             viewModel.selectedIcon,
@@ -111,19 +112,10 @@ class _EditClassScreenContent extends StatelessWidget {
 
                       // Name text field
                       Expanded(
-                        child: TextField(
+                        child: AppFormField(
                           controller: viewModel.nameController,
-                          decoration: InputDecoration(
-                            hintText: 'Text',
-                            hintStyle: AppTypography.bodyM.copyWith(
-                              color: colors.onSurfaceVariant.withValues(alpha: 0.5),
-                            ),
-                            border: const OutlineInputBorder(),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 12,
-                            ),
-                          ),
+                          hint: 'Name',
+                          type: FormFieldType.text,
                         ),
                       ),
                     ],
@@ -140,8 +132,8 @@ class _EditClassScreenContent extends StatelessWidget {
                           children: [
                             Text(
                               'Start Date',
-                              style: AppTypography.bodyS.copyWith(
-                                color: colors.onSurfaceVariant,
+                              style: AppTypography.h5.copyWith(
+                                color: colors.onTertiary
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -160,8 +152,8 @@ class _EditClassScreenContent extends StatelessWidget {
                           children: [
                             Text(
                               'End Date',
-                              style: AppTypography.bodyS.copyWith(
-                                color: colors.onSurfaceVariant,
+                              style: AppTypography.h5.copyWith(
+                                color: colors.onTertiary
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -187,8 +179,8 @@ class _EditClassScreenContent extends StatelessWidget {
                           children: [
                             Text(
                               'From',
-                              style: AppTypography.bodyS.copyWith(
-                                color: colors.onSurfaceVariant,
+                              style: AppTypography.h5.copyWith(
+                                color: colors.onTertiary
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -207,8 +199,8 @@ class _EditClassScreenContent extends StatelessWidget {
                           children: [
                             Text(
                               'To',
-                              style: AppTypography.bodyS.copyWith(
-                                color: colors.onSurfaceVariant,
+                              style: AppTypography.h5.copyWith(
+                                color: colors.onTertiary
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -228,8 +220,8 @@ class _EditClassScreenContent extends StatelessWidget {
                   // Repeats Every section
                   Text(
                     'Repeats Every',
-                    style: AppTypography.bodyS.copyWith(
-                      color: colors.onSurfaceVariant,
+                    style: AppTypography.h5.copyWith(
+                      color: colors.onTertiary
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -259,7 +251,6 @@ class _EditClassScreenContent extends StatelessWidget {
                               viewModel.setRecurrenceUnit(option.unit);
                             }
                           },
-                          label: 'Unit',
                         ),
                       ),
                     ],
@@ -282,24 +273,14 @@ class _EditClassScreenContent extends StatelessWidget {
                           children: [
                             Text(
                               'Building',
-                              style: AppTypography.bodyS.copyWith(
-                                color: colors.onSurfaceVariant,
+                              style: AppTypography.h5.copyWith(
+                                color: colors.onTertiary
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            TextField(
+                            AppFormField(
                               controller: viewModel.buildingController,
-                              decoration: InputDecoration(
-                                hintText: '...',
-                                hintStyle: AppTypography.bodyM.copyWith(
-                                  color: colors.onSurfaceVariant.withValues(alpha: 0.5),
-                                ),
-                                border: const OutlineInputBorder(),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
-                                ),
-                              ),
+                              hint: 'ML',
+                              type: FormFieldType.text,
                             ),
                           ],
                         ),
@@ -311,24 +292,14 @@ class _EditClassScreenContent extends StatelessWidget {
                           children: [
                             Text(
                               'Room',
-                              style: AppTypography.bodyS.copyWith(
-                                color: colors.onSurfaceVariant,
+                              style: AppTypography.h5.copyWith(
+                                color: colors.onTertiary
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            TextField(
+                            AppFormField(
                               controller: viewModel.roomController,
-                              decoration: InputDecoration(
-                                hintText: '...',
-                                hintStyle: AppTypography.bodyM.copyWith(
-                                  color: colors.onSurfaceVariant.withValues(alpha: 0.5),
-                                ),
-                                border: const OutlineInputBorder(),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
-                                ),
-                              ),
+                              hint: '515',
+                              type: FormFieldType.text,
                             ),
                           ],
                         ),
@@ -339,14 +310,24 @@ class _EditClassScreenContent extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Teachers dropdown
-                  AppDropdownField<String?>(
-                    value: viewModel.selectedTeacherName,
-                    items: [null, ...viewModel.teachers.map((t) => t.name)],
-                    getLabel: (name) => name ?? 'Teacher name',
-                    onChanged: viewModel.setTeacher,
-                    label: 'Teachers',
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Teachers',
+                        style: AppTypography.h5.copyWith(
+                          color: colors.onTertiary
+                        ),
+                      ),
+                      AppDropdownField<String?>(
+                        value: viewModel.selectedTeacherName,
+                        items: [null, ...viewModel.teachers.map((t) => t.name)],
+                        getLabel: (name) => name ?? "Teacher's name",
+                        onChanged: viewModel.setTeacher,
+                      ),
+                    ]
                   ),
-
+                  
                   const SizedBox(height: 16),
 
                   // Error message
