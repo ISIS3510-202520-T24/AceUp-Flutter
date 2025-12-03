@@ -3,7 +3,6 @@ import '../themes/app_icons.dart';
 import '../themes/app_typography.dart';
 import 'delete_confirmation_dialog.dart';
 
-/// Wrapper widget that adds long-press delete functionality to list items
 class DeletableListItem extends StatelessWidget {
   final Widget child;
   final String itemType;
@@ -64,7 +63,7 @@ class DeletableListItem extends StatelessWidget {
           ),
         ),
       ],
-      elevation: 8,
+      elevation: 0,
     ).then((value) {
       if (value == 'delete') {
         DeleteConfirmationDialog.show(

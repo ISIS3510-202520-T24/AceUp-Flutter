@@ -4,14 +4,16 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/enums.dart';
 import '../../data/repositories/academic_repository.dart';
+import '../../models/assignments/assignment_model.dart';
 import '../../models/planner/class_template_model.dart';
 import '../../models/planner/exam_model.dart';
-import '../../themes/app_colors.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/planner/subject_viewmodel.dart';
+import '../../widgets/assignment_card.dart';
 import '../../widgets/content_counter.dart';
 import '../../widgets/content_switcher.dart';
+import '../../widgets/deletable_list_item.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/keep_alive_wrapper.dart';
@@ -231,55 +233,50 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Content Counter
-          ContentCounter(
-            firstItem: CounterItem(
-              title: 'Classes left: ',
-              value: '${viewModel.classesLeft}',
-            ),
-            secondItem: CounterItem(
-              title: 'Exams left: ',
-              value: '${viewModel.examsLeft}',
-            ),
+    return Column(
+      children: [
+        ContentCounter(
+          firstItem: CounterItem(
+            title: 'Classes left: ',
+            value: '${viewModel.classesLeft}',
           ),
-          const SizedBox(height: 20),
-
-          // Classes Section
-          Text(
-            'Classes',
-            style: AppTypography.h4.copyWith(color: colors.onSurface),
+          secondItem: CounterItem(
+            title: 'Exams left: ',
+            value: '${viewModel.examsLeft}',
           ),
-          const SizedBox(height: 12),
+        ),
+        const SizedBox(height: 20),
 
-          ...viewModel.classTemplates.map((classTemplate) => _buildClassItem(
-            context,
-            classTemplate,
-            subjectColor,
-            colors,
-          )),
+        // Classes Section
+        Text(
+          'Classes',
+          style: AppTypography.h4.copyWith(color: colors.onSurface),
+        ),
+        const SizedBox(height: 12),
 
-          const SizedBox(height: 24),
+        ...viewModel.classTemplates.map((classTemplate) => _buildClassItem(
+          context,
+          classTemplate,
+          subjectColor,
+          colors,
+        )),
 
-          // Exams Section
-          Text(
-            'Exams',
-            style: AppTypography.h4.copyWith(color: colors.onSurface),
-          ),
-          const SizedBox(height: 12),
+        const SizedBox(height: 24),
 
-          ...viewModel.exams.map((exam) => _buildExamItem(
-            context,
-            exam,
-            subjectColor,
-            colors,
-          )),
-        ],
-      ),
+        // Exams Section
+        Text(
+          'Exams',
+          style: AppTypography.h4.copyWith(color: colors.onSurface),
+        ),
+        const SizedBox(height: 12),
+
+        ...viewModel.exams.map((exam) => _buildExamItem(
+          context,
+          exam,
+          subjectColor,
+          colors,
+        )),
+      ],
     );
   }
 
@@ -396,7 +393,6 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
   }
 
   Widget _buildAssignmentsTab(BuildContext context, SubjectViewModel viewModel) {
-    final colors = Theme.of(context).colorScheme;
 
     if (viewModel.subjectAssignments.isEmpty) {
       return EmptyState(
@@ -436,156 +432,28 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
           final assignment = index < pending.length
               ? pending[index]
               : completed[index - pending.length];
-          return _buildAssignmentCard(context, assignment, viewModel);
+          return DeletableListItem(
+          itemType: 'Assignment',
+          itemName: assignment.title,
+          onDelete: () => viewModel.deleteAssignment(assignment),
+          onTap: () => _handleEditAssignmentAction(context, viewModel, assignment),
+          child: AssignmentCard(
+            assignment: assignment,
+            showTimeInsteadOfDate: true,
+            onToggleStatus: () => viewModel.toggleAssignmentStatus(assignment),
+          )
+        );
         },
       ),
     );
   }
 
-  Widget _buildAssignmentCard(
-      BuildContext context,
-      dynamic assignment,
-      SubjectViewModel viewModel,
-      ) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    IconData priorityIcon = AppIcons.priority;
-    Color priorityColor;
-    switch (assignment.priority) {
-      case 'High':
-        priorityColor = AppColors.errorMedium;
-        break;
-      case 'Low':
-        priorityColor = AppColors.successMedium;
-        break;
-      default: // Medium
-        priorityColor = AppColors.warningMedium;
-    }
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final dueDate = DateTime(
-      assignment.dueDate.year,
-      assignment.dueDate.month,
-      assignment.dueDate.day,
-    );
-
-    String dueDateText;
-    if (dueDate.isAtSameMomentAs(today)) {
-      dueDateText = 'Due Today';
-    } else if (dueDate.isBefore(today)) {
-      final difference = today.difference(dueDate).inDays;
-      if (assignment.isCompleted) {
-        dueDateText = DateFormat('MMM d, yyyy').format(assignment.dueDate);
-      } else {
-        dueDateText = difference == 1
-            ? 'Overdue by 1 day'
-            : 'Overdue by $difference days';
-      }
-    } else {
-      final difference = dueDate.difference(today).inDays;
-      if (difference == 1) {
-        dueDateText = 'Due Tomorrow';
-      } else if (difference <= 7) {
-        dueDateText = 'Due in $difference days';
-      } else {
-        dueDateText = DateFormat('MMM d, yyyy').format(assignment.dueDate);
-      }
-    }
-
-    return InkWell(
-      onTap: () async {
-        final result = await Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => EditAssignmentScreen(assignment: assignment),
-          ),
-        );
-        if (result == true) {
-          viewModel.refreshAssignments();
-        }
-      },
-      child: Card(
-        elevation: 0,
-        margin: const EdgeInsets.only(bottom: 12.0),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Checkbox(
-                value: assignment.isCompleted,
-                onChanged: (value) {
-                  viewModel.toggleAssignmentStatus(assignment);
-                },
-                activeColor: colors.primary,
-                checkColor: colors.onPrimary,
-                side: BorderSide(color: colors.primary, width: 2),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      assignment.subjectName ?? 'Unknown Subject',
-                      style: AppTypography.h5.copyWith(
-                        color: colors.onSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      assignment.title,
-                      style: AppTypography.bodyM.copyWith(
-                        color: colors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      assignment.description ?? '',
-                      style: AppTypography.bodyS.copyWith(
-                        color: colors.onPrimaryContainer,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    dueDateText,
-                    style: AppTypography.bodyS.copyWith(
-                      color: dueDate.isBefore(today) && !assignment.isCompleted
-                          ? colors.error
-                          : colors.onPrimaryContainer,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Icon(
-                    priorityIcon,
-                    size: 21,
-                    color: priorityColor,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildGradesTab(BuildContext context, SubjectViewModel viewModel) {
     final colors = Theme.of(context).colorScheme;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ContentCounter(
             firstItem: CounterItem(
@@ -841,5 +709,17 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
         duration: Duration(seconds: 2),
       ),
     );
+  }
+
+  Future<void> _handleEditAssignmentAction(BuildContext context, SubjectViewModel viewModel, Assignment assignment) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EditAssignmentScreen(assignment: assignment),
+      ),
+    );
+
+    if (result == true) {
+          viewModel.refreshAssignments();
+    }
   }
 }

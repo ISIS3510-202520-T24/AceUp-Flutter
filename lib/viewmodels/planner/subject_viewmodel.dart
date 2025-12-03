@@ -68,10 +68,37 @@ class SubjectViewModel extends ChangeNotifier {
   }) : _repository = repository {
     finalGradeController = TextEditingController();
     creditsController = TextEditingController();
-    _loadSubject();
-    _loadSubjectAssignments();
-    _loadClassTemplates();
-    _loadExams();
+    _initializeData();
+  }
+
+  /// Initialize all data with proper loading state
+  Future<void> _initializeData() async {
+    _state = ViewState.loading;
+    notifyListeners();
+
+    try {
+      // Load all data in parallel
+      await Future.wait([
+        _loadSubject(),
+        _loadSubjectAssignments(),
+        _loadClassTemplates(),
+        _loadExams(),
+      ]);
+
+      // Initialize form fields after subject is loaded
+      if (_subject != null) {
+        _initializeFormFields();
+      }
+
+      _state = ViewState.idle;
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Failed to load subject data: $e';
+      _state = ViewState.error;
+      print('❌ Error initializing subject data: $e');
+    }
+
+    notifyListeners();
   }
 
   void selectTab(int index) {
@@ -89,10 +116,7 @@ class SubjectViewModel extends ChangeNotifier {
   Future<void> _loadSubject() async {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
-      _errorMessage = 'User not logged in';
-      _state = ViewState.error;
-      notifyListeners();
-      return;
+      throw Exception('User not logged in');
     }
 
     try {
@@ -101,78 +125,114 @@ class SubjectViewModel extends ChangeNotifier {
       _subject = await _repository.getSubjectById(subjectId);
 
       if (_subject == null) {
-        _errorMessage = 'Term not found';
-        _state = ViewState.error;
-        notifyListeners();
-        return;
+        throw Exception('Subject not found');
       }
 
       print('✅ Loaded subject: ${_subject!.name}');
-
-      _state = ViewState.idle;
-      _errorMessage = null;
     } catch (e) {
-      _errorMessage = e.toString();
-      _state = ViewState.error;
       print('❌ Error loading subject: $e');
+      rethrow;
     }
-    notifyListeners();
+  }
+
+  /// Initialize form fields from loaded subject data
+  void _initializeFormFields() {
+    if (_subject == null) return;
+
+    // Initialize credits controller
+    creditsController.text = _subject!.credits.toString();
+
+    // Initialize final grade if override is enabled
+    if (_subject!.useFinalGradeOverride && _subject!.finalGrade != null) {
+      _finalSubjectGrade = _subject!.finalGrade;
+      finalGradeController.text = _subject!.finalGrade!.toStringAsFixed(2);
+    }
+
+    // Build weights map for display
+    _weights = {};
+    for (final weight in _subject!.weights) {
+      _weights[weight.name] = weight.percentage.toInt();
+    }
+
+    // Note: _currentGrade should be calculated from assignments/exams
+    // TODO: Implement grade calculation
+    _currentGrade = _subject!.finalGrade ?? 0.0;
   }
 
   Future<void> _loadSubjectAssignments() async {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
-      _errorMessage = 'User not logged in';
-      _state = ViewState.error;
-      notifyListeners();
-      return;
+      throw Exception('User not logged in');
     }
-
-    _state = ViewState.loading;
-    notifyListeners();
 
     try {
       // Load all assignments for this subject
       _subjectAssignments = await _repository.getAssignmentsForSubject(subjectId);
-      
-      _state = ViewState.idle;
-      _errorMessage = null;
     } catch (e) {
-      _errorMessage = e.toString();
-      _state = ViewState.error;
-      print('Error loading subject assignments: $e');
+      print('❌ Error loading subject assignments: $e');
+      rethrow;
     }
-
-    notifyListeners();
   }
 
   Future<void> _loadClassTemplates() async {
     try {
       _classTemplates = await _repository.getClassTemplatesForSubject(subjectId);
-      notifyListeners();
     } catch (e) {
-      print('Error loading class templates: $e');
+      print('❌ Error loading class templates: $e');
+      rethrow;
     }
   }
 
   Future<void> _loadExams() async {
     try {
       _exams = await _repository.getExamsForSubject(subjectId);
-      notifyListeners();
     } catch (e) {
-      print('Error loading exams: $e');
+      print('❌ Error loading exams: $e');
+      rethrow;
     }
   }
 
   Future<void> refreshAssignments() async {
-    await _loadSubjectAssignments();
+    _state = ViewState.loading;
+    notifyListeners();
+
+    try {
+      await _loadSubjectAssignments();
+      _state = ViewState.idle;
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Failed to refresh assignments: $e';
+      _state = ViewState.error;
+    }
+
+    notifyListeners();
   }
 
   Future<void> refreshSubject() async {
-    await _loadSubject();
-    await _loadSubjectAssignments();
-    await _loadClassTemplates();
-    await _loadExams();
+    _state = ViewState.loading;
+    notifyListeners();
+
+    try {
+      await Future.wait([
+        _loadSubject(),
+        _loadSubjectAssignments(),
+        _loadClassTemplates(),
+        _loadExams(),
+      ]);
+
+      // Re-initialize form fields after refresh
+      if (_subject != null) {
+        _initializeFormFields();
+      }
+
+      _state = ViewState.idle;
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Failed to refresh subject: $e';
+      _state = ViewState.error;
+    }
+
+    notifyListeners();
   }
 
   Future<void> toggleAssignmentStatus(Assignment assignment) async {
@@ -182,6 +242,31 @@ class SubjectViewModel extends ChangeNotifier {
       await _loadSubjectAssignments();
     } catch (e) {
       _errorMessage = 'Failed to update assignment: $e';
+      _state = ViewState.error;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteAssignment(Assignment assignment) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null || assignment.termId == null || assignment.subjectId == null) {
+      _errorMessage = 'Cannot delete assignment: missing required information';
+      _state = ViewState.error;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await _repository.deleteAssignment(
+        assignment.id,
+        userId,
+        assignment.termId!,
+        assignment.subjectId!,
+      );
+
+      await _loadSubjectAssignments();
+    } catch (e) {
+      _errorMessage = 'Failed to delete assignment: $e';
       _state = ViewState.error;
       notifyListeners();
     }
@@ -217,6 +302,7 @@ class SubjectViewModel extends ChangeNotifier {
     final credits = int.tryParse(value);
     if (credits != null && credits > 0) {
       _saveGradesData();
+      notifyListeners();
     }
   }
 

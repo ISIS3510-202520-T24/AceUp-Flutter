@@ -27,7 +27,15 @@ class HolidayService {
         final List<dynamic> jsonData = json.decode(response.body);
 
         return jsonData
-            .map((json) => Holiday.fromJson(json as Map<String, dynamic>))
+            .asMap()
+            .entries
+            .map((entry) {
+              final index = entry.key;
+              final json = entry.value as Map<String, dynamic>;
+              // Generate unique ID using country code, year, and index
+              final id = 'api_${countryCode}_${year}_$index';
+              return Holiday.fromApiResponse(json, id);
+            })
             .toList();
       } else if (response.statusCode == 404) {
         throw Exception('Country not found or no holidays available for this year. Please check the country code.');

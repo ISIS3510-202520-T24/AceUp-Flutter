@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 
-import '../../themes/app_colors.dart';
+import '../../models/assignments/assignment_model.dart';
 import '../../themes/app_icons.dart';
-import '../../themes/app_typography.dart';
 
+import '../../widgets/assignment_card.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/content_switcher.dart';
 import '../../widgets/deletable_list_item.dart';
@@ -178,159 +177,32 @@ class _AssignmentsScreenContentState extends State<_AssignmentsScreenContent>
         itemCount: assignments.length,
         itemBuilder: (context, index) {
           final assignment = assignments[index];
-          return _buildAssignmentCard(context, assignment, viewModel);
+          return DeletableListItem(
+            itemType: 'Assignment',
+            itemName: assignment.title,
+            onDelete: () => viewModel.deleteAssignment(assignment),
+            onTap: () => _handleEditAction(context, viewModel, assignment),
+            child: AssignmentCard(
+              assignment: assignment,
+              onToggleStatus: () => viewModel.toggleAssignmentStatus(assignment),
+            )
+          );
         },
       ),
     );
   }
 
-  Widget _buildAssignmentCard(
-      BuildContext context,
-      dynamic assignment,
-      AssignmentsViewModel viewModel,
-      ) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
 
-    IconData priorityIcon;
-    Color priorityColor;
-    switch (assignment.priority) {
-      case 'High':
-        priorityIcon = AppIcons.priority;
-        priorityColor = AppColors.errorMedium;
-        break;
-      case 'Low':
-        priorityIcon = AppIcons.priority;
-        priorityColor = AppColors.successMedium;
-        break;
-      default: // Medium
-        priorityIcon = AppIcons.priority;
-        priorityColor = AppColors.warningMedium;
-    }
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final dueDate = DateTime(
-      assignment.dueDate.year,
-      assignment.dueDate.month,
-      assignment.dueDate.day,
-    );
-
-    String dueDateText;
-    if (dueDate.isAtSameMomentAs(today)) {
-      dueDateText = 'Due Today';
-    } else if (dueDate.isBefore(today)) {
-      final difference = today.difference(dueDate).inDays;
-      if (assignment.isCompleted) {
-        dueDateText = DateFormat('MMM d, yyyy').format(assignment.dueDate);
-      } else {
-        dueDateText = difference == 1
-            ? 'Overdue by 1 day'
-            : 'Overdue by $difference days';
-      }
-    } else {
-      final difference = dueDate.difference(today).inDays;
-      if (difference == 1) {
-        dueDateText = 'Due Tomorrow';
-      } else if (difference <= 7) {
-        dueDateText = 'Due in $difference days';
-      } else {
-        dueDateText = DateFormat('MMM d, yyyy').format(assignment.dueDate);
-      }
-    }
-
-    return DeletableListItem(
-      itemType: 'Assignment',
-      itemName: assignment.title,
-      onDelete: () => viewModel.deleteAssignment(assignment),
-      onTap: () async {
-        final result = await Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => EditAssignmentScreen(assignment: assignment),
-          ),
-        );
-        if (result == true) {
-          viewModel.refreshAssignments();
-        }
-      },
-      child: Card(
-        elevation: 0,
-        margin: const EdgeInsets.only(bottom: 12.0),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Checkbox(
-                value: assignment.isCompleted,
-                onChanged: (value) {
-                  viewModel.toggleAssignmentStatus(assignment);
-                },
-                activeColor: colors.primary,
-                checkColor: colors.onPrimary,
-                side: BorderSide(color: colors.primary, width: 2),
-              ),
-              const SizedBox(width: 8),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      assignment.subjectName ?? 'Unknown Subject',
-                      style: AppTypography.h5.copyWith(
-                        color: colors.onSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-
-                    Text(
-                      assignment.title,
-                      style: AppTypography.bodyM.copyWith(
-                        color: colors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-
-                    Text(
-                      assignment.description ?? '',
-                      style: AppTypography.bodyS.copyWith(
-                        color: colors.onPrimaryContainer,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(width: 8),
-
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    dueDateText,
-                    style: AppTypography.bodyS.copyWith(
-                      color: dueDate.isBefore(today) && !assignment.isCompleted
-                          ? colors.onError
-                          : colors.onPrimaryContainer,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  Icon(
-                    priorityIcon,
-                    size: 21,
-                    color: priorityColor,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+  Future<void> _handleEditAction(BuildContext context, AssignmentsViewModel viewModel, Assignment assignment) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EditAssignmentScreen(assignment: assignment),
       ),
     );
+
+    if (result == true) {
+          viewModel.refreshAssignments();
+    }
   }
 
   Future<void> _handleAddAction(BuildContext context, AssignmentsViewModel viewModel) async {

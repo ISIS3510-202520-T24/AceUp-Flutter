@@ -88,8 +88,8 @@ class DeleteConfirmationDialog extends StatelessWidget {
             onConfirm();
           },
           style: FilledButton.styleFrom(
-            backgroundColor: colors.error,
-            foregroundColor: colors.onError,
+            backgroundColor: colors.onError,
+            foregroundColor: colors.error,
           ),
           child: Text(
             'Delete',

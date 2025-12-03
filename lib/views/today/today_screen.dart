@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../models/assignments/assignment_model.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_icons.dart';
-import '../../themes/app_typography.dart';
 
+import '../../widgets/assignment_card.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/content_counter.dart';
+import '../../widgets/deletable_list_item.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/keep_alive_wrapper.dart';
@@ -232,97 +234,35 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
     final assignments = viewModel.assignmentsDueToday;
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.all(16),
       itemCount: assignments.length,
       itemBuilder: (context, index) {
         final assignment = assignments[index];
-        return _buildAssignmentCard(context, assignment, viewModel);
+        return DeletableListItem(
+          itemType: 'Assignment',
+          itemName: assignment.title,
+          onDelete: () => viewModel.deleteAssignment(assignment),
+          onTap: () => _handleEditAssignmentAction(context, viewModel, assignment),
+          child: AssignmentCard(
+            assignment: assignment,
+            showTimeInsteadOfDate: true,
+            onToggleStatus: () => viewModel.toggleAssignmentStatus(assignment),
+          )
+        );
       },
     );
   }
 
-  Widget _buildAssignmentCard(
-      BuildContext context,
-      assignment,
-      TodayViewModel viewModel,
-      ) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    IconData priorityIcon;
-    Color priorityColor;
-    switch (assignment.priority) {
-      case 'High':
-        priorityIcon = AppIcons.priority;
-        priorityColor = AppColors.errorMedium;
-        break;
-      case 'Low':
-        priorityIcon = AppIcons.priority;
-        priorityColor = AppColors.successMedium;
-        break;
-      default: // Medium
-        priorityIcon = AppIcons.priority;
-        priorityColor = AppColors.warningMedium;
-    }
-
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 12.0),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Checkbox(
-              value: assignment.isCompleted,
-              onChanged: (value) {
-                viewModel.toggleAssignmentStatus(assignment);
-              },
-              activeColor: colors.primary,
-              checkColor: colors.onPrimary,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    assignment.subjectName ?? 'Unknown Subject',
-                    style: AppTypography.h5.copyWith(
-                      color: colors.onSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  // Title
-                  Text(
-                    assignment.title,
-                    style: AppTypography.bodyM.copyWith(
-                      color: colors.onSurface,
-
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    assignment.description ?? '',
-                    style: AppTypography.bodyS.copyWith(
-                      color: colors.onPrimaryContainer,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              priorityIcon,
-              color: priorityColor,
-              size: 21,
-            ),
-          ],
-        ),
+  Future<void> _handleEditAssignmentAction(BuildContext context, TodayViewModel viewModel, Assignment assignment) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EditAssignmentScreen(assignment: assignment),
       ),
     );
+
+    if (result == true) {
+          viewModel.refreshAssignments();
+    }
   }
 
   Future<void> _handleAddAssignmentAction(BuildContext context, TodayViewModel viewModel) async {

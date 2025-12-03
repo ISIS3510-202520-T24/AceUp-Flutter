@@ -96,6 +96,31 @@ class TodayViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> deleteAssignment(Assignment assignment) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null || assignment.termId == null || assignment.subjectId == null) {
+      _errorMessage = 'Cannot delete assignment: missing required information';
+      _state = ViewState.error;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await _repository.deleteAssignment(
+        assignment.id,
+        userId,
+        assignment.termId!,
+        assignment.subjectId!,
+      );
+
+      await _loadAssignmentsDueToday();
+    } catch (e) {
+      _errorMessage = 'Failed to delete assignment: $e';
+      _state = ViewState.error;
+      notifyListeners();
+    }
+  }
+
   int get pendingCount =>
       _assignmentsDueToday
           .where((a) => !a.isCompleted)
