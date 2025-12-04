@@ -6,6 +6,7 @@ class ClassTemplate {
   final String id;
   final String name;
   final String icon; // Icon identifier from preset assets
+  final String? imageUrl; // Optional image URL for the class
   final DateTime startDate;
   final DateTime endDate;
   final String startTime; // HH:mm format
@@ -27,6 +28,7 @@ class ClassTemplate {
     required this.id,
     required this.name,
     required this.icon,
+    this.imageUrl,
     required this.startDate,
     required this.endDate,
     required this.startTime,
@@ -62,6 +64,7 @@ class ClassTemplate {
       id: doc.id,
       name: data['name'] ?? '',
       icon: data['icon'] ?? 'class_default',
+      imageUrl: data['imageUrl'],
       startDate: (data['startDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       endDate: (data['endDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       startTime: data['startTime'] ?? '09:00',
@@ -85,6 +88,7 @@ class ClassTemplate {
       id: json['id'] ?? '',
       name: json['name'] ?? '',
       icon: json['icon'] ?? 'class_default',
+      imageUrl: json['imageUrl'],
       startDate: json['startDate'] is Timestamp
           ? (json['startDate'] as Timestamp).toDate()
           : DateTime.tryParse(json['startDate']?.toString() ?? '') ?? DateTime.now(),
@@ -112,6 +116,7 @@ class ClassTemplate {
     return {
       'name': name,
       'icon': icon,
+      if (imageUrl != null) 'imageUrl': imageUrl,
       'startDate': Timestamp.fromDate(startDate),
       'endDate': Timestamp.fromDate(endDate),
       'startTime': startTime,
@@ -130,6 +135,7 @@ class ClassTemplate {
       'id': id,
       'name': name,
       'icon': icon,
+      if (imageUrl != null) 'imageUrl': imageUrl,
       'startDate': startDate.toIso8601String(),
       'endDate': endDate.toIso8601String(),
       'startTime': startTime,
@@ -147,6 +153,7 @@ class ClassTemplate {
     String? id,
     String? name,
     String? icon,
+    String? imageUrl,
     DateTime? startDate,
     DateTime? endDate,
     String? startTime,
@@ -166,6 +173,7 @@ class ClassTemplate {
       id: id ?? this.id,
       name: name ?? this.name,
       icon: icon ?? this.icon,
+      imageUrl: imageUrl ?? this.imageUrl,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       startTime: startTime ?? this.startTime,

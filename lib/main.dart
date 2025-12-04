@@ -42,6 +42,7 @@ import 'views/shared/shared_screen.dart';
 import 'views/shared/group_stats_screen.dart';
 import 'views/settings/settings_screen.dart';
 import 'views/uni_events/university_events_screen.dart';
+import 'views/calendar/calendar_screen.dart';
 
 // Core
 import 'core/observer/vm_scope.dart';
@@ -305,6 +306,7 @@ class AceUpApp extends StatelessWidget {
         child: const SignUpScreen(),
       );
     },
+    '/calendar': (context) => const CalendarScreen(),
   },
 );
   }

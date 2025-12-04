@@ -93,7 +93,6 @@ class BurgerMenu extends StatelessWidget {
             child: SafeArea(
               top: false,
               child: ListView(
-                physics: const NeverScrollableScrollPhysics(),
                 padding: EdgeInsets.zero,
                 children: [
                   const SizedBox(height: 8),
@@ -116,9 +115,8 @@ class BurgerMenu extends StatelessWidget {
                     context: context,
                     title: "Calendar",
                     icon: AppIcons.calendarMonth,
-                    route: null,
-                    isSelected: false,
-                    isComingSoon: true,
+                    route: '/calendar',
+                    isSelected: currentRoute == '/calendar',
                   ),
                   _menuItem(
                     context: context,

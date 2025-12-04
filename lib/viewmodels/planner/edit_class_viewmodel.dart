@@ -37,6 +37,7 @@ class EditClassViewModel extends ChangeNotifier {
   late TextEditingController nameController;
   late TextEditingController buildingController;
   late TextEditingController roomController;
+  late TextEditingController imageUrlController;
 
   // Subject selection
   String? _selectedSubject;
@@ -166,6 +167,7 @@ class EditClassViewModel extends ChangeNotifier {
     nameController = TextEditingController();
     buildingController = TextEditingController();
     roomController = TextEditingController();
+    imageUrlController = TextEditingController();
   }
 
   Future<void> _loadExistingClass() async {
@@ -189,6 +191,7 @@ class EditClassViewModel extends ChangeNotifier {
         nameController.text = _classTemplate!.name;
         buildingController.text = _classTemplate!.building ?? '';
         roomController.text = _classTemplate!.room ?? '';
+        imageUrlController.text = _classTemplate!.imageUrl ?? '';
 
         _selectedTermId = _classTemplate!.termId;
         _selectedSubject = _classTemplate!.subjectName;
@@ -466,6 +469,7 @@ class EditClassViewModel extends ChangeNotifier {
       id: classId,
       name: nameController.text.trim(),
       icon: _selectedIconName,
+      imageUrl: imageUrlController.text.trim().isEmpty ? null : imageUrlController.text.trim(),
       startDate: _startDate,
       endDate: _endDate,
       startTime: _formatTimeOfDay(_startTime),
@@ -502,6 +506,7 @@ class EditClassViewModel extends ChangeNotifier {
     final updatedClassTemplate = _classTemplate!.copyWith(
       name: nameController.text.trim(),
       icon: _selectedIconName,
+      imageUrl: imageUrlController.text.trim().isEmpty ? null : imageUrlController.text.trim(),
       startDate: _startDate,
       endDate: _endDate,
       startTime: _formatTimeOfDay(_startTime),
@@ -569,6 +574,7 @@ class EditClassViewModel extends ChangeNotifier {
     nameController.dispose();
     buildingController.dispose();
     roomController.dispose();
+    imageUrlController.dispose();
     super.dispose();
   }
 }

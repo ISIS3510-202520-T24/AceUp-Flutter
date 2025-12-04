@@ -173,38 +173,66 @@ class _PlannerScreenContent extends StatelessWidget {
         elevation: 0,
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Row(
+          child: Column(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      term.name,
-                      style: AppTypography.h4.copyWith(color: colors.onSurface),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              term.name,
+                              style: AppTypography.h4.copyWith(color: colors.onSurface),
+                            ),
+                            if (term.isActive) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: colors.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'ACTIVE',
+                                  style: AppTypography.bodyS.copyWith(
+                                    color: colors.onPrimary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        if (dateRange.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            dateRange,
+                            style: AppTypography.bodyS.copyWith(color: colors.onPrimaryContainer),
+                          ),
+                        ],
+                      ],
                     ),
-                    if (dateRange.isNotEmpty) ...[
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'GPA: ${termGPA?.toStringAsFixed(2) ?? '0.00'}',
+                        style: AppTypography.bodyM.copyWith(color: colors.onSurface),
+                      ),
                       const SizedBox(height: 4),
                       Text(
-                        dateRange,
+                        'Credits: $termCredits',
                         style: AppTypography.bodyS.copyWith(color: colors.onPrimaryContainer),
                       ),
                     ],
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'GPA: ${termGPA?.toStringAsFixed(2) ?? '0.00'}',
-                    style: AppTypography.bodyM.copyWith(color: colors.onSurface),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Credits: $termCredits',
-                    style: AppTypography.bodyS.copyWith(color: colors.onPrimaryContainer),
-                  ),
+                  const SizedBox(width: 8),
+                  Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
                 ],
               ),
               const SizedBox(width: 8),
