@@ -115,12 +115,13 @@ class WeekViewViewModel extends ChangeNotifier {
           // Fetch class templates for this subject
           final subjectClasses = await _repository.getClassTemplatesForSubject(subject.id);
 
-          // Add subject name to each class for display
+          // Add subject name and color to each class for display
           final classesWithSubject = subjectClasses.map((c) =>
             c.copyWith(
               subjectName: subject.name,
               subjectId: subject.id,
               termId: term.id,
+              subjectColor: subject.color,
             )
           ).toList();
 

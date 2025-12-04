@@ -194,8 +194,13 @@ class GpaCalculationService {
         // Skip subjects without grades
         if (subjectGrade == null) continue;
 
-        // Convert percentage grade to GPA scale (default: 0-5.0 scale)
-        final gpaValue = _convertToGpaScale(subjectGrade, gradingScale ?? 'percentage');
+        // Subject grades are already on the correct scale:
+        // - If calculated from assignments: 0-100 percentage scale
+        // - If using final grade override: user's input scale (0-5.0 Colombian scale)
+        // We need to convert percentage grades (0-100) to GPA scale (0-5.0)
+        // But final grade overrides are already on 5.0 scale, so check which one it is
+        final isOverride = subject.useFinalGradeOverride && subject.finalGrade != null;
+        final gpaValue = isOverride ? subjectGrade : _convertToGpaScale(subjectGrade, gradingScale ?? 'percentage');
 
         totalWeightedGrade += gpaValue * subject.credits;
         totalCredits += subject.credits;

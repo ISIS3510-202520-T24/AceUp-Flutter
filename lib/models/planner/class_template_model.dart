@@ -21,6 +21,7 @@ class ClassTemplate {
   final String? termId;
   final String? subjectId;
   final String? subjectName;
+  final String? subjectColor; // Hex color from subject
 
   ClassTemplate({
     required this.id,
@@ -39,6 +40,7 @@ class ClassTemplate {
     this.termId,
     this.subjectId,
     this.subjectName,
+    this.subjectColor,
   });
 
   factory ClassTemplate.fromFirestore(DocumentSnapshot doc) {
@@ -158,6 +160,7 @@ class ClassTemplate {
     String? termId,
     String? subjectId,
     String? subjectName,
+    String? subjectColor,
   }) {
     return ClassTemplate(
       id: id ?? this.id,
@@ -176,6 +179,7 @@ class ClassTemplate {
       termId: termId ?? this.termId,
       subjectId: subjectId ?? this.subjectId,
       subjectName: subjectName ?? this.subjectName,
+      subjectColor: subjectColor ?? this.subjectColor,
     );
   }
 

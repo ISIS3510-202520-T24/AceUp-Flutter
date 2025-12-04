@@ -274,7 +274,12 @@ class AcademicRepository {
   Future<model.Assignment?> getAssignmentById(String assignmentId) async {
     final entity = await _db.assignmentDao.getAssignmentById(assignmentId);
     if (entity == null) return null;
-    return _assignmentEntityToModel(entity);
+
+    final assignment = _assignmentEntityToModel(entity);
+
+    // Enrich with subject name and term ID
+    final enriched = await enrichAssignmentsWithSubjectInfo([assignment]);
+    return enriched.firstOrNull;
   }
 
   /// Get all assignments for user
@@ -475,7 +480,18 @@ class AcademicRepository {
   Future<model.Exam?> getExamById(String examId) async {
     final entity = await _db.examDao.getExamById(examId);
     if (entity == null) return null;
-    return _examEntityToModel(entity);
+
+    final exam = _examEntityToModel(entity);
+
+    // Enrich with termId from subject
+    if (exam.subjectId != null) {
+      final subject = await _db.subjectDao.getSubjectById(exam.subjectId!);
+      if (subject != null) {
+        return exam.copyWith(termId: subject.termId);
+      }
+    }
+
+    return exam;
   }
 
   /// Save exam locally and queue for sync
@@ -560,7 +576,18 @@ class AcademicRepository {
   Future<model.ClassTemplate?> getClassTemplateById(String templateId) async {
     final entity = await _db.classDao.getClassTemplateById(templateId);
     if (entity == null) return null;
-    return _classTemplateEntityToModel(entity);
+
+    final template = _classTemplateEntityToModel(entity);
+
+    // Enrich with termId from subject
+    if (template.subjectId != null) {
+      final subject = await _db.subjectDao.getSubjectById(template.subjectId!);
+      if (subject != null) {
+        return template.copyWith(termId: subject.termId);
+      }
+    }
+
+    return template;
   }
 
   /// Save class template locally and queue for sync

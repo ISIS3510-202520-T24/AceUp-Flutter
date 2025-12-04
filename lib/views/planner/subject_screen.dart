@@ -236,6 +236,7 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
     }
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ContentCounter(
           firstItem: CounterItem(
@@ -297,7 +298,7 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
       onDelete: () => viewModel.deleteClassTemplate(classTemplate),
       onTap: () => _handleEditClassAction(context, viewModel, classTemplate),
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 16.0),
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

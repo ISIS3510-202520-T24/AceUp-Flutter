@@ -263,12 +263,23 @@ class WeeklyCalendarView extends StatelessWidget {
     // Determine if we have space for multiple lines
     final hasSpace = height >= 60;
 
+    // Parse subject color or fallback to primary
+    Color borderColor = colors.primary;
+    if (classTemplate.subjectColor != null) {
+      try {
+        borderColor = Color(int.parse('0xFF${classTemplate.subjectColor!.substring(1)}'));
+      } catch (e) {
+        // If color parsing fails, use primary color
+        borderColor = colors.primary;
+      }
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: colors.surface,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: colors.primary,
+          color: borderColor,
           width: 1,
         ),
       ),
@@ -283,7 +294,7 @@ class WeeklyCalendarView extends StatelessWidget {
               classTemplate.subjectName!,
               style: AppTypography.bodyS.copyWith(
                 fontSize: 9,
-                color: colors.primary,
+                color: borderColor,
                 fontWeight: FontWeight.w600,
               ),
               maxLines: 1,

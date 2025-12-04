@@ -7,6 +7,7 @@ import '../../models/planner/class_template_model.dart';
 import '../../models/planner/exam_model.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/grades/gpa_calculation_service.dart';
+import '../../services/cache/memory_cache_service.dart';
 import '../../models/assignments/assignment_model.dart';
 
 enum SubjectTab { timetable, assignments, grades }
@@ -14,6 +15,7 @@ enum SubjectTab { timetable, assignments, grades }
 class SubjectViewModel extends ChangeNotifier {
   final AcademicRepository _repository;
   final GpaCalculationService _gpaService;
+  final MemoryCacheService _cache = MemoryCacheService();
   final AuthService _authService = AuthService();
   final String subjectId;
   final String termId;
@@ -52,8 +54,6 @@ class SubjectViewModel extends ChangeNotifier {
   int get examsLeft => _exams.where((exam) => !exam.isCompleted).length;
 
   // Current grade - calculated in real-time from assignments and exams
-  double? _cachedCurrentGrade;
-
   Future<double?> getCurrentGrade() async {
     if (_subject == null) return null;
 
@@ -399,6 +399,13 @@ class SubjectViewModel extends ChangeNotifier {
       );
 
       _subject = updatedSubject;
+
+      // Invalidate all related caches so UI updates
+      _cache.invalidateSubjectCache(subjectId);
+      _cache.invalidateTermCache(termId);
+      _cache.invalidateUserGpaCache(userId);
+
+      print('✅ Saved grade data and invalidated caches for subject $subjectId');
     } catch (e) {
       print('Error saving grades data: $e');
     }
