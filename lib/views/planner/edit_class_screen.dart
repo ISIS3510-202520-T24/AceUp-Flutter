@@ -337,6 +337,37 @@ class _EditClassContent extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
+                  // Image URL field
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Image URL (optional)',
+                        style: AppTypography.bodyS.copyWith(
+                          color: colors.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: viewModel.imageUrlController,
+                        decoration: InputDecoration(
+                          hintText: 'https://example.com/image.jpg',
+                          hintStyle: AppTypography.bodyM.copyWith(
+                            color: colors.onSurfaceVariant.withValues(alpha: 0.5),
+                          ),
+                          border: const OutlineInputBorder(),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                        ),
+                        keyboardType: TextInputType.url,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
                   // Error message
                   if (viewModel.state == EditClassViewState.error &&
                       viewModel.errorMessage != null)

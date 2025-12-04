@@ -1,12 +1,14 @@
-// lib/views/calendar/calendar_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../viewmodels/calendar_viewmodel.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../viewmodels/calendar/calendar_viewmodel.dart';
 import '../../data/repositories/academic_repository.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/content_switcher.dart';
 import '../../models/planner/class_template_model.dart';
 import '../../models/assignments/assignment_model.dart';
+import 'class_detail_screen.dart';
+import 'assignment_detail_screen.dart';
 
 class CalendarScreen extends StatelessWidget {
   const CalendarScreen({super.key});
@@ -254,8 +256,13 @@ class _CalendarGrid extends StatelessWidget {
     // Get the weekday of the first day (1 = Monday, 7 = Sunday)
     final firstWeekday = firstDay.weekday;
     
-    // Create list with null placeholders for days before the month starts
-    final List<DateTime?> days = List.filled(firstWeekday - 1, null, growable: true);
+    // Create a growable list
+    final List<DateTime?> days = [];
+    
+    // Add null placeholders for days before the month starts
+    for (int i = 0; i < firstWeekday - 1; i++) {
+      days.add(null);
+    }
     
     // Add all days of the month
     for (int day = 1; day <= lastDay.day; day++) {
@@ -285,6 +292,7 @@ class _TimetableTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final viewModel = context.read<CalendarViewModel>();
 
     if (classes.isEmpty) {
       return Center(
@@ -313,19 +321,56 @@ class _TimetableTab extends StatelessWidget {
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: ListTile(
-            leading: CircleAvatar(
-              child: Text(classItem.icon),
-            ),
+            leading: classItem.imageUrl != null
+                ? ClipOval(
+                    child: CachedNetworkImage(
+                      imageUrl: classItem.imageUrl!,
+                      width: 40,
+                      height: 40,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        width: 40,
+                        height: 40,
+                        color: colors.surfaceContainerHighest,
+                        child: const Center(
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => CircleAvatar(
+                        child: Text(classItem.icon),
+                      ),
+                    ),
+                  )
+                : CircleAvatar(
+                    child: Text(classItem.icon),
+                  ),
             title: Text(classItem.name),
             subtitle: Text(
               '${classItem.startTime} - ${classItem.endTime}${classItem.room != null ? " • ${classItem.room}" : ""}',
             ),
-            trailing: classItem.building != null
-                ? Text(
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (classItem.building != null)
+                  Text(
                     classItem.building!,
                     style: TextStyle(color: colors.primary),
-                  )
-                : null,
+                  ),
+                const SizedBox(width: 8),
+                Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
+              ],
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ClassDetailScreen(
+                    classTemplate: classItem,
+                    selectedDate: viewModel.selectedDate,
+                  ),
+                ),
+              );
+            },
           ),
         );
       },
@@ -341,6 +386,7 @@ class _AssignmentsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final viewModel = context.read<CalendarViewModel>();
 
     if (assignments.isEmpty) {
       return Center(
@@ -388,7 +434,29 @@ class _AssignmentsTab extends StatelessWidget {
                   ? 'Due at ${assignment.dueTime}'
                   : 'Due today',
             ),
-            trailing: _PriorityBadge(priority: assignment.priority),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _PriorityBadge(priority: assignment.priority),
+                const SizedBox(width: 8),
+                Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
+              ],
+            ),
+            onTap: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AssignmentDetailScreen(
+                    assignment: assignment,
+                  ),
+                ),
+              );
+              // If assignment was updated, invalidate cache and refresh
+              if (result == true) {
+                viewModel.invalidateDate(viewModel.selectedDate);
+                viewModel.refresh();
+              }
+            },
           ),
         );
       },

@@ -243,4 +243,24 @@ class PlannerViewModel extends ChangeNotifier {
     
     notifyListeners();
   }
+
+  /// Set active term
+  Future<void> setActiveTerm(String termId) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) return;
+
+    try {
+      print('🔄 Setting active term: $termId');
+      
+      // Set via repository
+      await _repository.setActiveTerm(userId, termId);
+      
+      print('✅ Active term set successfully');
+      
+      // Refresh terms to update UI
+      await refreshTerms();
+    } catch (e) {
+      print('❌ Error setting active term: $e');
+    }
+  }
 }
