@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import '../../models/assignments/assignment_model.dart';
 import '../../data/repositories/academic_repository.dart';
 import '../../services/auth/auth_service.dart';
+import '../../core/constants/enums.dart';
 
 enum AssignmentsTab { pending, completed }
-
-enum AssignmentsViewState { idle, loading, error }
 
 class AssignmentsViewModel extends ChangeNotifier {
   final AcademicRepository _repository;
@@ -14,8 +13,8 @@ class AssignmentsViewModel extends ChangeNotifier {
   AssignmentsTab _selectedTab = AssignmentsTab.pending;
   AssignmentsTab get selectedTab => _selectedTab;
 
-  AssignmentsViewState _state = AssignmentsViewState.idle;
-  AssignmentsViewState get state => _state;
+  ViewState _state = ViewState.idle;
+  ViewState get state => _state;
 
   List<Assignment> _pendingAssignments = [];
   List<Assignment> _completedAssignments = [];
@@ -51,23 +50,23 @@ class AssignmentsViewModel extends ChangeNotifier {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = AssignmentsViewState.error;
+      _state = ViewState.error;
       notifyListeners();
       return;
     }
 
-    _state = AssignmentsViewState.loading;
+    _state = ViewState.loading;
     notifyListeners();
 
     try {
       _pendingAssignments = await _repository.getPendingAssignments(userId);
       _completedAssignments = await _repository.getCompletedAssignments(userId);
 
-      _state = AssignmentsViewState.idle;
+      _state = ViewState.idle;
       _errorMessage = null;
     } catch (e) {
       _errorMessage = e.toString();
-      _state = AssignmentsViewState.error;
+      _state = ViewState.error;
       print('Error loading all assignments: $e');
     }
 
@@ -88,7 +87,7 @@ class AssignmentsViewModel extends ChangeNotifier {
       await _loadAllAssignments();
     } catch (e) {
       _errorMessage = 'Failed to update assignment: $e';
-      _state = AssignmentsViewState.error;
+      _state = ViewState.error;
       notifyListeners();
     }
   }
@@ -97,7 +96,7 @@ class AssignmentsViewModel extends ChangeNotifier {
     final userId = _authService.currentUser?.uid;
     if (userId == null || assignment.termId == null || assignment.subjectId == null) {
       _errorMessage = 'Cannot delete assignment: missing required information';
-      _state = AssignmentsViewState.error;
+      _state = ViewState.error;
       notifyListeners();
       return;
     }
@@ -113,7 +112,7 @@ class AssignmentsViewModel extends ChangeNotifier {
       await _loadAllAssignments();
     } catch (e) {
       _errorMessage = 'Failed to delete assignment: $e';
-      _state = AssignmentsViewState.error;
+      _state = ViewState.error;
       notifyListeners();
     }
   }

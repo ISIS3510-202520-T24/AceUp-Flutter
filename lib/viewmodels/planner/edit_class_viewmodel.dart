@@ -12,8 +12,6 @@ import '../../themes/app_icons.dart';
 
 // ignore_for_file: creation_with_non_type
 
-enum EditClassViewState { idle, loading, saving, error }
-
 class EditClassViewModel extends ChangeNotifier {
   final AuthService _authService;
   final AcademicRepository _academicRepo;
@@ -23,8 +21,8 @@ class EditClassViewModel extends ChangeNotifier {
   final String? subjectId;
   final String? termId;
 
-  EditClassViewState _state = EditClassViewState.idle;
-  EditClassViewState get state => _state;
+  EditViewState _state = EditViewState.idle;
+  EditViewState get state => _state;
 
   ClassTemplate? _classTemplate;
   ClassTemplate? get classTemplate => _classTemplate;
@@ -141,15 +139,28 @@ class EditClassViewModel extends ChangeNotifier {
         _academicRepo = academicRepo,
         _teacherRepo = teacherRepo {
     _initializeControllers();
-    _loadSubjects();
-    _loadTeachers();
+
     if (isEditMode) {
       _loadExistingClass();
     } else {
       // Set defaults for create mode
       _selectedTermId = termId;
       _selectedSubjectId = subjectId;
+      // Load subjects first, then it will auto-select if subjectId is provided
+      _initializeForCreateMode();
     }
+
+    _loadTeachers();
+  }
+
+  Future<void> _initializeForCreateMode() async {
+    _state = EditViewState.loading;
+    notifyListeners();
+
+    await _loadSubjects();
+
+    _state = EditViewState.idle;
+    notifyListeners();
   }
 
   void _initializeControllers() {
@@ -162,12 +173,12 @@ class EditClassViewModel extends ChangeNotifier {
   Future<void> _loadExistingClass() async {
     if (classTemplateId == null) return;
 
-    _state = EditClassViewState.loading;
+    _state = EditViewState.loading;
     notifyListeners();
 
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
-      _state = EditClassViewState.error;
+      _state = EditViewState.error;
       _errorMessage = 'User not logged in';
       notifyListeners();
       return;
@@ -212,14 +223,14 @@ class EditClassViewModel extends ChangeNotifier {
           _selectedTeacherName = teacher?.name;
         }
 
-        _state = EditClassViewState.idle;
+        _state = EditViewState.idle;
         _errorMessage = null;
       } else {
         _errorMessage = 'Class not found';
-        _state = EditClassViewState.error;
+        _state = EditViewState.error;
       }
     } catch (e) {
-      _state = EditClassViewState.error;
+      _state = EditViewState.error;
       _errorMessage = 'Failed to load class data';
     }
 
@@ -407,21 +418,21 @@ class EditClassViewModel extends ChangeNotifier {
       return false;
     }
 
-    _state = EditClassViewState.saving;
+    _state = EditViewState.saving;
     _errorMessage = null;
     notifyListeners();
 
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = EditClassViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
 
     if (_selectedTermId == null || _selectedSubjectId == null) {
       _errorMessage = 'Please select a valid subject';
-      _state = EditClassViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
@@ -433,12 +444,12 @@ class EditClassViewModel extends ChangeNotifier {
         await _updateClassTemplate(userId);
       }
 
-      _state = EditClassViewState.idle;
+      _state = EditViewState.idle;
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = 'Failed to save class: $e';
-      _state = EditClassViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
@@ -518,21 +529,21 @@ class EditClassViewModel extends ChangeNotifier {
   bool _validateForm() {
     if (nameController.text.trim().isEmpty) {
       _errorMessage = 'Class name is required';
-      _state = EditClassViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
 
     if (_selectedSubject == null || _selectedSubject!.isEmpty) {
       _errorMessage = 'Subject is required';
-      _state = EditClassViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
 
     if (_endDate.isBefore(_startDate)) {
       _errorMessage = 'End date must be after start date';
-      _state = EditClassViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
@@ -543,14 +554,14 @@ class EditClassViewModel extends ChangeNotifier {
 
     if (endMinutes <= startMinutes) {
       _errorMessage = 'End time must be after start time';
-      _state = EditClassViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }
 
     if (_recurrenceUnit == RecurrenceUnit.weeks && _selectedDays.isEmpty) {
       _errorMessage = 'Please select at least one day';
-      _state = EditClassViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return false;
     }

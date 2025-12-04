@@ -42,10 +42,6 @@ import 'views/shared/shared_screen.dart';
 import 'views/shared/group_stats_screen.dart';
 import 'views/settings/settings_screen.dart';
 import 'views/uni_events/university_events_screen.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'services/schedule_repository.dart';
-import 'views/schedule/schedule_screen_wrapper.dart';
 import 'views/calendar/calendar_screen.dart';
 
 // Core
@@ -65,8 +61,7 @@ import 'data/repositories/event_repository.dart';
 
 // Tema
 import 'themes/app_theme.dart';
-
-// 🔹 NUEVO: AuthGate para sesión persistente
+import 'views/week_view/week_view_screen.dart';
 import 'widgets/auth_gate.dart';
 
 Future<void> main() async {
@@ -201,7 +196,10 @@ Future<void> main() async {
 
           // HolidaysViewModel (ChangeNotifier con lógica de festivos)
           ChangeNotifierProvider<HolidaysViewModel>(
-            create: (_) => HolidaysViewModel(),
+            create: (context) => HolidaysViewModel(
+              holidayRepository: context.read<HolidayRepository>(),
+              settingsRepository: context.read<SettingsRepository>(),
+            ),
           ),
 
           // Database
@@ -227,15 +225,6 @@ Future<void> main() async {
 
           // SyncService es ChangeNotifier, debe usar ChangeNotifierProvider
           ChangeNotifierProvider<SyncService>.value(value: syncService),
-          // 🔹 NUEVO: ScheduleRepository (repositorio de clases)
-          ChangeNotifierProvider<ScheduleRepository>(
-          create: (_) {
-            final repo = ScheduleRepository();
-            // Cargar el horario guardado en segundo plano.
-            repo.loadFromLocal();
-            return repo;
-          },
-          ),
 
           // Stream de auth (FirebaseAuth) para saber si hay usuario logeado
           StreamProvider<User?>(
@@ -292,9 +281,7 @@ class AceUpApp extends StatelessWidget {
           vm: VmScope.of(context).get<LoginViewModel>(),
         ),
     '/today': (context) => const TodayScreen(),
-    
-    // 🔹 NUEVA RUTA: Week View (Schedule con calendario)
-    '/schedule': (context) => const ScheduleScreenWrapper(),
+    '/week-view': (context) => const WeekViewScreen(),  
     '/holidays': (context) => const HolidaysScreen(),
     '/shared': (context) => const SharedScreenWrapper(),
     '/planner' : (context) => const PlannerScreen(),

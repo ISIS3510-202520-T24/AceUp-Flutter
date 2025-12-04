@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/enums.dart';
 import '../../data/local/database/app_database.dart';
 import '../../data/repositories/settings_repository.dart';
+import '../../data/repositories/holiday_repository.dart';
 import '../../services/auth/auth_service.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
@@ -30,6 +31,7 @@ class SettingsScreen extends StatelessWidget {
           database: context.read<AppDatabase>(),
           firestore: FirebaseFirestore.instance,
         ),
+        holidayRepository: context.read<HolidayRepository>(),
         userId: userId,
       ),
       child: const SettingsScreenContent(),
@@ -167,22 +169,30 @@ class SettingsScreenContent extends StatelessWidget {
           // Holiday Country
           _buildSectionHeader('Holidays', colors),
           const SizedBox(height: 12),
-          AppFormField(
-            label: 'Holiday Country Code',
-            hint: 'e.g., CO, US, MX',
-            controller: viewModel.holidayCountryController,
-            type: FormFieldType.text,
-            maxLength: 2,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter a country code';
-              }
-              if (value.length != 2) {
-                return 'Country code must be 2 letters (e.g., CO)';
-              }
-              return null;
-            },
-          ),
+          viewModel.isLoadingCountries
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              : AppDropdownField<String>(
+                  label: 'Holiday Country',
+                  value: viewModel.selectedCountryCode,
+                  items: viewModel.availableCountries
+                      .map((country) => country['code']!)
+                      .toList(),
+                  getLabel: (code) {
+                    final country = viewModel.availableCountries
+                        .firstWhere((c) => c['code'] == code);
+                    return country['name']!;
+                  },
+                  onChanged: (value) {
+                    if (value != null) {
+                      viewModel.updateCountryCode(value);
+                    }
+                  },
+                ),
           const SizedBox(height: 8),
           Text(
             'Used to fetch public holidays from the API',

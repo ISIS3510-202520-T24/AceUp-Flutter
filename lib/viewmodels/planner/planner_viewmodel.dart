@@ -5,8 +5,7 @@ import '../../services/auth/auth_service.dart';
 import '../../services/grades/gpa_calculation_service.dart';
 import '../../services/cache/memory_cache_service.dart';
 import '../../data/repositories/academic_repository.dart';
-
-enum PlannerViewState { idle, loading, error }
+import '../../core/constants/enums.dart';
 
 class PlannerViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -14,8 +13,8 @@ class PlannerViewModel extends ChangeNotifier {
   final GpaCalculationService _gpaService;
   final MemoryCacheService _cache = MemoryCacheService();
 
-  PlannerViewState _state = PlannerViewState.idle;
-  PlannerViewState get state => _state;
+  ViewState _state = ViewState.idle;
+  ViewState get state => _state;
 
   List<Term> _terms = [];
   List<Term> get terms => _terms;
@@ -51,12 +50,12 @@ class PlannerViewModel extends ChangeNotifier {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = PlannerViewState.error;
+      _state = ViewState.error;
       notifyListeners();
       return;
     }
 
-    _state = PlannerViewState.loading;
+    _state = ViewState.loading;
     notifyListeners();
 
     try {
@@ -75,11 +74,11 @@ class PlannerViewModel extends ChangeNotifier {
       // Calculate overall GPA and credits
       await _calculateOverallGPA(userId);
 
-      _state = PlannerViewState.idle;
+      _state = ViewState.idle;
       _errorMessage = null;
     } catch (e) {
       _errorMessage = e.toString();
-      _state = PlannerViewState.error;
+      _state = ViewState.error;
       print('❌ Error loading terms: $e');
     }
 

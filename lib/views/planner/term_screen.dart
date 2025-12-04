@@ -7,8 +7,11 @@ import '../../themes/app_typography.dart';
 import '../../themes/app_icons.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/content_counter.dart';
+import '../../widgets/deletable_list_item.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
+import '../../core/constants/enums.dart';
 import 'subject_screen.dart';
 import 'edit_subject_screen.dart';
 import 'edit_term_screen.dart';
@@ -26,15 +29,15 @@ class TermScreen extends StatelessWidget {
         repository: context.read<AcademicRepository>(),
         gpaService: context.read<GpaCalculationService>(),
         ),
-      child: _TermContent(termId: termId),
+      child: _TermScreenContent(termId: termId),
     );
   }
 }
 
-class _TermContent extends StatelessWidget {
+class _TermScreenContent extends StatelessWidget {
   final String termId;
   
-  const _TermContent({required this.termId});
+  const _TermScreenContent({required this.termId});
 
   @override
   Widget build(BuildContext context) {
@@ -82,13 +85,13 @@ class _TermContent extends StatelessWidget {
   }
 
   Widget _buildBody(BuildContext context, TermViewModel viewModel, ColorScheme colors) {
-    if (viewModel.state == TermViewState.loading) {
+    if (viewModel.state == ViewState.loading) {
       return Center(
         child: CircularProgressIndicator(color: colors.primary),
       );
     }
 
-    if (viewModel.state == TermViewState.error) {
+    if (viewModel.state == ViewState.error) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -105,6 +108,14 @@ class _TermContent extends StatelessWidget {
             ],
           ),
         ),
+      );
+    }
+
+    if (viewModel.subjects.isEmpty) {
+      return EmptyState(
+        message: 'No subjects for this term yet',
+        subtitle: 'Tap the + button to add one!',
+        icon: AppIcons.assignments,
       );
     }
 
@@ -163,21 +174,17 @@ class _TermContent extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: viewModel.subjects.isEmpty
-                ? Center(
-              child: Text(
-                'No subjects yet. Add one to get started!',
-                style: AppTypography.bodyM.copyWith(
-                  color: colors.onPrimaryContainer,
-                ),
-              ),
-            )
-                : ListView.builder(
+            child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: viewModel.subjects.length,
               itemBuilder: (context, index) {
                 final subject = viewModel.subjects[index];
-                return _buildSubjectCard(context, subject, viewModel);
+                return DeletableListItem(
+                  itemType: 'Subject',
+                  itemName: subject.name,
+                  onDelete: () => viewModel.deleteSubject(subject.id),
+                  child: _buildSubjectCard(context, subject, viewModel),
+                );
               },
             ),
           ),
@@ -188,8 +195,8 @@ class _TermContent extends StatelessWidget {
 
   Widget _buildSubjectCard(BuildContext context, subject, TermViewModel viewModel) {
     final colors = Theme.of(context).colorScheme;
-    final grade = viewModel.getSubjectGrade(subject.id);
     final credits = subject.credits;
+    final subjectColor = Color(int.parse('0xFF${subject.color.substring(1)}'));
 
     return InkWell(
       onTap: () async {
@@ -209,24 +216,57 @@ class _TermContent extends StatelessWidget {
       child: Card(
         elevation: 0,
         margin: const EdgeInsets.only(bottom: 12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                subject.name,
-                style: AppTypography.h4.copyWith(color: colors.onSurface),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${subject.credits} credits',
-                style: AppTypography.bodyS.copyWith(
-                  color: colors.onPrimaryContainer,
+        child: Row(
+          children: [
+            // Colored vertical line on the left
+            Container(
+              width: 4,
+              height: 60,
+              decoration: BoxDecoration(
+                color: subjectColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
                 ),
               ),
-            ],
-          ),
+            ),
+            // Content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            subject.name,
+                            style: AppTypography.h4.copyWith(color: colors.onSurface),
+                          ),
+                          const SizedBox(height: 4),
+                          FutureBuilder<double?>(
+                            future: viewModel.getSubjectGrade(subject.id),
+                            builder: (context, snapshot) {
+                              final grade = snapshot.data;
+                              return Text(
+                                'Credits: $credits, Grade: ${grade?.toStringAsFixed(2) ?? '0.00'}',
+                                style: AppTypography.bodyS.copyWith(
+                                  color: colors.onPrimaryContainer,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(AppIcons.arrowRight, color: colors.onSurfaceVariant),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

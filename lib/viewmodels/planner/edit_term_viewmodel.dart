@@ -3,10 +3,9 @@ import 'package:uuid/uuid.dart'; // ignore: uri_does_not_exist
 import '../../models/planner/term_model.dart';
 import '../../services/auth/auth_service.dart';
 import '../../data/repositories/academic_repository.dart';
+import '../../core/constants/enums.dart';
 
 // ignore_for_file: creation_with_non_type
-
-enum EditTermViewState { idle, loading, saving, error }
 
 class EditTermViewModel extends ChangeNotifier {
   final AuthService _authService;
@@ -14,8 +13,8 @@ class EditTermViewModel extends ChangeNotifier {
   final _uuid = const Uuid();
   final String? termId;
 
-  EditTermViewState _state = EditTermViewState.idle;
-  EditTermViewState get state => _state;
+  EditViewState _state = EditViewState.idle;
+  EditViewState get state => _state;
 
   Term? _term;
   Term? get term => _term;
@@ -52,13 +51,13 @@ class EditTermViewModel extends ChangeNotifier {
   Future<void> _loadExistingTerm() async {
     if (termId == null) return;
 
-    _state = EditTermViewState.loading;
+    _state = EditViewState.loading;
     notifyListeners();
 
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = EditTermViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return;
     }
@@ -71,15 +70,15 @@ class EditTermViewModel extends ChangeNotifier {
         _startDate = _term!.startDate;
         _endDate = _term!.endDate;
 
-        _state = EditTermViewState.idle;
+        _state = EditViewState.idle;
         _errorMessage = null;
       } else {
         _errorMessage = 'Term not found';
-        _state = EditTermViewState.error;
+        _state = EditViewState.error;
       }
     } catch (e) {
       _errorMessage = 'Failed to load term: $e';
-      _state = EditTermViewState.error;
+      _state = EditViewState.error;
       print('Error loading term: $e');
     }
 
@@ -114,7 +113,7 @@ class EditTermViewModel extends ChangeNotifier {
       return false;
     }
 
-    _state = EditTermViewState.saving;
+    _state = EditViewState.saving;
     notifyListeners();
 
     try {
@@ -133,13 +132,13 @@ class EditTermViewModel extends ChangeNotifier {
 
       await _repository.saveTerm(term, userId);
 
-      _state = EditTermViewState.idle;
+      _state = EditViewState.idle;
       _errorMessage = null;
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = 'Failed to save term: $e';
-      _state = EditTermViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       print('Error saving term: $e');
       return false;

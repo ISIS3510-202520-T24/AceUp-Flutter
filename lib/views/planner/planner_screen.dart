@@ -7,8 +7,11 @@ import '../../themes/app_typography.dart';
 import '../../themes/app_icons.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/content_counter.dart';
+import '../../widgets/deletable_list_item.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
+import '../../core/constants/enums.dart';
 import 'term_screen.dart';
 import 'edit_term_screen.dart';
 
@@ -22,13 +25,13 @@ class PlannerScreen extends StatelessWidget {
         repository: context.read<AcademicRepository>(),
         gpaService: context.read<GpaCalculationService>(), 
       ),
-      child: const _PlannerContent(),
+      child: const _PlannerScreenContent(),
     );
   }
 }
 
-class _PlannerContent extends StatelessWidget {
-  const _PlannerContent();
+class _PlannerScreenContent extends StatelessWidget {
+  const _PlannerScreenContent();
 
   @override
   Widget build(BuildContext context) {
@@ -62,13 +65,13 @@ class _PlannerContent extends StatelessWidget {
   }
 
   Widget _buildBody(BuildContext context, PlannerViewModel viewModel, ColorScheme colors) {
-    if (viewModel.state == PlannerViewState.loading) {
+    if (viewModel.state == ViewState.loading) {
       return Center(
         child: CircularProgressIndicator(color: colors.primary),
       );
     }
 
-    if (viewModel.state == PlannerViewState.error) {
+    if (viewModel.state == ViewState.error) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -85,6 +88,14 @@ class _PlannerContent extends StatelessWidget {
             ],
           ),
         ),
+      );
+    }
+
+    if (viewModel.terms.isEmpty) {
+      return EmptyState(
+        message: 'No terms yet',
+        subtitle: 'Tap the + button to add one and get started!',
+        icon: AppIcons.assignments,
       );
     }
 
@@ -122,19 +133,17 @@ class _PlannerContent extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: viewModel.terms.isEmpty
-                ? Center(
-              child: Text(
-                'No terms yet. Add one to get started!',
-                style: AppTypography.bodyM.copyWith(color: colors.onSurfaceVariant),
-              ),
-            )
-                : ListView.builder(
+            child: ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
               itemCount: viewModel.terms.length,
               itemBuilder: (context, index) {
                 final term = viewModel.terms[index];
-                return _buildTermCard(context, term, viewModel, colors);
+                return DeletableListItem(
+                  itemType: 'Term',
+                  itemName: term.name,
+                  onDelete: () => viewModel.deleteTerm(term.id),
+                  child: _buildTermCard(context, term, viewModel, colors),
+                );
               },
             ),
           ),
@@ -162,8 +171,6 @@ class _PlannerContent extends StatelessWidget {
       },
       child: Card(
         elevation: 0,
-        margin: const EdgeInsets.only(bottom: 12),
-        color: term.isActive ? colors.primaryContainer.withOpacity(0.5) : null,
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -228,20 +235,8 @@ class _PlannerContent extends StatelessWidget {
                   Icon(Icons.chevron_right, color: colors.onSurfaceVariant),
                 ],
               ),
-              if (!term.isActive) ...[
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => viewModel.setActiveTerm(term.id),
-                    icon: const Icon(Icons.check_circle_outline, size: 18),
-                    label: const Text('Set as Active Term'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                  ),
-                ),
-              ],
+              const SizedBox(width: 8),
+              Icon(AppIcons.arrowRight, color: colors.onSurfaceVariant),
             ],
           ),
         ),

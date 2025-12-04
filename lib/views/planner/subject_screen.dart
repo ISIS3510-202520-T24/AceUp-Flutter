@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants/enums.dart';
 import '../../data/repositories/academic_repository.dart';
+import '../../models/assignments/assignment_model.dart';
 import '../../models/planner/class_template_model.dart';
 import '../../models/planner/exam_model.dart';
-import '../../themes/app_colors.dart';
+import '../../services/grades/gpa_calculation_service.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/planner/subject_viewmodel.dart';
+import '../../widgets/assignment_card.dart';
 import '../../widgets/content_counter.dart';
 import '../../widgets/content_switcher.dart';
+import '../../widgets/deletable_list_item.dart';
+import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/keep_alive_wrapper.dart';
 import '../../widgets/top_bar.dart';
@@ -34,6 +39,7 @@ class SubjectScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => SubjectViewModel(
         repository: context.read<AcademicRepository>(),
+        gpaService: context.read<GpaCalculationService>(),
         subjectId: subjectId,
         termId: termId,
       ),
@@ -65,9 +71,9 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
     );
 
     _tabController.addListener(() {
-      if (_tabController.indexIsChanging) {
-        viewModel.selectTab(_tabController.index);
-      }
+      if (!mounted) return;
+      // Update whenever the index changes, not just during animation
+      viewModel.selectTab(_tabController.index);
     });
   }
 
@@ -98,13 +104,13 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
           }
         },
       ),
-      body: viewModel.state == SubjectViewState.loading
+      body: viewModel.state == ViewState.loading
           ? Center(
         child: CircularProgressIndicator(
           color: Theme.of(context).colorScheme.primary,
         ),
       )
-          : viewModel.state == SubjectViewState.error
+          : viewModel.state == ViewState.error
           ? Center(
         child: Text(
           viewModel.errorMessage ?? 'An error occurred',
@@ -133,9 +139,13 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
     );
   }
 
-  Widget _buildFAB(BuildContext context, SubjectViewModel viewModel) {
-    switch (viewModel.selectedTab) {
+  Widget? _buildFAB(BuildContext context, SubjectViewModel viewModel) {
+    // Ensure the FAB rebuilds when the tab changes
+    final currentTab = viewModel.selectedTab;
+
+    switch (currentTab) {
       case SubjectTab.assignments:
+        // Show only Assignment FAB
         return FAB(
           options: [
             FabOption(
@@ -145,7 +155,11 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => EditAssignmentScreen(assignment: null, subjectId: viewModel.subjectId, termId: viewModel.subjectId),
+                    builder: (_) => EditAssignmentScreen(
+                      assignment: null,
+                      subjectId: viewModel.subjectId,
+                      termId: viewModel.termId,
+                    ),
                   ),
                 );
                 if (result == true) {
@@ -155,7 +169,9 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
             ),
           ],
         );
+
       case SubjectTab.timetable:
+        // Show Class and Exam FABs
         return FAB(
           options: [
             FabOption(
@@ -165,11 +181,15 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => EditClassScreen(classTemplate: null, subjectId: viewModel.subjectId, termId: viewModel.subjectId),
+                    builder: (_) => EditClassScreen(
+                      classTemplate: null,
+                      subjectId: viewModel.subjectId,
+                      termId: viewModel.termId,
+                    ),
                   ),
                 );
                 if (result == true) {
-                  viewModel.refreshAssignments();
+                  viewModel.refreshSubject();
                 }
               },
             ),
@@ -180,18 +200,24 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => EditExamScreen(exam: null, subjectId: viewModel.subjectId, termId: viewModel.subjectId),
+                    builder: (_) => EditExamScreen(
+                      exam: null,
+                      subjectId: viewModel.subjectId,
+                      termId: viewModel.termId,
+                    ),
                   ),
                 );
                 if (result == true) {
-                  viewModel.refreshAssignments();
+                  viewModel.refreshSubject();
                 }
               },
             ),
           ],
         );
+
       case SubjectTab.grades:
-        return const SizedBox.shrink();
+        // Hide FAB on grades tab
+        return null;
     }
   }
 
@@ -201,55 +227,59 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
         ? Color(int.parse('0xFF${viewModel.subject!.color.substring(1)}'))
         : colors.primary;
 
-    return Padding(
-      padding: const EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Content Counter
-          ContentCounter(
-            firstItem: CounterItem(
-              title: 'Classes left: ',
-              value: '${viewModel.classesLeft}',
-            ),
-            secondItem: CounterItem(
-              title: 'Exams left: ',
-              value: '${viewModel.examsLeft}',
-            ),
+    if (viewModel.classTemplates.isEmpty && viewModel.exams.isEmpty) {
+      return EmptyState(
+        message: 'No classes or exams yet',
+        subtitle: 'Tap the + button to create any',
+        icon: AppIcons.assignments,
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ContentCounter(
+          firstItem: CounterItem(
+            title: 'Classes left: ',
+            value: '${viewModel.classesLeft}',
           ),
-          const SizedBox(height: 20),
-
-          // Classes Section
-          Text(
-            'Classes',
-            style: AppTypography.h4.copyWith(color: colors.onSurface),
+          secondItem: CounterItem(
+            title: 'Exams left: ',
+            value: '${viewModel.examsLeft}',
           ),
-          const SizedBox(height: 12),
+        ),
+        const SizedBox(height: 20),
 
-          ...viewModel.classTemplates.map((classTemplate) => _buildClassItem(
-            context,
-            classTemplate,
-            subjectColor,
-            colors,
-          )),
+        // Classes Section
+        Text(
+          'Classes',
+          style: AppTypography.h4.copyWith(color: colors.onSurface),
+        ),
+        const SizedBox(height: 12),
 
-          const SizedBox(height: 24),
+        ...viewModel.classTemplates.map((classTemplate) => _buildClassItem(
+          context,
+          classTemplate,
+          subjectColor,
+          colors,
+        )),
 
-          // Exams Section
-          Text(
-            'Exams',
-            style: AppTypography.h4.copyWith(color: colors.onSurface),
-          ),
-          const SizedBox(height: 12),
+        const SizedBox(height: 24),
 
-          ...viewModel.exams.map((exam) => _buildExamItem(
-            context,
-            exam,
-            subjectColor,
-            colors,
-          )),
-        ],
-      ),
+        // Exams Section
+        Text(
+          'Exams',
+          style: AppTypography.h4.copyWith(color: colors.onSurface),
+        ),
+        const SizedBox(height: 12),
+
+        ...viewModel.exams.map((exam) => _buildExamItem(
+          context,
+          exam,
+          subjectColor,
+          colors,
+        )),
+      ],
     );
   }
 
@@ -259,54 +289,61 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
     Color subjectColor,
     ColorScheme colors,
   ) {
+    final viewModel = context.read<SubjectViewModel>();
     final dayAbbreviations = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Colored circle
-          Container(
-            width: 12,
-            height: 12,
-            margin: const EdgeInsets.only(top: 4),
-            decoration: BoxDecoration(
-              color: subjectColor,
-              shape: BoxShape.circle,
+    return DeletableListItem(
+      itemType: 'Class',
+      itemName: classTemplate.name,
+      onDelete: () => viewModel.deleteClassTemplate(classTemplate),
+      onTap: () => _handleEditClassAction(context, viewModel, classTemplate),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Colored circle
+            Container(
+              width: 12,
+              height: 12,
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                color: subjectColor,
+                shape: BoxShape.circle,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
+            const SizedBox(width: 12),
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Time range
-                Text(
-                  '${classTemplate.startTime} - ${classTemplate.endTime}',
-                  style: AppTypography.bodyM.copyWith(
-                    color: colors.onSurface,
-                    fontWeight: FontWeight.w600,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Time range
+                  Text(
+                    '${classTemplate.startTime} - ${classTemplate.endTime}',
+                    style: AppTypography.bodyM.copyWith(
+                      color: colors.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
+                  const SizedBox(height: 4),
 
-                // Days
-                Text(
-                  classTemplate.recurrence.selectedDays.map((day) {
-                    // day is 0-6 where 0=Sunday, adjust to get correct abbreviation
-                    final index = day == 0 ? 6 : day - 1; // Convert Sunday from 0 to 6
-                    return dayAbbreviations[index];
-                  }).join('  '),
-                  style: AppTypography.bodyS.copyWith(
-                    color: colors.onSurfaceVariant,
+                  // Days
+                  Text(
+                    classTemplate.recurrence.selectedDays.map((day) {
+                      // day is 0-6 where 0=Sunday, adjust to get correct abbreviation
+                      final index = day == 0 ? 6 : day - 1; // Convert Sunday from 0 to 6
+                      return dayAbbreviations[index];
+                    }).join('  '),
+                    style: AppTypography.bodyS.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -317,85 +354,68 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
     Color subjectColor,
     ColorScheme colors,
   ) {
+    final viewModel = context.read<SubjectViewModel>();
     final dateFormat = DateFormat('MMM d, yyyy');
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Colored circle
-          Container(
-            width: 12,
-            height: 12,
-            margin: const EdgeInsets.only(top: 4),
-            decoration: BoxDecoration(
-              color: subjectColor,
-              shape: BoxShape.circle,
+    return DeletableListItem(
+      itemType: 'Exam',
+      itemName: exam.name,
+      onDelete: () => viewModel.deleteExam(exam),
+      onTap: () => _handleEditExamAction(context, viewModel, exam),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Colored circle
+            Container(
+              width: 12,
+              height: 12,
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                color: subjectColor,
+                shape: BoxShape.circle,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
+            const SizedBox(width: 12),
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Time range
-                Text(
-                  '${exam.startTime} - ${exam.endTime}',
-                  style: AppTypography.bodyM.copyWith(
-                    color: colors.onSurface,
-                    fontWeight: FontWeight.w600,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Time range
+                  Text(
+                    '${exam.startTime} - ${exam.endTime}',
+                    style: AppTypography.bodyM.copyWith(
+                      color: colors.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
+                  const SizedBox(height: 4),
 
-                // Date
-                Text(
-                  dateFormat.format(exam.date),
-                  style: AppTypography.bodyS.copyWith(
-                    color: colors.onSurfaceVariant,
+                  // Date
+                  Text(
+                    dateFormat.format(exam.date),
+                    style: AppTypography.bodyS.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildAssignmentsTab(BuildContext context, SubjectViewModel viewModel) {
-    final colors = Theme.of(context).colorScheme;
 
     if (viewModel.subjectAssignments.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                AppIcons.assignments,
-                size: 64,
-                color: colors.onPrimaryContainer,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'No assignments yet',
-                style: AppTypography.h4.copyWith(color: colors.onSurface),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Add an assignment to get started',
-                style: AppTypography.bodyM.copyWith(
-                  color: colors.onPrimaryContainer,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+      return EmptyState(
+        message: 'No assignments yet',
+        subtitle: 'Tap the + button to create one',
+        icon: AppIcons.assignments,
       );
     }
 
@@ -429,166 +449,43 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
           final assignment = index < pending.length
               ? pending[index]
               : completed[index - pending.length];
-          return _buildAssignmentCard(context, assignment, viewModel);
+          return DeletableListItem(
+          itemType: 'Assignment',
+          itemName: assignment.title,
+          onDelete: () => viewModel.deleteAssignment(assignment),
+          onTap: () => _handleEditAssignmentAction(context, viewModel, assignment),
+          child: AssignmentCard(
+            assignment: assignment,
+            onToggleStatus: () => viewModel.toggleAssignmentStatus(assignment),
+          )
+        );
         },
       ),
     );
   }
 
-  Widget _buildAssignmentCard(
-      BuildContext context,
-      dynamic assignment,
-      SubjectViewModel viewModel,
-      ) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
-    IconData priorityIcon = AppIcons.priority;
-    Color priorityColor;
-    switch (assignment.priority) {
-      case 'High':
-        priorityColor = AppColors.errorMedium;
-        break;
-      case 'Low':
-        priorityColor = AppColors.successMedium;
-        break;
-      default: // Medium
-        priorityColor = AppColors.warningMedium;
-    }
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final dueDate = DateTime(
-      assignment.dueDate.year,
-      assignment.dueDate.month,
-      assignment.dueDate.day,
-    );
-
-    String dueDateText;
-    if (dueDate.isAtSameMomentAs(today)) {
-      dueDateText = 'Due Today';
-    } else if (dueDate.isBefore(today)) {
-      final difference = today.difference(dueDate).inDays;
-      if (assignment.isPending) {
-        dueDateText = difference == 1
-            ? 'Overdue by 1 day'
-            : 'Overdue by $difference days';
-      } else {
-        dueDateText = DateFormat('MMM d, yyyy').format(assignment.dueDate);
-      }
-    } else {
-      final difference = dueDate.difference(today).inDays;
-      if (difference == 1) {
-        dueDateText = 'Due Tomorrow';
-      } else if (difference <= 7) {
-        dueDateText = 'Due in $difference days';
-      } else {
-        dueDateText = DateFormat('MMM d, yyyy').format(assignment.dueDate);
-      }
-    }
-
-    return InkWell(
-      onTap: () async {
-        final result = await Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => EditAssignmentScreen(assignment: assignment),
-          ),
-        );
-        if (result == true) {
-          viewModel.refreshAssignments();
-        }
-      },
-      child: Card(
-        elevation: 0,
-        margin: const EdgeInsets.only(bottom: 12.0),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Checkbox(
-                value: assignment.isCompleted,
-                onChanged: (value) {
-                  viewModel.toggleAssignmentStatus(assignment);
-                },
-                activeColor: colors.primary,
-                checkColor: colors.onPrimary,
-                side: BorderSide(color: colors.primary, width: 2),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      assignment.subjectName ?? 'Unknown Subject',
-                      style: AppTypography.h5.copyWith(
-                        color: colors.onSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      assignment.title,
-                      style: AppTypography.bodyM.copyWith(
-                        color: colors.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      assignment.description ?? '',
-                      style: AppTypography.bodyS.copyWith(
-                        color: colors.onPrimaryContainer,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    dueDateText,
-                    style: AppTypography.bodyS.copyWith(
-                      color: dueDate.isBefore(today) && assignment.isPending
-                          ? colors.error
-                          : colors.onPrimaryContainer,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Icon(
-                    priorityIcon,
-                    size: 21,
-                    color: priorityColor,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildGradesTab(BuildContext context, SubjectViewModel viewModel) {
     final colors = Theme.of(context).colorScheme;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ContentCounter(
-            firstItem: CounterItem(
-              title: 'Current Grade: ',
-              value: null,
-            ),
-            secondItem: CounterItem(
-              title: null,
-              value: viewModel.currentGrade.toStringAsFixed(2),
-            ),
+          FutureBuilder<double?>(
+            future: viewModel.getCurrentGrade(),
+            builder: (context, snapshot) {
+              final grade = snapshot.data;
+              return ContentCounter(
+                firstItem: CounterItem(
+                  title: 'Current Grade: ',
+                  value: null,
+                ),
+                secondItem: CounterItem(
+                  title: null,
+                  value: grade != null ? grade.toStringAsFixed(2) : 'N/A',
+                ),
+              );
+            },
           ),
 
           // Use Grades Toggle
@@ -834,5 +731,49 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
         duration: Duration(seconds: 2),
       ),
     );
+  }
+
+  Future<void> _handleEditClassAction(BuildContext context, SubjectViewModel viewModel, ClassTemplate classTemplate) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EditClassScreen(
+          classTemplate: classTemplate,
+          subjectId: viewModel.subjectId,
+          termId: viewModel.termId,
+        ),
+      ),
+    );
+
+    if (result == true) {
+      viewModel.refreshSubject();
+    }
+  }
+
+  Future<void> _handleEditExamAction(BuildContext context, SubjectViewModel viewModel, Exam exam) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EditExamScreen(
+          exam: exam,
+          subjectId: viewModel.subjectId,
+          termId: viewModel.termId,
+        ),
+      ),
+    );
+
+    if (result == true) {
+      viewModel.refreshSubject();
+    }
+  }
+
+  Future<void> _handleEditAssignmentAction(BuildContext context, SubjectViewModel viewModel, Assignment assignment) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EditAssignmentScreen(assignment: assignment),
+      ),
+    );
+
+    if (result == true) {
+          viewModel.refreshAssignments();
+    }
   }
 }

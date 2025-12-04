@@ -9,8 +9,6 @@ import '../themes/app_icons.dart';
 import '../services/auth/auth_service.dart';
 import '../services/profile/profile_notifier.dart';
 
-import '../views/schedule/schedule_screen.dart';
-
 class BurgerMenu extends StatelessWidget {
   const BurgerMenu({super.key});
 
@@ -108,10 +106,10 @@ class BurgerMenu extends StatelessWidget {
                   ),
                   _menuItem(
                     context: context,
-                    title: "Schedule",
+                    title: "Week View",
                     icon: AppIcons.calendarWeek,
-                    route: '/schedule',                    // <- va a tu pantalla
-                    isSelected: currentRoute == '/schedule',
+                    route: '/week-view',         
+                    isSelected: currentRoute == '/week-view',
                   ),
                   _menuItem(
                     context: context,
@@ -120,7 +118,6 @@ class BurgerMenu extends StatelessWidget {
                     route: '/calendar',
                     isSelected: currentRoute == '/calendar',
                   ),
-
                   _menuItem(
                     context: context,
                     title: "Shared",
@@ -197,7 +194,7 @@ class BurgerMenu extends StatelessWidget {
   Widget _sectionHeader(BuildContext context, String title) {
     final colors = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Text(
         title,
         style: AppTypography.h4.copyWith(color: colors.onSecondaryContainer),
@@ -216,6 +213,10 @@ class BurgerMenu extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return ListTile(
+      dense: true,
+      visualDensity: VisualDensity.compact,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      minLeadingWidth: 28,
       leading: Icon(
         icon,
         size: 20,
@@ -242,7 +243,11 @@ class BurgerMenu extends StatelessWidget {
             ),
           );
         } else if (route != null && !isSelected) {
-          Navigator.pushReplacementNamed(context, route);
+          if (route == '/settings') {
+            Navigator.pushNamed(context, route);
+          } else {
+            Navigator.pushReplacementNamed(context, route);
+          }
         }
       },
     );

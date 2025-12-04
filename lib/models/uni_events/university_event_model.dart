@@ -136,7 +136,7 @@ class UniversityEvent {
     if (end != null && start.day == end.day) {
       return _formatDateTime(start, end);
     } else if (end != null) {
-      return '${_formatDateTime(start, null)}/n${_formatDateTime(end, null)}';
+      return '${_formatDateTime(start, null)}\n${_formatDateTime(end, null)}';
     }
     return _formatDateTime(start, null);
   }

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:drift/drift.dart'; // ignore: uri_does_not_exist
 import '../../models/holidays/holiday_model.dart' as model;
+import '../../services/holidays/holiday_service.dart';
 import '../local/database/app_database.dart';
 
 /// Repository for holiday data management with offline-first pattern
@@ -23,6 +24,12 @@ class HolidayRepository {
   Future<List<model.Holiday>> getHolidaysForUser(String userId) async {
     final entities = await _db.holidayDao.getHolidaysForUser(userId);
     return entities.map(_entityToModel).toList();
+  }
+
+  /// Get holiday by ID from local database
+  Future<model.Holiday?> getHolidayById(String holidayId) async {
+    final entity = await _db.holidayDao.getHolidayById(holidayId);
+    return entity != null ? _entityToModel(entity) : null;
   }
 
   /// Watch holidays for user (stream)
@@ -93,6 +100,39 @@ class HolidayRepository {
   /// Clear all API holidays for a year
   Future<void> clearApiHolidaysForYear(String userId, int year) async {
     await _db.holidayDao.deleteApiHolidaysForYear(userId, year);
+  }
+
+  // ==================== API INTEGRATION ====================
+
+  /// Fetch API holidays from Nager.Date API and save to local database
+  /// This method fetches holidays for current and next year, replaces old API holidays
+  Future<List<model.Holiday>> fetchAndSaveApiHolidays(
+    String userId,
+    String countryCode,
+  ) async {
+    try {
+      final holidayService = HolidayService();
+      final currentYear = DateTime.now().year;
+      final nextYear = currentYear + 1;
+
+      print('🌍 Fetching API holidays for country: $countryCode');
+
+      // Clear old API holidays for these years
+      await clearApiHolidaysForYear(userId, currentYear);
+      await clearApiHolidaysForYear(userId, nextYear);
+
+      // Fetch from API
+      final apiHolidays = await holidayService.getHolidaysForCurrentAndNextYear(countryCode);
+
+      // Save to local database
+      await saveHolidaysBatch(apiHolidays, userId);
+
+      print('✅ Saved ${apiHolidays.length} API holidays to local database');
+      return apiHolidays;
+    } catch (e) {
+      print('❌ Error fetching API holidays: $e');
+      rethrow;
+    }
   }
 
   // ==================== FIREBASE SYNC ====================

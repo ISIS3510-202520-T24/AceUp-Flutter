@@ -47,7 +47,7 @@ class Subject {
       id: doc.id,
       name: data['name'] ?? '',
       color: data['color'] ?? '#6B7280',
-      credits: (data['credits'] ?? 0).toDouble(),
+      credits: (data['credits'] ?? 0).toInt(),
       finalGrade: data['finalGrade']?.toDouble(),
       useFinalGradeOverride: data['useFinalGradeOverride'] ?? false,
       weights: (data['weights'] as List<dynamic>?)
@@ -65,7 +65,7 @@ class Subject {
       id: json['id'] ?? '',
       name: json['name'] ?? '',
       color: json['color'] ?? '#6B7280',
-      credits: (json['credits'] ?? 0).toDouble(),
+      credits: (json['credits'] ?? 0).toInt(),
       finalGrade: json['finalGrade']?.toDouble(),
       useFinalGradeOverride: json['useFinalGradeOverride'] ?? false,
       weights: (json['weights'] as List<dynamic>?)

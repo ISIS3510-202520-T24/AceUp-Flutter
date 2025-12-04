@@ -274,7 +274,12 @@ class AcademicRepository {
   Future<model.Assignment?> getAssignmentById(String assignmentId) async {
     final entity = await _db.assignmentDao.getAssignmentById(assignmentId);
     if (entity == null) return null;
-    return _assignmentEntityToModel(entity);
+
+    final assignment = _assignmentEntityToModel(entity);
+
+    // Enrich with subject name and term ID
+    final enriched = await enrichAssignmentsWithSubjectInfo([assignment]);
+    return enriched.firstOrNull;
   }
 
   /// Get all assignments for user
@@ -475,7 +480,18 @@ class AcademicRepository {
   Future<model.Exam?> getExamById(String examId) async {
     final entity = await _db.examDao.getExamById(examId);
     if (entity == null) return null;
-    return _examEntityToModel(entity);
+
+    final exam = _examEntityToModel(entity);
+
+    // Enrich with termId from subject
+    if (exam.subjectId != null) {
+      final subject = await _db.subjectDao.getSubjectById(exam.subjectId!);
+      if (subject != null) {
+        return exam.copyWith(termId: subject.termId);
+      }
+    }
+
+    return exam;
   }
 
   /// Save exam locally and queue for sync
@@ -504,6 +520,12 @@ class AcademicRepository {
       data: {},
       documentPath: 'users/$userId/terms/$termId/subjects/$subjectId/exams/$examId',
     );
+  }
+
+  /// Get exams for today
+  Future<List<model.Exam>> getExamsForToday(String userId, DateTime today) async {
+    final entities = await _db.examDao.getExamsForToday(userId, today);
+    return entities.map(_examEntityToModel).toList();
   }
 
   /// Fetch exams from Firebase for a specific subject
@@ -554,7 +576,18 @@ class AcademicRepository {
   Future<model.ClassTemplate?> getClassTemplateById(String templateId) async {
     final entity = await _db.classDao.getClassTemplateById(templateId);
     if (entity == null) return null;
-    return _classTemplateEntityToModel(entity);
+
+    final template = _classTemplateEntityToModel(entity);
+
+    // Enrich with termId from subject
+    if (template.subjectId != null) {
+      final subject = await _db.subjectDao.getSubjectById(template.subjectId!);
+      if (subject != null) {
+        return template.copyWith(termId: subject.termId);
+      }
+    }
+
+    return template;
   }
 
   /// Save class template locally and queue for sync
@@ -583,6 +616,12 @@ class AcademicRepository {
       data: {},
       documentPath: 'users/$userId/terms/$termId/subjects/$subjectId/classTemplates/$templateId',
     );
+  }
+
+  /// Get all class templates for user
+  Future<List<model.ClassTemplate>> getClassTemplatesForUser(String userId) async {
+    final entities = await _db.classDao.getClassTemplatesForUser(userId);
+    return entities.map(_classTemplateEntityToModel).toList();
   }
 
   /// Fetch class templates from Firebase for a specific subject
@@ -829,6 +868,8 @@ class AcademicRepository {
       grade: entity.grade,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      subjectId: entity.subjectId,
+      termId: null, // termId not stored in entity, needs to be joined
     );
   }
 
@@ -872,6 +913,8 @@ class AcademicRepository {
       teacherId: entity.teacherId,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      subjectId: entity.subjectId,
+      termId: null, // termId not stored in entity, needs to be joined
     );
   }
 

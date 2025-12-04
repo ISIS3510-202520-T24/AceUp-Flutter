@@ -7,6 +7,7 @@ import '../../themes/app_typography.dart';
 import '../../viewmodels/shared/shared_viewmodel.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/content_counter.dart';
+import '../../widgets/empty_state.dart';
 import 'edit_group_screen.dart';
 import 'group_detail_screen.dart';
 import '../../widgets/top_bar.dart';
@@ -256,53 +257,10 @@ class _SharedScreenState extends State<SharedScreen> {
     }
 
     if (viewModel.groups.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              AppIcons.shared,
-              size: 64,
-              color: colors.onSurface.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No groups found',
-              style: AppTypography.h5.copyWith(
-                color: colors.onSurface.withValues(alpha: 0.7),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Tap the + button to create your first group!',
-              style: AppTypography.bodyS.copyWith(
-                color: colors.onSurface.withValues(alpha: 0.6),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (!viewModel.isOnline) ...[
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.info_outline, size: 16, color: colors.primary),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Groups created offline will sync later',
-                      style: AppTypography.bodyS.copyWith(color: colors.primary),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
+      return EmptyState(
+        message: 'No groups found',
+        subtitle: 'Tap the + button to create your first group!',
+        icon: AppIcons.shared,
       );
     }
 

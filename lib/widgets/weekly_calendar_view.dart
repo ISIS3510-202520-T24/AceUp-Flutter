@@ -1,240 +1,195 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-import '../models/schedule_event.dart';
+import '../themes/app_typography.dart';
+import '../viewmodels/week_view/week_view_viewmodel.dart';
 
-/// Weekly calendar Monday–Friday, 7:00 a.m. – 10:00 p.m.
-/// - Scroll vertical (horas)
-/// - Colores por curso (máx 14 colores, se reusan si hay más)
-/// - Tap en una clase => callback [onEventTap]
+/// Widget that displays a weekly calendar view with class occurrences
+/// Shows Monday to Friday with time slots from 7:00 AM to 10:00 PM
 class WeeklyCalendarView extends StatelessWidget {
-  WeeklyCalendarView({
-    Key? key,
-    required this.events,
+  final List<WeeklyClassOccurrence> occurrences;
+  final void Function(WeeklyClassOccurrence)? onEventTap;
+
+  const WeeklyCalendarView({
+    super.key,
+    required this.occurrences,
     this.onEventTap,
-  }) : super(key: key);
+  });
 
-  final List<ScheduleEvent> events;
-  final void Function(ScheduleEvent event)? onEventTap;
-
-  // 7:00 a.m. – 22:00 (10 p.m.)
-  static const int _kStartMinutes = 7 * 60;
-  static const int _kEndMinutes = 22 * 60;
-
-  // Altura de cada bloque de una hora en la grilla
-  static const double _kHourRowHeight = 64.0;
-
-  // Ancho de la columna de horas
-  static const double _kTimeColumnWidth = 56.0;
-
-  // Ancho aproximado de cada día (el Row padre tiene Expanded, así que se adapta)
-  static const double _kDayColumnWidth = 96.0;
-
-  // Altura mínima de un bloque de clase para evitar overflow del contenido
-  static const double _kEventMinHeight = 72.0;
-
-  // Paleta de hasta 14 colores distinta por curso
-  static const List<Color> _palette = [
-    Color(0xfff48fb1),
-    Color(0xffce93d8),
-    Color(0xffb39ddb),
-    Color(0xff9fa8da),
-    Color(0xff90caf9),
-    Color(0xff81d4fa),
-    Color(0xff80deea),
-    Color(0xff80cbc4),
-    Color(0xffa5d6a7),
-    Color(0xffc5e1a5),
-    Color(0xffffe082),
-    Color(0xffffcc80),
-    Color(0xffffab91),
-    Color(0xffbcaaa4),
-  ];
-
-  // Mapa interno curso -> color
-  final Map<String, Color> _courseColorMap = {};
-
-  Color _colorForTitle(String title) {
-    final key = title.toLowerCase().trim();
-    if (_courseColorMap.containsKey(key)) {
-      return _courseColorMap[key]!;
-    }
-    final color = _palette[_courseColorMap.length % _palette.length];
-    _courseColorMap[key] = color;
-    return color;
-  }
+  // Constants
+  static const double _kDayColumnWidth = 70.0;
+  static const double _kTimeColumnWidth = 45.0;
+  static const double _kEventMinHeight = 32.0;
+  static const int _kStartMinutes = 7 * 60; // 7:00 AM
+  static const int _kEndMinutes = 22 * 60; // 10:00 PM
 
   @override
   Widget build(BuildContext context) {
-    // Número de horas que vamos a mostrar
-    final hourCount =
-        ((_kEndMinutes - _kStartMinutes) / 60).ceil(); // 15 horas (7–22)
+    // Group occurrences by weekday
+    final eventsByDay = <int, List<WeeklyClassOccurrence>>{};
+    for (int i = 1; i <= 5; i++) {
+      eventsByDay[i] = [];
+    }
 
-    final totalHeight = hourCount * _kHourRowHeight;
-
-    // Agrupar eventos por día (solo lunes a viernes)
-    final Map<int, List<ScheduleEvent>> byDay = {
-      DateTime.monday: [],
-      DateTime.tuesday: [],
-      DateTime.wednesday: [],
-      DateTime.thursday: [],
-      DateTime.friday: [],
-    };
-
-    for (final e in events) {
-      if (byDay.containsKey(e.weekday)) {
-        byDay[e.weekday]!.add(e);
+    for (final occurrence in occurrences) {
+      if (occurrence.weekday >= 1 && occurrence.weekday <= 5) {
+        eventsByDay[occurrence.weekday]!.add(occurrence);
       }
     }
 
-    return Scrollbar(
-      thumbVisibility: true,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: SizedBox(
-          height: totalHeight,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTimeColumn(hourCount),
-              Expanded(
-                child: Row(
-                  children: [
-                    _buildDayColumn(
-                      context,
-                      label: 'Mon',
-                      weekday: DateTime.monday,
-                      events: byDay[DateTime.monday]!,
-                    ),
-                    _buildDayColumn(
-                      context,
-                      label: 'Tue',
-                      weekday: DateTime.tuesday,
-                      events: byDay[DateTime.tuesday]!,
-                    ),
-                    _buildDayColumn(
-                      context,
-                      label: 'Wed',
-                      weekday: DateTime.wednesday,
-                      events: byDay[DateTime.wednesday]!,
-                    ),
-                    _buildDayColumn(
-                      context,
-                      label: 'Thu',
-                      weekday: DateTime.thursday,
-                      events: byDay[DateTime.thursday]!,
-                    ),
-                    _buildDayColumn(
-                      context,
-                      label: 'Fri',
-                      weekday: DateTime.friday,
-                      events: byDay[DateTime.friday]!,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Columna izquierda con las horas (7 a.m., 8 a.m., ...)
-  Widget _buildTimeColumn(int hourCount) {
-    final children = <Widget>[];
-
-    var currentHour = (_kStartMinutes / 60).floor(); // 7
-    for (var i = 0; i < hourCount; i++) {
-      final label = _formatHourLabel(currentHour);
-      children.add(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Time column
         SizedBox(
-          height: _kHourRowHeight,
-          child: Align(
-            alignment: Alignment.topRight,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: Colors.grey,
-              ),
-            ),
-          ),
+          width: _kTimeColumnWidth,
+          child: _buildTimeColumn(context),
         ),
-      );
-      currentHour++;
-    }
-
-    return SizedBox(
-      width: _kTimeColumnWidth,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: children,
-      ),
+        
+        // Days columns
+        _buildDayColumn(
+          context,
+          label: 'MON',
+          weekday: 1,
+          occurrences: eventsByDay[1]!,
+        ),
+        _buildDayColumn(
+          context,
+          label: 'TUE',
+          weekday: 2,
+          occurrences: eventsByDay[2]!,
+        ),
+        _buildDayColumn(
+          context,
+          label: 'WED',
+          weekday: 3,
+          occurrences: eventsByDay[3]!,
+        ),
+        _buildDayColumn(
+          context,
+          label: 'THU',
+          weekday: 4,
+          occurrences: eventsByDay[4]!,
+        ),
+        _buildDayColumn(
+          context,
+          label: 'FRI',
+          weekday: 5,
+          occurrences: eventsByDay[5]!,
+        ),
+      ],
     );
   }
 
-  String _formatHourLabel(int hour24) {
-    final isAm = hour24 < 12;
-    var h = hour24 % 12;
-    if (h == 0) h = 12;
-    final suffix = isAm ? 'a.m.' : 'p.m.';
-    return '$h $suffix';
+  Widget _buildTimeColumn(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    
+    return Column(
+      children: [
+        // Header spacing
+        const SizedBox(height: 28),
+        
+        // Time labels
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final contentHeight = constraints.maxHeight;
+              final totalMinutes = _kEndMinutes - _kStartMinutes;
+              final pixelsPerMinute = contentHeight / totalMinutes.toDouble();
+
+              final labels = <Widget>[];
+              
+              // Generate labels for each hour
+              for (int hour = 7; hour <= 22; hour++) {
+                final minutes = hour * 60;
+                final top = (minutes - _kStartMinutes) * pixelsPerMinute;
+
+                labels.add(
+                  Positioned(
+                    top: top - 8,
+                    left: 0,
+                    right: 0,
+                    child: Text(
+                      _formatHour(hour),
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodyS.copyWith(
+                        color: colors.onSurfaceVariant,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return Stack(children: labels);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatHour(int hour) {
+    if (hour == 0) return '12 a.m.';
+    if (hour < 12) return '$hour a.m.';
+    if (hour == 12) return '12 p.m.';
+    final h = hour - 12;
+    return '$h p.m.';
   }
 
   Widget _buildDayColumn(
     BuildContext context, {
     required String label,
     required int weekday,
-    required List<ScheduleEvent> events,
+    required List<WeeklyClassOccurrence> occurrences,
   }) {
+    final colors = Theme.of(context).colorScheme;
+    
     return Expanded(
       child: Container(
         width: _kDayColumnWidth,
         decoration: BoxDecoration(
           border: Border(
-            left: BorderSide(color: Colors.grey.shade300),
+            left: BorderSide(color: colors.outline.withValues(alpha: 0.2)),
           ),
         ),
         child: Column(
           children: [
-            // header con nombre del día
+            // Day header
             SizedBox(
               height: 28,
               child: Center(
                 child: Text(
                   label,
-                  style: const TextStyle(
+                  style: AppTypography.bodyM.copyWith(
                     fontWeight: FontWeight.w600,
-                    fontSize: 12,
+                    color: colors.onSurface,
                   ),
                 ),
               ),
             ),
+            
+            // Events
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
                   final contentHeight = constraints.maxHeight;
                   final totalMinutes = _kEndMinutes - _kStartMinutes;
-                  final pixelsPerMinute =
-                      contentHeight / totalMinutes.toDouble();
+                  final pixelsPerMinute = contentHeight / totalMinutes.toDouble();
 
-                  final background = _buildHourGrid(contentHeight);
+                  final background = _buildHourGrid(contentHeight, colors);
 
                   final tiles = <Widget>[];
 
-                  for (final e in events) {
-                    final startMinutes = max(e.startMinutes, _kStartMinutes);
-                    final endMinutes = min(e.endMinutes, _kEndMinutes);
+                  for (final occurrence in occurrences) {
+                    final startMinutes = max(occurrence.startMinutes, _kStartMinutes);
+                    final endMinutes = min(occurrence.endMinutes, _kEndMinutes);
 
-                    final top = (startMinutes - _kStartMinutes) *
-                        pixelsPerMinute.toDouble();
+                    final top = (startMinutes - _kStartMinutes) * pixelsPerMinute.toDouble();
 
-                    final computedHeight =
-                        (endMinutes - startMinutes) * pixelsPerMinute.toDouble();
+                    final computedHeight = (endMinutes - startMinutes) * pixelsPerMinute.toDouble();
 
-                    final height =
-                        max(_kEventMinHeight, computedHeight.roundToDouble());
+                    final height = max(_kEventMinHeight, computedHeight.roundToDouble());
 
                     tiles.add(
                       Positioned(
@@ -245,20 +200,21 @@ class WeeklyCalendarView extends StatelessWidget {
                         child: GestureDetector(
                           onTap: () {
                             if (onEventTap != null) {
-                              onEventTap!(e);
+                              onEventTap!(occurrence);
                             }
                           },
-                          child: _buildEventTile(context, e),
+                          child: _buildEventTile(
+                            context,
+                            occurrence,
+                            height,
+                          ),
                         ),
                       ),
                     );
                   }
 
                   return Stack(
-                    children: [
-                      background,
-                      ...tiles,
-                    ],
+                    children: [background, ...tiles],
                   );
                 },
               ),
@@ -269,67 +225,111 @@ class WeeklyCalendarView extends StatelessWidget {
     );
   }
 
-  /// Grilla de horas de fondo (solo líneas suaves horizontales)
-  Widget _buildHourGrid(double totalHeight) {
-    final hourCount =
-        ((_kEndMinutes - _kStartMinutes) / 60).ceil(); // 15 bloques
-    return Column(
-      children: List.generate(
-        hourCount,
-        (index) => Container(
-          height: totalHeight / hourCount,
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: Colors.grey.shade200,
-                width: 0.7,
-              ),
-            ),
+  Widget _buildHourGrid(double totalHeight, ColorScheme colors) {
+    final totalMinutes = _kEndMinutes - _kStartMinutes;
+    final pixelsPerMinute = totalHeight / totalMinutes.toDouble();
+
+    final lines = <Widget>[];
+    
+    // Generate lines for each hour
+    for (int hour = 7; hour <= 22; hour++) {
+      final minutes = hour * 60;
+      final top = (minutes - _kStartMinutes) * pixelsPerMinute;
+
+      lines.add(
+        Positioned(
+          top: top,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 1,
+            color: colors.outline.withValues(alpha: 0.1),
           ),
         ),
+      );
+    }
+
+    return Stack(children: lines);
+  }
+
+  Widget _buildEventTile(
+    BuildContext context,
+    WeeklyClassOccurrence occurrence,
+    double height,
+  ) {
+    final colors = Theme.of(context).colorScheme;
+    final classTemplate = occurrence.classTemplate;
+
+    // Determine if we have space for multiple lines
+    final hasSpace = height >= 60;
+
+    // Parse subject color or fallback to primary
+    Color borderColor = colors.primary;
+    if (classTemplate.subjectColor != null) {
+      try {
+        borderColor = Color(int.parse('0xFF${classTemplate.subjectColor!.substring(1)}'));
+      } catch (e) {
+        // If color parsing fails, use primary color
+        borderColor = colors.primary;
+      }
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: borderColor,
+          width: 1,
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Subject name (if available and space permits)
+          if (hasSpace && classTemplate.subjectName != null) ...[
+            Text(
+              classTemplate.subjectName!,
+              style: AppTypography.bodyS.copyWith(
+                fontSize: 9,
+                color: borderColor,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+          ],
+          
+          // Class name
+          Text(
+            classTemplate.name,
+            style: AppTypography.bodyS.copyWith(
+              fontSize: 10,
+              color: colors.onPrimaryContainer,
+              fontWeight: FontWeight.w500,
+            ),
+            maxLines: hasSpace ? 2 : 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          
+          // Location (if space permits)
+          if (hasSpace && classTemplate.location.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              classTemplate.location,
+              style: AppTypography.bodyS.copyWith(
+                fontSize: 8,
+                color: colors.onSurfaceVariant,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
       ),
     );
   }
-
-  /// Tile de una clase (texto más grande ahora)
-  Widget _buildEventTile(BuildContext context, ScheduleEvent e) {
-  final color = _colorForTitle(e.title);
-  final textColor =
-      ThemeData.estimateBrightnessForColor(color) == Brightness.dark
-          ? Colors.white
-          : Colors.black87;
-
-  return Container(
-    clipBehavior: Clip.hardEdge,
-    decoration: BoxDecoration(
-      color: color.withOpacity(0.95),
-      borderRadius: BorderRadius.circular(10),
-      boxShadow: const [
-        BoxShadow(
-          color: Colors.black26,
-          blurRadius: 3,
-          offset: Offset(0, 1),
-        ),
-      ],
-    ),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
-      child: Align(
-        alignment: Alignment.topLeft,
-        child: Text(
-          e.title,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 10,          // 🔹 letra grande
-            fontWeight: FontWeight.w700,
-            height: 1.1,
-            color: textColor,
-          ),
-        ),
-      ),
-    ),
-  );
 }
-
-  }

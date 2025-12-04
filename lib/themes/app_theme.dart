@@ -27,9 +27,9 @@ class AppTheme {
       outline: AppColors.blueMedium, // Form borders, outlines
       outlineVariant: AppColors.lightDark, // Dividers
       shadow: AppColors.lightDarkest, // Unavailable items
-      errorContainer: AppColors.errorLight,
-      onError: AppColors.errorMedium,
-      error: AppColors.errorDark,
+      errorContainer: AppColors.errorDark,
+      onError: AppColors.errorLight,
+      error: AppColors.errorMedium,
     ),
 
     inputDecorationTheme: InputDecorationTheme(
@@ -65,9 +65,9 @@ class AppTheme {
       outline: AppColors.blueMedium, // Form borders, outlines
       outlineVariant: AppColors.darkLight, // Dividers
       shadow: AppColors.darkLightest, // Unavailable items
-      error: AppColors.errorLight,
-      onError: AppColors.errorMedium,
-      errorContainer: AppColors.errorDark,
+      errorContainer: AppColors.errorMedium,
+      onError: AppColors.errorLight,
+      error: AppColors.errorDark,
     ),
 
     inputDecorationTheme: InputDecorationTheme(

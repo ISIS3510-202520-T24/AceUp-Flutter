@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/schedule_event.dart';
-import '../../services/schedule_repository.dart';
+import '../../data/repositories/academic_repository.dart';
 
 class ManualScheduleEditScreen extends StatefulWidget {
   const ManualScheduleEditScreen({

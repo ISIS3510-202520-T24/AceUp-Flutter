@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../data/repositories/settings_repository.dart';
+import '../../data/repositories/holiday_repository.dart';
 import '../../models/settings_model.dart';
 import '../../models/helpers/grading_scale_model.dart';
+import '../../services/holidays/holiday_service.dart';
 import '../../core/constants/enums.dart';
 
 enum SettingsViewState { idle, loading, saving, error, success }
 
 class SettingsViewModel extends ChangeNotifier {
   final SettingsRepository _repository;
+  final HolidayRepository _holidayRepository;
   final String _userId;
 
   Settings? _settings;
@@ -21,9 +24,19 @@ class SettingsViewModel extends ChangeNotifier {
 
   // Form controllers
   final TextEditingController defaultClassDurationController = TextEditingController();
-  final TextEditingController holidayCountryController = TextEditingController();
   final TextEditingController minPointsController = TextEditingController();
   final TextEditingController maxPointsController = TextEditingController();
+
+  // Available countries from API
+  List<Map<String, String>> _availableCountries = [];
+  List<Map<String, String>> get availableCountries => _availableCountries;
+
+  bool _isLoadingCountries = false;
+  bool get isLoadingCountries => _isLoadingCountries;
+
+  // Selected country code
+  String _selectedCountryCode = 'CO';
+  String get selectedCountryCode => _selectedCountryCode;
 
   // Selected weekdays
   List<int> _selectedWeekdays = [];
@@ -43,19 +56,51 @@ class SettingsViewModel extends ChangeNotifier {
 
   SettingsViewModel({
     required SettingsRepository repository,
+    required HolidayRepository holidayRepository,
     required String userId,
   })  : _repository = repository,
+        _holidayRepository = holidayRepository,
         _userId = userId {
     loadSettings();
+    fetchAvailableCountries();
   }
 
   @override
   void dispose() {
     defaultClassDurationController.dispose();
-    holidayCountryController.dispose();
     minPointsController.dispose();
     maxPointsController.dispose();
     super.dispose();
+  }
+
+  /// Fetch available countries from API
+  Future<void> fetchAvailableCountries() async {
+    _isLoadingCountries = true;
+    notifyListeners();
+
+    try {
+      final holidayService = HolidayService();
+      _availableCountries = await holidayService.getAvailableCountries();
+      print('✅ Loaded ${_availableCountries.length} available countries');
+    } catch (e) {
+      print('⚠️  Error fetching countries: $e');
+      // Use fallback list if API fails
+      _availableCountries = [
+        {'code': 'CO', 'name': 'Colombia'},
+        {'code': 'US', 'name': 'United States'},
+        {'code': 'MX', 'name': 'Mexico'},
+        {'code': 'ES', 'name': 'Spain'},
+      ];
+    } finally {
+      _isLoadingCountries = false;
+      notifyListeners();
+    }
+  }
+
+  /// Update selected country code
+  void updateCountryCode(String countryCode) {
+    _selectedCountryCode = countryCode;
+    notifyListeners();
   }
 
   /// Load settings from repository
@@ -78,7 +123,7 @@ class SettingsViewModel extends ChangeNotifier {
     if (_settings == null) return;
 
     defaultClassDurationController.text = _settings!.defaultClassDuration.toString();
-    holidayCountryController.text = _settings!.holidayCountry;
+    _selectedCountryCode = _settings!.holidayCountry;
     _selectedWeekdays = List.from(_settings!.weekdays);
     _selectedGradingScaleType = _settings!.gradingScale.type;
 
@@ -141,14 +186,16 @@ class SettingsViewModel extends ChangeNotifier {
         throw Exception('Default class duration must be a positive number');
       }
 
-      final holidayCountry = holidayCountryController.text.trim();
-      if (holidayCountry.isEmpty || holidayCountry.length != 2) {
-        throw Exception('Holiday country must be a 2-letter ISO code (e.g., CO, US)');
+      if (_selectedCountryCode.isEmpty || _selectedCountryCode.length != 2) {
+        throw Exception('Please select a valid country');
       }
 
       if (_selectedWeekdays.isEmpty) {
         throw Exception('At least one weekday must be selected');
       }
+
+      // Check if country changed - need to refresh holidays
+      final countryChanged = _settings?.holidayCountry != _selectedCountryCode.toUpperCase();
 
       // Build grading scale based on selected type
       GradingScale gradingScale;
@@ -177,13 +224,28 @@ class SettingsViewModel extends ChangeNotifier {
         defaultClassDuration: defaultClassDuration,
         weekdays: _selectedWeekdays,
         gradingScale: gradingScale,
-        holidayCountry: holidayCountry.toUpperCase(),
+        holidayCountry: _selectedCountryCode.toUpperCase(),
         updatedAt: DateTime.now(),
       );
 
       // Save to repository
       await _repository.saveSettings(updatedSettings, _userId);
       _settings = updatedSettings;
+
+      // If country changed, fetch new holidays
+      if (countryChanged) {
+        print('🌍 Country changed to ${_selectedCountryCode}, fetching new holidays...');
+        try {
+          await _holidayRepository.fetchAndSaveApiHolidays(
+            _userId,
+            _selectedCountryCode.toUpperCase(),
+          );
+          print('✅ Holidays updated for new country');
+        } catch (e) {
+          print('⚠️  Error fetching holidays for new country: $e');
+          // Don't fail the settings save if holiday fetch fails
+        }
+      }
 
       _setState(SettingsViewState.success);
     } catch (e) {
@@ -224,7 +286,19 @@ class SettingsViewModel extends ChangeNotifier {
   /// Check if form is valid
   bool get isFormValid {
     return defaultClassDurationController.text.isNotEmpty &&
-        holidayCountryController.text.isNotEmpty &&
+        _selectedCountryCode.isNotEmpty &&
         _selectedWeekdays.isNotEmpty;
+  }
+
+  /// Get country name from code
+  String getCountryName(String code) {
+    try {
+      return _availableCountries.firstWhere(
+        (c) => c['code'] == code,
+        orElse: () => {'name': code},
+      )['name']!;
+    } catch (e) {
+      return code;
+    }
   }
 }

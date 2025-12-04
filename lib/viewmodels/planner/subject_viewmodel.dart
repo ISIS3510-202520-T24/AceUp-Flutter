@@ -1,27 +1,30 @@
 import 'package:flutter/material.dart';
 
+import '../../core/constants/enums.dart';
 import '../../data/repositories/academic_repository.dart';
 import '../../models/planner/subject_model.dart';
 import '../../models/planner/class_template_model.dart';
 import '../../models/planner/exam_model.dart';
 import '../../services/auth/auth_service.dart';
+import '../../services/grades/gpa_calculation_service.dart';
+import '../../services/cache/memory_cache_service.dart';
 import '../../models/assignments/assignment_model.dart';
 
 enum SubjectTab { timetable, assignments, grades }
 
-enum SubjectViewState { idle, loading, error }
-
 class SubjectViewModel extends ChangeNotifier {
   final AcademicRepository _repository;
+  final GpaCalculationService _gpaService;
+  final MemoryCacheService _cache = MemoryCacheService();
   final AuthService _authService = AuthService();
   final String subjectId;
   final String termId;
-  
+
   SubjectTab _selectedTab = SubjectTab.assignments;
   SubjectTab get selectedTab => _selectedTab;
-  
-  SubjectViewState _state = SubjectViewState.idle;
-  SubjectViewState get state => _state;
+
+  ViewState _state = ViewState.idle;
+  ViewState get state => _state;
 
   Subject? _subject;
   Subject? get subject => _subject;
@@ -35,13 +38,33 @@ class SubjectViewModel extends ChangeNotifier {
   List<Exam> _exams = [];
   List<Exam> get exams => _exams;
 
-  // TODO: Implement classes left calculation (complex - requires date calculations, holiday checks, etc.)
-  int get classesLeft => 23; // Static placeholder for now
+  // Classes left - calculated dynamically
+  // TODO: Implement full calculation with date calculations, holiday checks, and exception handling
+  int get classesLeft {
+    // For now, return 0 instead of placeholder
+    // Full implementation requires:
+    // - Generate instances from templates
+    // - Filter out holidays
+    // - Filter out exam conflicts
+    // - Apply class exceptions
+    // - Count only future dates
+    return 0;
+  }
 
   int get examsLeft => _exams.where((exam) => !exam.isCompleted).length;
 
-  double _currentGrade = 4.00;
-  double get currentGrade => _currentGrade;
+  // Current grade - calculated in real-time from assignments and exams
+  Future<double?> getCurrentGrade() async {
+    if (_subject == null) return null;
+
+    // If using final grade override, return that
+    if (_subject!.useFinalGradeOverride && _subject!.finalGrade != null) {
+      return _subject!.finalGrade;
+    }
+
+    // Calculate from assignments
+    return await _gpaService.calculateSubjectGrade(subjectId);
+  }
 
   bool _useGrades = true;
   bool get useGrades => _useGrades;
@@ -64,15 +87,44 @@ class SubjectViewModel extends ChangeNotifier {
 
   SubjectViewModel({
     required AcademicRepository repository,
+    required GpaCalculationService gpaService,
     required this.subjectId,
     required this.termId,
-  }) : _repository = repository {
+  })  : _repository = repository,
+        _gpaService = gpaService {
     finalGradeController = TextEditingController();
     creditsController = TextEditingController();
-    _loadSubject();
-    _loadSubjectAssignments();
-    _loadClassTemplates();
-    _loadExams();
+    _initializeData();
+  }
+
+  /// Initialize all data with proper loading state
+  Future<void> _initializeData() async {
+    _state = ViewState.loading;
+    notifyListeners();
+
+    try {
+      // Load all data in parallel
+      await Future.wait([
+        _loadSubject(),
+        _loadSubjectAssignments(),
+        _loadClassTemplates(),
+        _loadExams(),
+      ]);
+
+      // Initialize form fields after subject is loaded
+      if (_subject != null) {
+        _initializeFormFields();
+      }
+
+      _state = ViewState.idle;
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Failed to load subject data: $e';
+      _state = ViewState.error;
+      print('❌ Error initializing subject data: $e');
+    }
+
+    notifyListeners();
   }
 
   void selectTab(int index) {
@@ -90,10 +142,7 @@ class SubjectViewModel extends ChangeNotifier {
   Future<void> _loadSubject() async {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
-      _errorMessage = 'User not logged in';
-      _state = SubjectViewState.error;
-      notifyListeners();
-      return;
+      throw Exception('User not logged in');
     }
 
     try {
@@ -102,78 +151,110 @@ class SubjectViewModel extends ChangeNotifier {
       _subject = await _repository.getSubjectById(subjectId);
 
       if (_subject == null) {
-        _errorMessage = 'Term not found';
-        _state = SubjectViewState.error;
-        notifyListeners();
-        return;
+        throw Exception('Subject not found');
       }
 
       print('✅ Loaded subject: ${_subject!.name}');
-
-      _state = SubjectViewState.idle;
-      _errorMessage = null;
     } catch (e) {
-      _errorMessage = e.toString();
-      _state = SubjectViewState.error;
       print('❌ Error loading subject: $e');
+      rethrow;
     }
-    notifyListeners();
+  }
+
+  /// Initialize form fields from loaded subject data
+  void _initializeFormFields() {
+    if (_subject == null) return;
+
+    // Initialize credits controller
+    creditsController.text = _subject!.credits.toString();
+
+    // Initialize final grade if override is enabled
+    if (_subject!.useFinalGradeOverride && _subject!.finalGrade != null) {
+      _finalSubjectGrade = _subject!.finalGrade;
+      finalGradeController.text = _subject!.finalGrade!.toStringAsFixed(2);
+    }
+
+    // Build weights map for display
+    _weights = {};
+    for (final weight in _subject!.weights) {
+      _weights[weight.name] = weight.percentage.toInt();
+    }
   }
 
   Future<void> _loadSubjectAssignments() async {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
-      _errorMessage = 'User not logged in';
-      _state = SubjectViewState.error;
-      notifyListeners();
-      return;
+      throw Exception('User not logged in');
     }
-
-    _state = SubjectViewState.loading;
-    notifyListeners();
 
     try {
       // Load all assignments for this subject
       _subjectAssignments = await _repository.getAssignmentsForSubject(subjectId);
-      
-      _state = SubjectViewState.idle;
-      _errorMessage = null;
     } catch (e) {
-      _errorMessage = e.toString();
-      _state = SubjectViewState.error;
-      print('Error loading subject assignments: $e');
+      print('❌ Error loading subject assignments: $e');
+      rethrow;
     }
-
-    notifyListeners();
   }
 
   Future<void> _loadClassTemplates() async {
     try {
       _classTemplates = await _repository.getClassTemplatesForSubject(subjectId);
-      notifyListeners();
     } catch (e) {
-      print('Error loading class templates: $e');
+      print('❌ Error loading class templates: $e');
+      rethrow;
     }
   }
 
   Future<void> _loadExams() async {
     try {
       _exams = await _repository.getExamsForSubject(subjectId);
-      notifyListeners();
     } catch (e) {
-      print('Error loading exams: $e');
+      print('❌ Error loading exams: $e');
+      rethrow;
     }
   }
 
   Future<void> refreshAssignments() async {
-    await _loadSubjectAssignments();
+    _state = ViewState.loading;
+    notifyListeners();
+
+    try {
+      await _loadSubjectAssignments();
+      _state = ViewState.idle;
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Failed to refresh assignments: $e';
+      _state = ViewState.error;
+    }
+
+    notifyListeners();
   }
 
   Future<void> refreshSubject() async {
-    await _loadSubject();
-    await _loadSubjectAssignments();
-    await _loadClassTemplates();
-    await _loadExams();
+    _state = ViewState.loading;
+    notifyListeners();
+
+    try {
+      await Future.wait([
+        _loadSubject(),
+        _loadSubjectAssignments(),
+        _loadClassTemplates(),
+        _loadExams(),
+      ]);
+
+      // Re-initialize form fields after refresh
+      if (_subject != null) {
+        _initializeFormFields();
+      }
+
+      _state = ViewState.idle;
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Failed to refresh subject: $e';
+      _state = ViewState.error;
+    }
+
+    notifyListeners();
   }
 
   Future<void> toggleAssignmentStatus(Assignment assignment) async {
@@ -183,7 +264,82 @@ class SubjectViewModel extends ChangeNotifier {
       await _loadSubjectAssignments();
     } catch (e) {
       _errorMessage = 'Failed to update assignment: $e';
-      _state = SubjectViewState.error;
+      _state = ViewState.error;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteAssignment(Assignment assignment) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null || assignment.termId == null || assignment.subjectId == null) {
+      _errorMessage = 'Cannot delete assignment: missing required information';
+      _state = ViewState.error;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await _repository.deleteAssignment(
+        assignment.id,
+        userId,
+        assignment.termId!,
+        assignment.subjectId!,
+      );
+
+      await _loadSubjectAssignments();
+    } catch (e) {
+      _errorMessage = 'Failed to delete assignment: $e';
+      _state = ViewState.error;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteClassTemplate(ClassTemplate classTemplate) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'Cannot delete class: user not logged in';
+      _state = ViewState.error;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await _repository.deleteClassTemplate(
+        classTemplate.id,
+        userId,
+        termId,
+        subjectId,
+      );
+
+      await _loadClassTemplates();
+    } catch (e) {
+      _errorMessage = 'Failed to delete class: $e';
+      _state = ViewState.error;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteExam(Exam exam) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'Cannot delete exam: user not logged in';
+      _state = ViewState.error;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await _repository.deleteExam(
+        exam.id,
+        userId,
+        termId,
+        subjectId,
+      );
+
+      await _loadExams();
+    } catch (e) {
+      _errorMessage = 'Failed to delete exam: $e';
+      _state = ViewState.error;
       notifyListeners();
     }
   }
@@ -218,6 +374,7 @@ class SubjectViewModel extends ChangeNotifier {
     final credits = int.tryParse(value);
     if (credits != null && credits > 0) {
       _saveGradesData();
+      notifyListeners();
     }
   }
 
@@ -242,6 +399,13 @@ class SubjectViewModel extends ChangeNotifier {
       );
 
       _subject = updatedSubject;
+
+      // Invalidate all related caches so UI updates
+      _cache.invalidateSubjectCache(subjectId);
+      _cache.invalidateTermCache(termId);
+      _cache.invalidateUserGpaCache(userId);
+
+      print('✅ Saved grade data and invalidated caches for subject $subjectId');
     } catch (e) {
       print('Error saving grades data: $e');
     }

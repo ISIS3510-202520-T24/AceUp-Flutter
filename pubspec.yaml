@@ -32,14 +32,14 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.8
-  local_auth: ^2.3.0
+  local_auth: ^3.0.0
   firebase_core: ^4.2.0
   cloud_firestore: ^6.0.2
   firebase_messaging: ^16.0.2
   provider: ^6.1.2
   flutter_svg: ^2.2.1
   intl: ^0.20.2
-  font_awesome_flutter: ^10.9.1
+  font_awesome_flutter: ^10.12.0
   http: ^1.1.0
   html: ^0.15.6
   url_launcher: ^6.3.2 
@@ -103,13 +103,6 @@ flutter:
     - assets/logos/
     - assets/avatars/
     - assets/group_avatars/
-    - assets/avatars/bat_avatar.png
-    - assets/avatars/cat_avatar.png
-    - assets/avatars/dog_avatar.png
-    - assets/avatars/fox_avatar.png
-    - assets/avatars/owl_avatar.png
-    - assets/avatars/penguin_avatar.png
-
 
   fonts:
     - family: Inter

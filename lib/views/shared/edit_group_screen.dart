@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart'; // ignore: uri_does_not_exist
 
 import '../../core/connectivity/connectivity_manager.dart';
+import '../../core/constants/enums.dart';
 import '../../data/repositories/group_repository.dart';
 import '../../data/repositories/user_repository.dart';
 import '../../services/storage/group_image_service.dart';
@@ -47,7 +48,7 @@ class _EditGroupScreenContent extends StatelessWidget {
         rightControlType: RightControlType.save,
         onRightPressed: () => _saveGroup(context, viewModel),
       ),
-      body: viewModel.state == EditGroupViewState.loading
+      body: viewModel.state == EditViewStateWithUpload.loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20.0),
@@ -161,7 +162,7 @@ class _EditGroupScreenContent extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Error message
-                  if (viewModel.state == EditGroupViewState.error &&
+                  if (viewModel.state == EditViewStateWithUpload.error &&
                       viewModel.errorMessage != null)
                     Container(
                       padding: const EdgeInsets.all(12),

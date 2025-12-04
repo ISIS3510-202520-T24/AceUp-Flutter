@@ -3,10 +3,9 @@ import 'package:uuid/uuid.dart'; // ignore: uri_does_not_exist
 import '../../models/planner/subject_model.dart';
 import '../../data/repositories/academic_repository.dart';
 import '../../services/auth/auth_service.dart';
+import '../../core/constants/enums.dart';
 
 // ignore_for_file: creation_with_non_type
-
-enum EditSubjectViewState { idle, loading, saving, error }
 
 class EditSubjectViewModel extends ChangeNotifier {
   final AuthService _authService;
@@ -15,8 +14,8 @@ class EditSubjectViewModel extends ChangeNotifier {
   final String termId;
   final String? subjectId;
 
-  EditSubjectViewState _state = EditSubjectViewState.idle;
-  EditSubjectViewState get state => _state;
+  EditViewState _state = EditViewState.idle;
+  EditViewState get state => _state;
 
   Subject? _subject;
   Subject? get subject => _subject;
@@ -71,13 +70,13 @@ class EditSubjectViewModel extends ChangeNotifier {
   Future<void> _loadExistingSubject() async {
     if (subjectId == null) return;
 
-    _state = EditSubjectViewState.loading;
+    _state = EditViewState.loading;
     notifyListeners();
 
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = EditSubjectViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       return;
     }
@@ -90,15 +89,15 @@ class EditSubjectViewModel extends ChangeNotifier {
         nameController.text = _subject!.name;
         _selectedColor = colorOptions[0];
         
-        _state = EditSubjectViewState.idle;
+        _state = EditViewState.idle;
         _errorMessage = null;
       } else {
         _errorMessage = 'Subject not found';
-        _state = EditSubjectViewState.error;
+        _state = EditViewState.error;
       }
     } catch (e) {
       _errorMessage = 'Failed to load subject: $e';
-      _state = EditSubjectViewState.error;
+      _state = EditViewState.error;
       print('Error loading subject: $e');
     }
 
@@ -124,7 +123,7 @@ class EditSubjectViewModel extends ChangeNotifier {
       return false;
     }
 
-    _state = EditSubjectViewState.saving;
+    _state = EditViewState.saving;
     notifyListeners();
 
     try {
@@ -146,13 +145,13 @@ class EditSubjectViewModel extends ChangeNotifier {
 
       await _repository.saveSubject(subject, userId, termId);
 
-      _state = EditSubjectViewState.idle;
+      _state = EditViewState.idle;
       _errorMessage = null;
       notifyListeners();
       return true;
     } catch (e) {
       _errorMessage = 'Failed to save subject: $e';
-      _state = EditSubjectViewState.error;
+      _state = EditViewState.error;
       notifyListeners();
       print('Error saving subject: $e');
       return false;

@@ -192,12 +192,21 @@ class InitialLoadService extends ChangeNotifier {
       _progress = completedSteps / totalSteps;
       notifyListeners();
 
-      // 9. Load holidays
+      // 9. Load holidays (both user-created from Firebase and API holidays)
       _currentStep = 'Loading holidays...';
       notifyListeners();
       try {
-        final holidays = await _holidayRepository.fetchHolidaysFromFirebase(userId);
-        print('✅ Loaded ${holidays.length} holidays');
+        // Load user-created holidays from Firebase
+        final userHolidays = await _holidayRepository.fetchHolidaysFromFirebase(userId);
+        print('✅ Loaded ${userHolidays.length} user-created holidays from Firebase');
+
+        // Fetch API holidays if not present
+        final settings = await _settingsRepository.getOrCreateSettings(userId);
+        final apiHolidays = await _holidayRepository.fetchAndSaveApiHolidays(
+          userId,
+          settings.holidayCountry,
+        );
+        print('✅ Fetched and saved ${apiHolidays.length} API holidays for ${settings.holidayCountry}');
       } catch (e) {
         print('⚠️  Error loading holidays: $e');
       }
@@ -301,8 +310,10 @@ class InitialLoadService extends ChangeNotifier {
       // Load teachers
       await _teacherRepository.fetchTeachersFromFirebase(userId);
 
-      // Load holidays
+      // Load holidays (both user-created and API)
       await _holidayRepository.fetchHolidaysFromFirebase(userId);
+      final settings = await _settingsRepository.getOrCreateSettings(userId);
+      await _holidayRepository.fetchAndSaveApiHolidays(userId, settings.holidayCountry);
 
       // Load groups
       await _groupRepository.fetchGroupsOwnedByUserFromFirebase(userId);

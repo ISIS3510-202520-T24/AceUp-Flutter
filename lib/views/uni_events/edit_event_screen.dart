@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../models/uni_events/university_event_model.dart';
 import '../../themes/app_typography.dart';
 import '../../themes/app_icons.dart';
