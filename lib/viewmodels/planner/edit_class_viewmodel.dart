@@ -138,15 +138,28 @@ class EditClassViewModel extends ChangeNotifier {
         _academicRepo = academicRepo,
         _teacherRepo = teacherRepo {
     _initializeControllers();
-    _loadSubjects();
-    _loadTeachers();
+
     if (isEditMode) {
       _loadExistingClass();
     } else {
       // Set defaults for create mode
       _selectedTermId = termId;
       _selectedSubjectId = subjectId;
+      // Load subjects first, then it will auto-select if subjectId is provided
+      _initializeForCreateMode();
     }
+
+    _loadTeachers();
+  }
+
+  Future<void> _initializeForCreateMode() async {
+    _state = EditViewState.loading;
+    notifyListeners();
+
+    await _loadSubjects();
+
+    _state = EditViewState.idle;
+    notifyListeners();
   }
 
   void _initializeControllers() {

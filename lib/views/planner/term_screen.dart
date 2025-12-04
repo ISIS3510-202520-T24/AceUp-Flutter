@@ -195,8 +195,8 @@ class _TermScreenContent extends StatelessWidget {
 
   Widget _buildSubjectCard(BuildContext context, subject, TermViewModel viewModel) {
     final colors = Theme.of(context).colorScheme;
-    final grade = viewModel.getSubjectGrade(subject.id);
     final credits = subject.credits;
+    final subjectColor = Color(int.parse('0xFF${subject.color.substring(1)}'));
 
     return InkWell(
       onTap: () async {
@@ -216,24 +216,57 @@ class _TermScreenContent extends StatelessWidget {
       child: Card(
         elevation: 0,
         margin: const EdgeInsets.only(bottom: 12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                subject.name,
-                style: AppTypography.h4.copyWith(color: colors.onSurface),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${subject.credits} credits',
-                style: AppTypography.bodyS.copyWith(
-                  color: colors.onPrimaryContainer,
+        child: Row(
+          children: [
+            // Colored vertical line on the left
+            Container(
+              width: 4,
+              height: 60,
+              decoration: BoxDecoration(
+                color: subjectColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
                 ),
               ),
-            ],
-          ),
+            ),
+            // Content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            subject.name,
+                            style: AppTypography.h4.copyWith(color: colors.onSurface),
+                          ),
+                          const SizedBox(height: 4),
+                          FutureBuilder<double?>(
+                            future: viewModel.getSubjectGrade(subject.id),
+                            builder: (context, snapshot) {
+                              final grade = snapshot.data;
+                              return Text(
+                                'Credits: $credits, Grade: ${grade?.toStringAsFixed(2) ?? '0.00'}',
+                                style: AppTypography.bodyS.copyWith(
+                                  color: colors.onPrimaryContainer,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Icon(AppIcons.arrowRight, color: colors.onSurfaceVariant),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

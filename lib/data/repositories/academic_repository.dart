@@ -506,6 +506,12 @@ class AcademicRepository {
     );
   }
 
+  /// Get exams for today
+  Future<List<model.Exam>> getExamsForToday(String userId, DateTime today) async {
+    final entities = await _db.examDao.getExamsForToday(userId, today);
+    return entities.map(_examEntityToModel).toList();
+  }
+
   /// Fetch exams from Firebase for a specific subject
   Future<List<model.Exam>> fetchExamsFromFirebase(String userId, String termId, String subjectId) async {
     try {
@@ -583,6 +589,12 @@ class AcademicRepository {
       data: {},
       documentPath: 'users/$userId/terms/$termId/subjects/$subjectId/classTemplates/$templateId',
     );
+  }
+
+  /// Get all class templates for user
+  Future<List<model.ClassTemplate>> getClassTemplatesForUser(String userId) async {
+    final entities = await _db.classDao.getClassTemplatesForUser(userId);
+    return entities.map(_classTemplateEntityToModel).toList();
   }
 
   /// Fetch class templates from Firebase for a specific subject
@@ -829,6 +841,8 @@ class AcademicRepository {
       grade: entity.grade,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      subjectId: entity.subjectId,
+      termId: null, // termId not stored in entity, needs to be joined
     );
   }
 
@@ -872,6 +886,8 @@ class AcademicRepository {
       teacherId: entity.teacherId,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      subjectId: entity.subjectId,
+      termId: null, // termId not stored in entity, needs to be joined
     );
   }
 

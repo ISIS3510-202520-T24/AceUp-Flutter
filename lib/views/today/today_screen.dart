@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/assignments/assignment_model.dart';
 import '../../themes/app_colors.dart';
 import '../../themes/app_icons.dart';
+import '../../themes/app_typography.dart';
 
 import '../../widgets/assignment_card.dart';
 import '../../widgets/burger_menu.dart';
@@ -191,8 +192,8 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
 
     if (tab == TodayTab.assignments && viewModel.assignmentsDueToday.isNotEmpty) {
       return _buildAssignmentsList(viewModel);
-    } else if (tab == TodayTab.timetable && viewModel.timetable.isNotEmpty && viewModel.exams.isNotEmpty) {
-      return _buildTimetableList(viewModel.timetable, viewModel.exams);
+    } else if (tab == TodayTab.timetable && viewModel.timetableItems.isNotEmpty) {
+      return _buildTimetableList(context, viewModel);
     }
 
     return EmptyState(
@@ -202,30 +203,15 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
     );
   }
 
-  Widget _buildExamsList(List<String> exams) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: exams.length,
-      itemBuilder: (context, index) {
-        return Card(
-          child: ListTile(
-            title: Text(exams[index]),
-          ),
-        );
-      },
-    );
-  }
+  Widget _buildTimetableList(BuildContext context, TodayViewModel viewModel) {
+    final colors = Theme.of(context).colorScheme;
 
-  Widget _buildTimetableList(List<String> timetable, List<String> exams) {
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: timetable.length,
+      itemCount: viewModel.timetableItems.length,
       itemBuilder: (context, index) {
-        return Card(
-          child: ListTile(
-            title: Text(timetable[index]),
-          ),
-        );
+        final item = viewModel.timetableItems[index];
+        return _TimetableItemCard(item: item, colors: colors);
       },
     );
   }
@@ -285,7 +271,7 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
     );
 
     if (result == true && context.mounted) {
-      context.read<TodayViewModel>().refreshAssignments();
+      context.read<TodayViewModel>().refreshTimetable();
     }
   }
 
@@ -297,7 +283,122 @@ class _TodayScreenContentState extends State<_TodayScreenContent>
     );
 
     if (result == true && context.mounted) {
-      context.read<TodayViewModel>().refreshAssignments();
+      context.read<TodayViewModel>().refreshTimetable();
     }
+  }
+}
+
+/// Widget to display a single timetable item (class or exam)
+class _TimetableItemCard extends StatelessWidget {
+  final TimetableItem item;
+  final ColorScheme colors;
+
+  const _TimetableItemCard({
+    required this.item,
+    required this.colors,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Time column (left)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _formatTime(item.startTime),
+                  style: AppTypography.bodyM.copyWith(
+                    color: colors.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  _formatTime(item.endTime),
+                  style: AppTypography.bodyS.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(width: 16),
+
+            // Icon in colored circle
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: item.subjectColor.withOpacity(0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                item.isExam ? AppIcons.exam : (item.classIcon ?? AppIcons.chalkboard),
+                size: 20,
+                color: item.subjectColor,
+              ),
+            ),
+
+            const SizedBox(width: 16),
+
+            // Content column (right)
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Subject name
+                  Text(
+                    item.subjectName,
+                    style: AppTypography.h5.copyWith(
+                      color: colors.onSurface,
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // Class/Exam name and teacher
+                  if (item.name.isNotEmpty || item.teacherName != null)
+                    Text(
+                      [
+                        if (item.name.isNotEmpty) item.name,
+                        if (item.teacherName != null) item.teacherName,
+                      ].join(', '),
+                      style: AppTypography.bodyM.copyWith(
+                        color: colors.onSurfaceVariant,
+                      ),
+                    ),
+
+                  const SizedBox(height: 4),
+
+                  // Building and room
+                  if (item.building != null || item.room != null)
+                    Text(
+                      [
+                        if (item.building != null) item.building,
+                        if (item.room != null) item.room,
+                      ].join(' '),
+                      style: AppTypography.bodyS.copyWith(
+                        color: colors.onPrimaryContainer,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatTime(DateTime time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }

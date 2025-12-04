@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../services/storage/hive_service.dart';
 import '../../services/storage/app_preferences.dart';
 import '../../themes/app_typography.dart';
+import '../../widgets/burger_menu.dart';
 import '../../widgets/top_bar.dart';
 import '../../models/visited_group_history.dart';
 import '../../data/repositories/group_repository.dart';
@@ -63,7 +64,8 @@ class _GroupStatsScreenState extends State<GroupStatsScreen> {
     final colors = theme.colorScheme;
 
     return Scaffold(
-      appBar: const TopBar(title: "Group Stats"),
+      drawer: const BurgerMenu(),
+      appBar: TopBar(title: "Group Stats"),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(

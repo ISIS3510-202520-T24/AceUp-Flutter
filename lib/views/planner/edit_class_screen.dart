@@ -137,12 +137,10 @@ class _EditClassScreenContent extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Expanded(
-                        child: DatePickerField(
-                          label: 'Start Date',
-                          selectedDate: viewModel.startDate,
-                          onDateSelected: (date) => viewModel.setStartDate(date)
-                        ),
+                      DatePickerField(
+                        label: 'Start Date',
+                        selectedDate: viewModel.startDate,
+                        onDateSelected: (date) => viewModel.setStartDate(date)
                       ),
                     ],
                   ),
@@ -159,12 +157,10 @@ class _EditClassScreenContent extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Expanded(
-                        child: DatePickerField(
-                          label: 'End Date',
-                          selectedDate: viewModel.endDate,
-                          onDateSelected: (date) => viewModel.setEndDate(date)
-                        ),
+                      DatePickerField(
+                        label: 'End Date',
+                        selectedDate: viewModel.endDate,
+                        onDateSelected: (date) => viewModel.setEndDate(date)
                       ),
                     ],
                   ),
@@ -188,12 +184,10 @@ class _EditClassScreenContent extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Expanded(
-                        child: TimePickerField(
-                          label: 'From',
-                          selectedTime: viewModel.startTime,
-                          onTimeSelected: (time) => viewModel.setStartTime(time)
-                        ),
+                      TimePickerField(
+                        label: 'From',
+                        selectedTime: viewModel.startTime,
+                        onTimeSelected: (time) => viewModel.setStartTime(time)
                       ),
                     ],
                   ),
@@ -210,12 +204,10 @@ class _EditClassScreenContent extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Expanded(
-                        child: TimePickerField(
-                          label: 'To',
-                          selectedTime: viewModel.endTime,
-                          onTimeSelected: (time) => viewModel.setEndTime(time)
-                        ),
+                      TimePickerField(
+                        label: 'To',
+                        selectedTime: viewModel.endTime,
+                        onTimeSelected: (time) => viewModel.setEndTime(time)
                       ),
                     ],
                   ),

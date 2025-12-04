@@ -89,11 +89,28 @@ class EditExamViewModel extends ChangeNotifier {
         _academicRepo = academicRepo,
         _teacherRepo = teacherRepo {
     _initializeControllers();
-    _loadSubjects();
-    _loadTeachers();
+
     if (isEditMode) {
       _loadExistingExam();
+    } else {
+      // Set defaults for create mode
+      _selectedTermId = termId;
+      _selectedSubjectId = subjectId;
+      // Load subjects first, then it will auto-select if subjectId is provided
+      _initializeForCreateMode();
     }
+
+    _loadTeachers();
+  }
+
+  Future<void> _initializeForCreateMode() async {
+    _state = EditViewState.loading;
+    notifyListeners();
+
+    await _loadSubjects();
+
+    _state = EditViewState.idle;
+    notifyListeners();
   }
 
   void _initializeControllers() {
@@ -189,10 +206,14 @@ class EditExamViewModel extends ChangeNotifier {
 
       _subjects = subjectOptions;
 
-      if (_subjects.isNotEmpty && isCreateMode) {
-        _selectedSubject = null;
-        _selectedSubjectId = null;
-        _selectedTermId = null;
+      // Set selected subject if subjectId was provided in create mode
+      if (isCreateMode && subjectId != null) {
+        final subject = _subjects.where((s) => s.subjectId == subjectId).firstOrNull;
+        if (subject != null) {
+          _selectedSubject = subject.name;
+          _selectedSubjectId = subject.subjectId;
+          _selectedTermId = subject.termId;
+        }
       }
 
       notifyListeners();

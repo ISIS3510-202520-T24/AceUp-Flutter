@@ -115,26 +115,22 @@ class _EditExamScreenContent extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Date',
-                    style: AppTypography.h5.copyWith(
-                      color: colors.onTertiary
-                    ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Date',
+                  style: AppTypography.h5.copyWith(
+                    color: colors.onTertiary
                   ),
-                  const SizedBox(height: 4),
-                  Expanded(
-                    child: DatePickerField(
-                      label: 'Date',
-                      selectedDate: viewModel.selectedDate,
-                      onDateSelected: (date) => viewModel.setDate(date)
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 4),
+                DatePickerField(
+                  label: 'Date',
+                  selectedDate: viewModel.selectedDate,
+                  onDateSelected: (date) => viewModel.setDate(date)
+                ),
+              ],
             ),
 
             const SizedBox(height: 16),
@@ -153,12 +149,10 @@ class _EditExamScreenContent extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Expanded(
-                        child: TimePickerField(
-                          label: 'From',
-                          selectedTime: viewModel.selectedStartTime,
-                          onTimeSelected: (time) => viewModel.setStartTime(time)
-                        ),
+                      TimePickerField(
+                        label: 'From',
+                        selectedTime: viewModel.selectedStartTime,
+                        onTimeSelected: (time) => viewModel.setStartTime(time)
                       ),
                     ],
                   ),
@@ -175,12 +169,10 @@ class _EditExamScreenContent extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Expanded(
-                        child: TimePickerField(
-                          label: 'To',
-                          selectedTime: viewModel.selectedEndTime,
-                          onTimeSelected: (time) => viewModel.setEndTime(time)
-                        ),
+                      TimePickerField(
+                        label: 'To',
+                        selectedTime: viewModel.selectedEndTime,
+                        onTimeSelected: (time) => viewModel.setEndTime(time)
                       ),
                     ],
                   ),
