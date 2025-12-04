@@ -10,14 +10,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="83f1ba98-ac45-48c6-90e8-73adca6f18e6" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/lib/viewmodels/assignments/edit_assignment_viewmodel.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/widgets/date_time_picker.dart" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/lib/widgets/dropdown_field.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/android/build/reports/problems/problems-report.html" beforeDir="false" afterPath="$PROJECT_DIR$/android/build/reports/problems/problems-report.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/lib/views/assignments/assignments_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/assignments/assignments_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/assignments/edit_assignment_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/assignments/edit_assignment_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/views/today/today_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/today/today_screen.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lib/widgets/top_bar.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/top_bar.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/views/settings/account_screen.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/views/settings/account_screen.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/widgets/burger_menu.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/burger_menu.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lib/widgets/floating_action_button.dart" beforeDir="false" afterPath="$PROJECT_DIR$/lib/widgets/floating_action_button.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/linux/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/linux/flutter/generated_plugin_registrant.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/linux/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/linux/flutter/generated_plugins.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.lock" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pubspec.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/pubspec.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/windows/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/windows/flutter/generated_plugin_registrant.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/windows/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/windows/flutter/generated_plugins.cmake" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -118,7 +123,7 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "feature/feature-fixes-for-viva-voce",
+    "git-widget-placeholder": "feature/planner-related-views",
     "io.flutter.reload.alreadyRun": "true",
     "last_opened_file_path": "C:/Users/LAURA/AceUp-Flutter/assets/icons",
     "project.structure.last.edited": "SDKs",
@@ -134,11 +139,11 @@
       <recent name="C:\Users\LAURA\AceUp-Flutter\assets\logos" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\LAURA\AceUp-Flutter\lib\views\settings" />
+      <recent name="C:\Users\LAURA\AceUp-Flutter\assets\avatars" />
+      <recent name="C:\Users\LAURA\AceUp-Flutter\lib\models\planner" />
       <recent name="C:\Users\LAURA\AceUp-Flutter\lib\services\shared" />
       <recent name="C:\Users\LAURA\AceUp-Flutter\lib\services\notif" />
-      <recent name="C:\Users\LAURA\AceUp-Flutter\lib\viewmodels\today" />
-      <recent name="C:\Users\LAURA\AceUp-Flutter\lib\viewmodels\auth" />
-      <recent name="C:\Users\LAURA\AceUp-Flutter\lib\viewmodels\holidays" />
     </key>
   </component>
   <component name="RunManager" selected="Flutter.main.dart">

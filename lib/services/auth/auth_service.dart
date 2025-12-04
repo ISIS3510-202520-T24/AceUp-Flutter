@@ -14,6 +14,27 @@ class AuthService {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
   bool get isEmailVerified => _auth.currentUser?.emailVerified ?? false;
+    // ---- Sesión offline (para eventual connectivity) ----
+  static String? _offlineUserId;
+  static String? _offlineEmail;
+
+  /// uid efectivo: Firebase si existe, o sesión offline
+  String? get currentUserId => _auth.currentUser?.uid ?? _offlineUserId;
+
+  /// email efectivo: Firebase si existe, o sesión offline
+  String? get currentUserEmail => _auth.currentUser?.email ?? _offlineEmail;
+
+  /// Activa sesión local/offline (sin usuario Firebase)
+  void startOfflineSession({required String uid, required String email}) {
+    _offlineUserId = uid;
+    _offlineEmail = email;
+  }
+
+  /// Limpia sesión offline (llamar en signOut)
+  void clearOfflineSession() {
+    _offlineUserId = null;
+    _offlineEmail = null;
+  }
 
   // ---------- SIGN UP (email/clave) ----------
   Future<UserCredential> signUpEmailPassword({

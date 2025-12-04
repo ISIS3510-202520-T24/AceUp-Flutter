@@ -1,0 +1,1063 @@
+{
+  "database": "aceup-app-123",
+  "collections": {
+    "users": {
+      "description": "User profile and authentication information",
+      "document_structure": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth user ID (document ID)",
+          "required": true
+        },
+        "email": {
+          "type": "string",
+          "description": "User email address",
+          "required": true
+        },
+        "nickname": {
+          "type": "string",
+          "description": "User chosen display name",
+          "required": true
+        },
+        "avatar": {
+          "type": "string",
+          "description": "URL to user avatar image",
+          "required": false
+        },
+        "createdAt": {
+          "type": "timestamp",
+          "description": "Account creation timestamp",
+          "required": true
+        },
+        "lastLogin": {
+          "type": "timestamp",
+          "description": "Last login timestamp",
+          "required": false
+        }
+      },
+      "subcollections": {
+        "terms": {
+          "description": "Academic terms/semesters for the user",
+          "document_structure": {
+            "name": {
+              "type": "string",
+              "description": "Custom term name (e.g., 'Fall 2024', 'Spring Semester')",
+              "required": true
+            },
+            "startDate": {
+              "type": "timestamp",
+              "description": "Term start date",
+              "required": true
+            },
+            "endDate": {
+              "type": "timestamp",
+              "description": "Term end date",
+              "required": true
+            },
+            "isActive": {
+              "type": "boolean",
+              "description": "Whether this is the current active term",
+              "required": true,
+              "default": false
+            },
+            "createdAt": {
+              "type": "timestamp",
+              "description": "Creation timestamp",
+              "required": true
+            },
+            "updatedAt": {
+              "type": "timestamp",
+              "description": "Last update timestamp",
+              "required": true
+            }
+          },
+          "subcollections": {
+            "subjects": {
+              "description": "Subjects/courses within a term",
+              "document_structure": {
+                "name": {
+                  "type": "string",
+                  "description": "Subject name",
+                  "required": true
+                },
+                "color": {
+                  "type": "string",
+                  "description": "Hex color code from predefined palette",
+                  "required": true
+                },
+                "credits": {
+                  "type": "number",
+                  "description": "Course credits",
+                  "required": true
+                },
+                "finalGrade": {
+                  "type": "number",
+                  "description": "User-entered final grade (overrides calculated if enabled)",
+                  "required": false
+                },
+                "useFinalGradeOverride": {
+                  "type": "boolean",
+                  "description": "Whether to use finalGrade instead of calculated grade",
+                  "required": true,
+                  "default": false
+                },
+                "weights": {
+                  "type": "array",
+                  "description": "Grade weight categories (must total 100%)",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "Weight category ID"
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Weight category name (e.g., 'Exams', 'Assignments')"
+                      },
+                      "percentage": {
+                        "type": "number",
+                        "description": "Weight percentage (0-100)"
+                      },
+                      "subweights": {
+                        "type": "array",
+                        "description": "Sub-categories that must total parent percentage",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "description": "Subweight ID"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Subweight name (e.g., 'Exam 1', 'Exam 2')"
+                            },
+                            "percentage": {
+                              "type": "number",
+                              "description": "Subweight percentage relative to parent"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "createdAt": {
+                  "type": "timestamp",
+                  "description": "Creation timestamp",
+                  "required": true
+                },
+                "updatedAt": {
+                  "type": "timestamp",
+                  "description": "Last update timestamp",
+                  "required": true
+                }
+              },
+              "subcollections": {
+                "assignments": {
+                  "description": "Assignments for this subject",
+                  "document_structure": {
+                    "title": {
+                      "type": "string",
+                      "description": "Assignment title",
+                      "required": true
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Assignment description",
+                      "required": false
+                    },
+                    "dueDate": {
+                      "type": "timestamp",
+                      "description": "Due date (date only)",
+                      "required": true
+                    },
+                    "dueTime": {
+                      "type": "string",
+                      "description": "Due time in HH:mm format",
+                      "required": false
+                    },
+                    "weightId": {
+                      "type": "string",
+                      "description": "ID of weight/subweight this assignment belongs to",
+                      "required": false
+                    },
+                    "priority": {
+                      "type": "string",
+                      "description": "Assignment priority level",
+                      "enum": ["low", "medium", "high"],
+                      "required": true
+                    },
+                    "isCompleted": {
+                      "type": "boolean",
+                      "description": "Whether assignment has been completed",
+                      "required": true,
+                      "default": false
+                    },
+                    "completedAt": {
+                      "type": "timestamp",
+                      "description": "Completion timestamp",
+                      "required": false
+                    },
+                    "isGraded": {
+                      "type": "boolean",
+                      "description": "Whether this assignment has been graded",
+                      "required": true,
+                      "default": false
+                    },
+                    "grade": {
+                      "type": "number",
+                      "description": "Grade received (format depends on grading scale)",
+                      "required": false
+                    },
+                    "alerts": {
+                      "type": "array",
+                      "description": "Reminder alerts for this assignment",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "description": "Alert ID"
+                          },
+                          "daysBeforeDue": {
+                            "type": "number",
+                            "description": "Days before due date (0 = on due date)"
+                          },
+                          "time": {
+                            "type": "string",
+                            "description": "Time of day for alert in HH:mm format"
+                          }
+                        }
+                      }
+                    },
+                    "createdAt": {
+                      "type": "timestamp",
+                      "description": "Creation timestamp",
+                      "required": true
+                    },
+                    "updatedAt": {
+                      "type": "timestamp",
+                      "description": "Last update timestamp",
+                      "required": true
+                    }
+                  }
+                },
+                "classTemplates": {
+                  "description": "Class templates defining recurring class patterns",
+                  "document_structure": {
+                    "name": {
+                      "type": "string",
+                      "description": "Class name/type (chosen by student)",
+                      "required": true
+                    },
+                    "icon": {
+                      "type": "string",
+                      "description": "Icon identifier from preset assets",
+                      "required": true
+                    },
+                    "startDate": {
+                      "type": "timestamp",
+                      "description": "Class start date (defaults to term start)",
+                      "required": true
+                    },
+                    "endDate": {
+                      "type": "timestamp",
+                      "description": "Class end date (defaults to term end)",
+                      "required": true
+                    },
+                    "startTime": {
+                      "type": "string",
+                      "description": "Class start time in HH:mm format",
+                      "required": true
+                    },
+                    "endTime": {
+                      "type": "string",
+                      "description": "Class end time in HH:mm format",
+                      "required": true
+                    },
+                    "recurrence": {
+                      "type": "object",
+                      "description": "Class recurrence pattern",
+                      "properties": {
+                        "interval": {
+                          "type": "number",
+                          "description": "Repeat interval (1-6)",
+                          "minimum": 1,
+                          "maximum": 6
+                        },
+                        "unit": {
+                          "type": "string",
+                          "enum": ["weeks", "days", "working_days", "odd_days", "even_days", "odd_working_days", "even_working_days"],
+                          "description": "Interval unit type"
+                        },
+                        "selectedDays": {
+                          "type": "array",
+                          "description": "Selected days of week (only for 'weeks' unit) - 0=Sunday, 6=Saturday",
+                          "items": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 6
+                          }
+                        }
+                      },
+                      "required": true
+                    },
+                    "building": {
+                      "type": "string",
+                      "description": "Building name/number",
+                      "required": false
+                    },
+                    "room": {
+                      "type": "string",
+                      "description": "Room number",
+                      "required": false
+                    },
+                    "teacherId": {
+                      "type": "string",
+                      "description": "Reference to teacher document ID",
+                      "required": false
+                    },
+                    "createdAt": {
+                      "type": "timestamp",
+                      "description": "Creation timestamp",
+                      "required": true
+                    },
+                    "updatedAt": {
+                      "type": "timestamp",
+                      "description": "Last update timestamp",
+                      "required": true
+                    }
+                  }
+                },
+                "classExceptions": {
+                  "description": "Individual class occurrences that have been modified (notes added or cancelled)",
+                  "document_structure": {
+                    "classTemplateId": {
+                      "type": "string",
+                      "description": "Reference to parent classTemplate",
+                      "required": true
+                    },
+                    "date": {
+                      "type": "timestamp",
+                      "description": "Specific date of this class occurrence",
+                      "required": true
+                    },
+                    "isCancelled": {
+                      "type": "boolean",
+                      "description": "Whether this instance is cancelled",
+                      "required": true,
+                      "default": false
+                    },
+                    "notes": {
+                      "type": "string",
+                      "description": "User notes for this specific class occurrence",
+                      "required": false
+                    },
+                    "createdAt": {
+                      "type": "timestamp",
+                      "description": "Creation timestamp",
+                      "required": true
+                    },
+                    "updatedAt": {
+                      "type": "timestamp",
+                      "description": "Last update timestamp",
+                      "required": true
+                    }
+                  }
+                },
+                "exams": {
+                  "description": "Exams for this subject",
+                  "document_structure": {
+                    "name": {
+                      "type": "string",
+                      "description": "Exam name",
+                      "required": true
+                    },
+                    "date": {
+                      "type": "timestamp",
+                      "description": "Exam date",
+                      "required": true
+                    },
+                    "startTime": {
+                      "type": "string",
+                      "description": "Exam start time in HH:mm format",
+                      "required": true
+                    },
+                    "endTime": {
+                      "type": "string",
+                      "description": "Exam end time in HH:mm format",
+                      "required": true
+                    },
+                    "weightId": {
+                      "type": "string",
+                      "description": "ID of weight/subweight this exam belongs to",
+                      "required": false
+                    },
+                    "building": {
+                      "type": "string",
+                      "description": "Building name/number",
+                      "required": false
+                    },
+                    "room": {
+                      "type": "string",
+                      "description": "Room number",
+                      "required": false
+                    },
+                    "teacherId": {
+                      "type": "string",
+                      "description": "Reference to teacher document ID",
+                      "required": false
+                    },
+                    "isCompleted": {
+                      "type": "boolean",
+                      "description": "Whether exam has been completed",
+                      "required": true,
+                      "default": false
+                    },
+                    "completedAt": {
+                      "type": "timestamp",
+                      "description": "Completion timestamp",
+                      "required": false
+                    },
+                    "isGraded": {
+                      "type": "boolean",
+                      "description": "Whether this exam has been graded",
+                      "required": true,
+                      "default": false
+                    },
+                    "grade": {
+                      "type": "number",
+                      "description": "Grade received",
+                      "required": false
+                    },
+                    "createdAt": {
+                      "type": "timestamp",
+                      "description": "Creation timestamp",
+                      "required": true
+                    },
+                    "updatedAt": {
+                      "type": "timestamp",
+                      "description": "Last update timestamp",
+                      "required": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "teachers": {
+          "description": "Teacher information managed by the user",
+          "document_structure": {
+            "name": {
+              "type": "string",
+              "description": "Teacher full name",
+              "required": true
+            },
+            "position": {
+              "type": "string",
+              "description": "Job title/position",
+              "required": false
+            },
+            "department": {
+              "type": "string",
+              "description": "Department name",
+              "required": false
+            },
+            "affiliation": {
+              "type": "string",
+              "description": "Institution/university name",
+              "required": false
+            },
+            "email": {
+              "type": "string",
+              "description": "Contact email",
+              "required": false
+            },
+            "phone": {
+              "type": "string",
+              "description": "Contact phone number",
+              "required": false
+            },
+            "webPage": {
+              "type": "string",
+              "description": "Personal or departmental web page URL",
+              "required": false
+            },
+            "officeHours": {
+              "type": "array",
+              "description": "Office hours schedule",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Office hour entry ID"
+                  },
+                  "dayOfWeek": {
+                    "type": "number",
+                    "description": "Day of week (0=Sunday, 6=Saturday)",
+                    "minimum": 0,
+                    "maximum": 6
+                  },
+                  "startTime": {
+                    "type": "string",
+                    "description": "Start time in HH:mm format"
+                  },
+                  "endTime": {
+                    "type": "string",
+                    "description": "End time in HH:mm format"
+                  },
+                  "location": {
+                    "type": "string",
+                    "description": "Office location"
+                  }
+                }
+              }
+            },
+            "createdAt": {
+              "type": "timestamp",
+              "description": "Creation timestamp",
+              "required": true
+            },
+            "updatedAt": {
+              "type": "timestamp",
+              "description": "Last update timestamp",
+              "required": true
+            }
+          }
+        },
+        "holidays": {
+          "description": "Holidays (both user-created and API-provided)",
+          "document_structure": {
+            "name": {
+              "type": "string",
+              "description": "Holiday name",
+              "required": true
+            },
+            "startDate": {
+              "type": "timestamp",
+              "description": "Holiday start date",
+              "required": true
+            },
+            "endDate": {
+              "type": "timestamp",
+              "description": "Holiday end date (same as start for single-day)",
+              "required": true
+            },
+            "source": {
+              "type": "string",
+              "description": "Holiday source (user = editable, api = read-only)",
+              "enum": ["user", "api"],
+              "required": true
+            },
+            "createdAt": {
+              "type": "timestamp",
+              "description": "Creation timestamp",
+              "required": true
+            },
+            "updatedAt": {
+              "type": "timestamp",
+              "description": "Last update timestamp",
+              "required": true
+            }
+          }
+        },
+        "calendar_events": {
+          "description": "University events that user has added to their personal calendar",
+          "document_structure": {
+            "id": {
+              "type": "string",
+              "description": "Event ID from university events API",
+              "required": true
+            },
+            "userId": {
+              "type": "string",
+              "description": "User ID (matches parent document)",
+              "required": true
+            },
+            "title": {
+              "type": "string",
+              "description": "Event title",
+              "required": true
+            },
+            "description": {
+              "type": "string",
+              "description": "Event description",
+              "required": true
+            },
+            "startDateTime": {
+              "type": "timestamp",
+              "description": "Event start date and time",
+              "required": true
+            },
+            "endDateTime": {
+              "type": "timestamp",
+              "description": "Event end date and time",
+              "required": false
+            },
+            "location": {
+              "type": "string",
+              "description": "Original event location",
+              "required": false
+            },
+            "imageUrl": {
+              "type": "string",
+              "description": "Event image URL",
+              "required": false
+            },
+            "eventUrl": {
+              "type": "string",
+              "description": "URL to event details page",
+              "required": false
+            },
+            "category": {
+              "type": "string",
+              "description": "Event category (e.g., Academic, Cultural, Sports)",
+              "required": false
+            },
+            "userNotes": {
+              "type": "string",
+              "description": "User's personal notes about the event",
+              "required": false
+            },
+            "userLocation": {
+              "type": "string",
+              "description": "User's custom location override",
+              "required": false
+            },
+            "addedAt": {
+              "type": "timestamp",
+              "description": "When user added event to calendar",
+              "required": true
+            },
+            "updatedAt": {
+              "type": "timestamp",
+              "description": "Last update timestamp",
+              "required": true
+            }
+          }
+        },
+        "settings": {
+          "description": "User preferences and settings (single document)",
+          "document_id": "preferences",
+          "document_structure": {
+            "defaultClassDuration": {
+              "type": "number",
+              "description": "Default class duration in minutes",
+              "required": true,
+              "default": 60
+            },
+            "weekdays": {
+              "type": "array",
+              "description": "Active weekdays (0=Sunday, 6=Saturday)",
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 6
+              },
+              "required": true,
+              "default": [1, 2, 3, 4, 5]
+            },
+            "gradingScale": {
+              "type": "object",
+              "description": "Grading system configuration",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["percentage", "letter", "points"],
+                  "description": "Grading scale type"
+                },
+                "letterGrades": {
+                  "type": "array",
+                  "description": "Letter grade templates (only for letter type)",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "letter": {
+                        "type": "string",
+                        "description": "Letter grade (e.g., 'A', 'B+')"
+                      },
+                      "minPercentage": {
+                        "type": "number",
+                        "description": "Minimum percentage for this grade"
+                      },
+                      "maxPercentage": {
+                        "type": "number",
+                        "description": "Maximum percentage for this grade"
+                      },
+                      "gpaValue": {
+                        "type": "number",
+                        "description": "GPA value for this letter grade"
+                      }
+                    }
+                  }
+                },
+                "pointsConfig": {
+                  "type": "object",
+                  "description": "Points system configuration (only for points type)",
+                  "properties": {
+                    "minPoints": {
+                      "type": "number",
+                      "description": "Minimum possible points"
+                    },
+                    "maxPoints": {
+                      "type": "number",
+                      "description": "Maximum possible points"
+                    }
+                  }
+                }
+              },
+              "required": true
+            },
+            "holidayCountry": {
+              "type": "string",
+              "description": "ISO country code for API holidays (e.g., 'CO', 'US')",
+              "required": true,
+              "default": "CO"
+            },
+            "updatedAt": {
+              "type": "timestamp",
+              "description": "Last update timestamp",
+              "required": true
+            }
+          }
+        }
+      }
+    },
+            "groups": {
+      "description": "Schedule sharing groups for finding common free time",
+      "document_structure": {
+        "name": {
+          "type": "string",
+          "description": "Group name",
+          "required": true
+        },
+        "description": {
+          "type": "string",
+          "description": "Group description",
+          "required": false
+        },
+        "color": {
+          "type": "string",
+          "description": "Hex color code for group",
+          "required": true
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL to group image stored in Firebase Storage",
+          "required": false
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Group owner user ID",
+          "required": true
+        },
+        "members": {
+          "type": "array",
+          "description": "Array of member objects with user info",
+          "items": {
+            "type": "object",
+            "properties": {
+              "userId": {
+                "type": "string",
+                "description": "User ID"
+              },
+              "nickname": {
+                "type": "string",
+                "description": "User display name"
+              },
+              "joinedAt": {
+                "type": "timestamp",
+                "description": "When user joined group"
+              }
+            }
+          },
+          "required": true
+        },
+        "inviteCode": {
+          "type": "string",
+          "description": "Unique 6-character invite code",
+          "required": true
+        },
+        "createdAt": {
+          "type": "timestamp",
+          "description": "Group creation timestamp",
+          "required": true
+        },
+        "updatedAt": {
+          "type": "timestamp",
+          "description": "Last update timestamp (triggers recalculation)",
+          "required": true
+        }
+      },
+      "subcollections": {
+        "weeklyAvailability": {
+          "description": "Pre-calculated weekly availability for all members",
+          "document_id": "Uses week identifier as ID (e.g., '2025-W02')",
+          "document_structure": {
+            "weekIdentifier": {
+              "type": "string",
+              "description": "ISO week format: YYYY-Wnn",
+              "required": true
+            },
+            "weekStartDate": {
+              "type": "timestamp",
+              "description": "Monday of this week",
+              "required": true
+            },
+            "weekEndDate": {
+              "type": "timestamp",
+              "description": "Sunday of this week",
+              "required": true
+            },
+            "dailySlots": {
+              "type": "object",
+              "description": "Availability slots for each day",
+              "properties": {
+                "monday": {
+                  "type": "array",
+                  "description": "Time slots for Monday",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "startTime": {
+                        "type": "string",
+                        "description": "Slot start time in HH:mm format"
+                      },
+                      "endTime": {
+                        "type": "string",
+                        "description": "Slot end time in HH:mm format"
+                      },
+                      "availableMembers": {
+                        "type": "array",
+                        "description": "User IDs of members free during this slot",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "memberCount": {
+                        "type": "number",
+                        "description": "Number of available members"
+                      }
+                    }
+                  }
+                },
+                "tuesday": {
+                  "type": "array",
+                  "description": "Same structure as monday"
+                },
+                "wednesday": {
+                  "type": "array",
+                  "description": "Same structure as monday"
+                },
+                "thursday": {
+                  "type": "array",
+                  "description": "Same structure as monday"
+                },
+                "friday": {
+                  "type": "array",
+                  "description": "Same structure as monday"
+                },
+                "saturday": {
+                  "type": "array",
+                  "description": "Same structure as monday"
+                },
+                "sunday": {
+                  "type": "array",
+                  "description": "Same structure as monday"
+                }
+              },
+              "required": true
+            },
+            "calculatedAt": {
+              "type": "timestamp",
+              "description": "When this availability was calculated",
+              "required": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "security_rules": {
+    "users": "Users can only read/write their own user document and subcollections",
+    "users/terms": "Users can only access their own terms",
+    "users/terms/subjects": "Users can only access subjects within their terms",
+    "users/teachers": "Users can only access their own teachers",
+    "users/holidays": "Users can only access their own holidays",
+    "users/calendar_events": "Users can only access their own calendar events",
+    "users/settings": "Users can only access their own settings",
+    "groups": "Users can only access groups they are members of",
+    "groups/weeklyAvailability": "Users can only access availability from groups they belong to"
+  },
+  "indexes_required": [
+    {
+      "collection": "users/{userId}/terms",
+      "fields": [
+        {"field": "startDate", "order": "descending"}
+      ]
+    },
+    {
+      "collection": "users/{userId}/terms/{termId}/subjects/{subjectId}/assignments",
+      "fields": [
+        {"field": "dueDate", "order": "ascending"}
+      ]
+    },
+    {
+      "collection": "users/{userId}/terms/{termId}/subjects/{subjectId}/classTemplates",
+      "fields": [
+        {"field": "startDate", "order": "ascending"}
+      ]
+    },
+    {
+      "collection": "users/{userId}/terms/{termId}/subjects/{subjectId}/classExceptions",
+      "fields": [
+        {"field": "date", "order": "ascending"}
+      ]
+    },
+    {
+      "collection": "users/{userId}/terms/{termId}/subjects/{subjectId}/classExceptions",
+      "fields": [
+        {"field": "classTemplateId", "order": "ascending"},
+        {"field": "date", "order": "ascending"}
+      ]
+    },
+    {
+      "collection": "users/{userId}/terms/{termId}/subjects/{subjectId}/exams",
+      "fields": [
+        {"field": "date", "order": "ascending"}
+      ]
+    },
+    {
+      "collection": "users/{userId}/holidays",
+      "fields": [
+        {"field": "startDate", "order": "ascending"}
+      ]
+    },
+    {
+      "collection": "groups",
+      "fields": [
+        {"field": "members.userId", "mode": "array-contains"}
+      ]
+    }
+  ],
+  "data_models": {
+    "enums": {
+      "Priority": ["low", "medium", "high"],
+      "RecurrenceUnit": ["weeks", "days", "working_days", "odd_days", "even_days", "odd_working_days", "even_working_days"],
+      "GradingScaleType": ["percentage", "letter", "points"],
+      "HolidaySource": ["user", "api"]
+    }
+  },
+  "calculation_logic": {
+    "grade_calculations": {
+      "subject_current_grade": {
+        "calculation": "Calculated on-demand from assignments and exams",
+        "steps": [
+          "1. Get all graded assignments and exams for the subject",
+          "2. For each weight category (e.g., 'Exams 40%', 'Assignments 60%'):",
+          "   - Calculate average grade of items in that category",
+          "   - Multiply by weight percentage",
+          "3. Sum all weighted values to get current grade",
+          "4. If useFinalGradeOverride=true, use finalGrade instead"
+        ],
+        "notes": [
+          "Only include items where isGraded=true",
+          "Handle subweights: calculate subcategory average first, then apply to parent weight",
+          "Return null if no graded items exist yet"
+        ]
+      },
+      "term_gpa": {
+        "calculation": "Calculated on-demand from all subjects in the term",
+        "formula": "Σ(subjectGrade × credits) / Σ(credits)",
+        "notes": [
+          "Only include subjects that have a grade (calculated or final override)",
+          "Skip subjects with no graded items yet",
+          "Convert grades to GPA scale based on gradingScale setting"
+        ]
+      },
+      "overall_gpa": {
+        "calculation": "Calculated on-demand across all terms",
+        "formula": "Σ(termGPA × termTotalCredits) / Σ(allTermCredits)",
+        "notes": [
+          "Calculate each term's GPA first",
+          "Weight by total credits in each term",
+          "Can also be calculated directly from all subjects across all terms"
+        ]
+      }
+    },
+    "class_occurrence_calculation": {
+      "process": "Calculate on-the-fly when displaying schedule",
+      "steps": [
+        "1. For each classTemplate, calculate all dates matching recurrence pattern",
+        "2. Filter out dates that fall on holidays",
+        "3. Filter out dates that conflict with exams (same subject + overlapping time)",
+        "4. Check classExceptions collection for cancelled dates or notes",
+        "5. Remove any dates marked as cancelled in exceptions",
+        "6. Display remaining classes with their notes if available"
+      ],
+      "notes": [
+        "No need to store all instances - calculate dynamically",
+        "Only store exceptions (cancellations and notes) in classExceptions",
+        "When user cancels a class, create exception with isCancelled=true",
+        "When user adds notes, create/update exception with notes field",
+        "When user cancels, the exception is created (not deleted)",
+        "Holidays and exams automatically filter out classes during calculation"
+      ]
+    },
+    "remaining_classes_count": {
+      "calculation": "Count future occurrences after applying filters",
+      "steps": [
+        "1. Calculate all future dates from classTemplate recurrence",
+        "2. Filter out holidays",
+        "3. Filter out exam conflicts",
+        "4. Filter out dates in classExceptions where isCancelled=true",
+        "5. Count remaining dates"
+      ],
+      "notes": [
+        "Calculated on-demand, not stored",
+        "Only includes dates >= today",
+        "Automatically excludes holiday and exam conflicts"
+      ]
+    },
+    "group_availability": {
+      "trigger": "On group creation, member addition/removal, or when any member updates their class schedule",
+      "process": [
+        "1. Fetch all classes from all members' active terms",
+        "2. For each week (current + next N weeks), calculate busy time slots per member",
+        "3. Generate free time slots by inverting busy slots (assuming work hours like 7am-10pm)",
+        "4. Merge overlapping free slots across members to create compound availability",
+        "5. Store in weeklyAvailability subcollection with week identifier as document ID"
+      ],
+      "notes": [
+        "Recalculation should be triggered via Cloud Functions",
+        "Consider caching to avoid excessive recalculations",
+        "Display shows only free time, not class details for privacy"
+      ]
+    }
+  },
+  "generated_at": "2025-01-10T00:00:00Z",
+  "version": "2.1",
+  "notes": [
+    "All timestamps use Firebase Timestamp type",
+    "Document IDs are auto-generated by Firebase or UUIDs",
+    "Color fields store hex color codes (e.g., '#FF6B6B')",
+    "Times are stored as strings in HH:mm 24-hour format",
+    "Settings is a single document per user with ID 'preferences'",
+    "Priority has only 3 levels: low, medium, high",
+    "Both assignments and exams track isCompleted and isGraded separately",
+    "Class recurrence supports complex patterns: interval (1-6) + unit + selected days",
+    "Class occurrences are calculated on-the-fly from classTemplates, not stored",
+    "Only exceptions (cancellations and notes) are stored in classExceptions",
+    "Holidays and exams automatically prevent class occurrences on conflict dates",
+    "Remaining classes count is calculated dynamically when needed",
+    "Current grades, term GPAs, and overall GPA are calculated on-demand, not stored",
+    "Only finalGrade (user override) is stored in subjects",
+    "Group availability is pre-calculated and stored for performance",
+    "Weekly availability shows who is free when, not what they're doing",
+    "Security rules enforce user-level data isolation"
+  ]
+}

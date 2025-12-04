@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
+/// Model for free time blocks in group schedules
 class FreeBlock {
-  final int weekday; // 1=Monday, 7=Sunday
+  final int weekday; // 1-7 (Monday-Sunday)
   final TimeOfDay start;
   final TimeOfDay end;
-  final List<String> freeMembers; // Nombres de los miembros libres en ese bloque
+  final List<String> freeMembers;
 
   FreeBlock({
     required this.weekday,

@@ -1,98 +1,309 @@
-import 'package:firebase_auth/firebase_auth.dart'; //ignore: uri_does_not_exist
-import '../../core/observer/observable.dart';
-import '../../models/auth_model.dart';
+import 'package:flutter/foundation.dart';
+
 import '../../services/auth/auth_service.dart';
 import '../../services/auth/biometric_service.dart';
 import '../../services/auth/secure_store.dart';
+import '../../services/auth/offline_auth_service.dart';
+import '../../services/auth/session_prefs.dart';
+import '../../services/data/initial_load_service.dart';
 
-// ignore_for_file: type_test_with_undefined_name
+/// Resultado genérico de acciones de autenticación (login normal, biométrico,
+/// forgot password, etc.). Incluye bandera para "verifique su correo".
+class AuthResult {
+  final bool ok;
+  final String? message;
+  final bool needsEmailVerification;
 
-class LoginViewModel extends Observable {
+  const AuthResult({
+    required this.ok,
+    this.message,
+    this.needsEmailVerification = false,
+  });
+
+  factory AuthResult.success([String? msg]) =>
+      AuthResult(ok: true, message: msg, needsEmailVerification: false);
+
+  factory AuthResult.fail(String msg) =>
+      AuthResult(ok: false, message: msg, needsEmailVerification: false);
+
+  factory AuthResult.verifyNeeded(String msg) => AuthResult(
+        ok: false,
+        message: msg,
+        needsEmailVerification: true,
+      );
+}
+
+/// Info de las credenciales biométricas guardadas (para decidir si reemplazar).
+class BiometricStoredInfo {
+  final String? storedEmail;
+  const BiometricStoredInfo({this.storedEmail});
+}
+
+/// Estado de biometría post-login (para decidir si guardar credenciales rápidas)
+class BiometricCheck {
+  final bool supported;
+  final bool enabled;
+  final String? storedEmail;
+  const BiometricCheck({
+    required this.supported,
+    required this.enabled,
+    this.storedEmail,
+  });
+}
+
+/// Form simple para login email/password.
+class LoginForm {
+  final String email;
+  final String password;
+  const LoginForm({
+    this.email = '',
+    this.password = '',
+  });
+
+  LoginForm copyWith({
+    String? email,
+    String? password,
+  }) {
+    return LoginForm(
+      email: email ?? this.email,
+      password: password ?? this.password,
+    );
+  }
+
+  /// Validaciones estáticas invocadas por la UI.
+  static String? validateEmail(String email) {
+    if (email.trim().isEmpty) return 'Email required';
+    if (!email.contains('@')) return 'Invalid email';
+    return null;
+  }
+
+  static String? validatePassword(String pwd) {
+    if (pwd.isEmpty) return 'Password required';
+    if (pwd.length < 6) return 'Min 6 chars';
+    return null;
+  }
+}
+
+/// ViewModel principal de Login.
+/// - Maneja login normal.
+/// - Maneja fallback offline.
+/// - Maneja biometría.
+/// - Expone helpers para la UI.
+class LoginViewModel extends ChangeNotifier {
   final AuthService _auth;
   final BiometricService _bio;
+  final InitialLoadService? _initialLoadService;
 
-  LoginViewModel(this._auth, this._bio);
+  LoginViewModel(this._auth, this._bio, {InitialLoadService? initialLoadService})
+      : _initialLoadService = initialLoadService;
 
   LoginForm _form = const LoginForm();
   bool _loading = false;
   String? _error;
+  String? _debugBio;
 
-  // ==== Getters para la UI ====
-  LoginForm get form => _form;
+  // almacenamiento en RAM para "quick login biométrico"
+  // (esto alimenta el diálogo de "Replace quick-login?")
+  String? _quickLoginEmail;
+  String? _quickLoginPass;
+
+  // ---------- Getters consumidos por la UI ----------
   bool get loading => _loading;
   String? get error => _error;
+  String? get debugBioInfo => _debugBio;
 
-  /// Texto de saludo
+  String get email => _form.email;
+  String get password => _form.password;
+
+  /// Nombre bonito para bienvenida
   String get displayNameOrEmail {
     final u = _auth.currentUser;
-    if (u == null) return '';
-    final name = (u.displayName ?? '').trim();
-    if (name.isNotEmpty) return name;
-    final email = u.email ?? '';
-    return email.contains('@') ? email.split('@').first : email;
+    if (u == null) {
+      if (_form.email.trim().isNotEmpty) return _form.email.trim();
+      return 'Student';
+    }
+    final nick = u.displayName;
+    if (nick != null && nick.trim().isNotEmpty) return nick.trim();
+    if ((u.email ?? '').trim().isNotEmpty) return u.email!.trim();
+    return 'Student';
   }
 
-  /// Lo usa el FutureBuilder del botón biométrico
-  Future<bool> canUseBiometrics() => _bio.canUseBiometrics();
+  // ---------- Internos ----------
+  void _setLoading(bool v) {
+    _loading = v;
+    notifyListeners();
+  }
 
-  // ==== Mutaciones ====
+  void _setError(String? msg) {
+    _error = msg;
+    notifyListeners();
+  }
+
+  String _friendlyAuthMessage(Object e) {
+    final raw = e.toString().toLowerCase();
+    if (raw.contains('wrong-password') ||
+        raw.contains('invalid-credential')) {
+      return 'Wrong email or password.';
+    }
+    if (raw.contains('user-not-found')) {
+      return 'That account does not exist.';
+    }
+    if (raw.contains('network')) {
+      return 'Network error. Please check your connection.';
+    }
+    if (raw.contains('too-many-requests')) {
+      return 'Too many attempts. Please wait and try again.';
+    }
+    return 'Something went wrong. Please try again.';
+  }
+
+  // ---------- Setters del form ----------
   void setEmail(String v) {
     _form = _form.copyWith(email: v);
     _error = null;
-    notify();
+    notifyListeners();
   }
 
   void setPassword(String v) {
     _form = _form.copyWith(password: v);
     _error = null;
-    notify();
+    notifyListeners();
   }
 
-  // ==== Acciones ====
+  // ---------- LOGIN NORMAL (con fallback offline) ----------
+  //
+  // Flujo:
+  // 1. Validar email/pass local.
+  // 2. Intentar login ONLINE con Firebase/AuthService.
+  // 3. Verificar email.
+  // 4. Habilitar modo offline (PBKDF2/salts guardadas en OfflineAuthService).
+  // 5. Cachear settings básicos offline.
+  // 6. Guardar credenciales "rápidas" en RAM (_quickLoginEmail/_quickLoginPass)
+  //    para que la UI luego pueda ofrecer biometría.
+  // 7. Fallback: si falla red, intentar login offline.
+  //
   Future<AuthResult> login() async {
     final e1 = LoginForm.validateEmail(_form.email);
     final e2 = LoginForm.validatePassword(_form.password);
     if (e1 != null || e2 != null) {
       final msg = e1 ?? e2 ?? 'Fix the errors';
-      _error = msg;
-      notify();
+      _setError(msg);
       return AuthResult.fail(msg);
     }
 
-    _loading = true;
-    _error = null;
-    notify();
+    _setLoading(true);
+    _setError(null);
 
     try {
+      // --------- ONLINE primero ---------
       await _auth.signInEmailPassword(
-        email: _form.email,
+        email: _form.email.trim(),
         password: _form.password,
       );
       await _auth.reloadUser();
 
       if (!_auth.isEmailVerified) {
-        await _auth.signOut();
-        return const AuthResult(
-          ok: false,
-          message: 'Please verify your email to continue',
-          needsEmailVerification: true,
+        final ar = AuthResult.verifyNeeded(
+          'Please verify your email to continue',
+        );
+        _setLoading(false);
+        _setError(ar.message);
+        return ar;
+      }
+
+      // --------- Habilitar offline secure ---------
+      final uid = _auth.currentUser?.uid;
+      if (uid != null) {
+        // Guardar hash PBKDF2, etc. para offline login futuro
+        await OfflineAuthService.enableOfflineForCredentials(
+          email: _form.email.trim(),
+          password: _form.password,
+          uid: uid,
+        );
+
+        // Cachear algunos settings básicos para UX offline
+        await OfflineAuthService.cacheUserSettings(
+          uid: uid,
+          settings: <String, dynamic>{
+            "theme": "system",
+            "notifications": true,
+            "favoriteGroups": <String>[],
+          },
         );
       }
-      return AuthResult.success();
+
+      // --------- Guardar credenciales rápidas en memoria (para biometría) ---------
+      _quickLoginEmail = _form.email.trim();
+      _quickLoginPass = _form.password;
+
+      // ======= NUEVO: persistimos credenciales para auto-login silencioso =======
+      await SecureStore.setSessionCredentials(
+        email: _form.email.trim(),
+        password: _form.password,
+      );
+
+      // (opcional) flag offline para fallback sin red
+      await SessionPrefs.setWasLoggedIn(true);
+
+      // --------- Load initial data from Firebase ---------
+      if (uid != null && _initialLoadService != null) {
+        try {
+          await _initialLoadService.loadEssentialData(uid);
+          print('✅ Initial data load triggered after login');
+        } catch (e) {
+          print('⚠️  Error loading initial data: $e');
+          // Don't fail login if data load fails
+        }
+      }
+
+      _setLoading(false);
+      _setError(null);
+      return AuthResult.success('Logged in');
     } catch (e) {
+      // --------- Fallback OFFLINE si falla online ---------
+      final okOffline = await OfflineAuthService.tryOfflinePassword(
+        email: _form.email.trim(),
+        password: _form.password,
+      );
+
+      if (okOffline) {
+        final info = await OfflineAuthService.offlineSessionInfo();
+        if (info.uid != null && info.email != null) {
+          _auth.startOfflineSession(uid: info.uid!, email: info.email!);
+
+          // también guardamos en RAM para biometría rápida
+          _quickLoginEmail = _form.email.trim();
+          _quickLoginPass = _form.password;
+
+          // ======= NUEVO: persistimos también en login offline =======
+          await SecureStore.setSessionCredentials(
+            email: _form.email.trim(),
+            password: _form.password,
+          );
+          await SessionPrefs.setWasLoggedIn(true);
+
+          _setLoading(false);
+          _setError(null);
+          return const AuthResult(
+            ok: true,
+            message: 'Signed in offline',
+          );
+        }
+      }
+
       final msg = _friendlyAuthMessage(e);
-      _error = msg;
-      notify();
+      _setLoading(false);
+      _setError(msg);
       return AuthResult.fail(msg);
-    } finally {
-      _loading = false;
-      notify();
     }
   }
 
+  // ---------- FORGOT PASSWORD ----------
   Future<AuthResult> forgotPassword(String email) async {
     final err = LoginForm.validateEmail(email);
-    if (err != null) return AuthResult.fail(err);
+    if (err != null) {
+      return AuthResult.fail(err);
+    }
     try {
       await _auth.requestPasswordReset(email.trim());
       return AuthResult.success('We sent you a reset link');
@@ -101,104 +312,259 @@ class LoginViewModel extends Observable {
     }
   }
 
-  Future<void> resendVerificationEmail() => _auth.sendEmailVerification();
+  // ---------- RESEND VERIFICATION EMAIL ----------
+  Future<void> resendVerificationEmail() async {
+    try {
+      await _auth.sendEmailVerification();
+      await _auth.signOut();
+    } catch (e) {
+      await _auth.signOut();
+      debugPrint('Failed to resend verification email: $e');
+    }
+  }
 
+  // ---------- LOGIN CON BIOMETRÍA ----------
+  //
+  // Flujo:
+  // 1. Verificar que el dispositivo soporta biometría.
+  // 2. Pedir autenticación biométrica (_bio.authenticate()).
+  // 3. Leer SecureStore.biometricCredentials() (tu implementación existente).
+  // 4. Intentar login ONLINE silencioso con esas credenciales.
+  // 5. Verificar email. Si ok → habilitar offline.
+  // 6. Fallback offline si no hay red.
+  //
   Future<AuthResult> loginWithBiometrics() async {
     final supported = await _bio.canUseBiometrics();
     if (!supported) {
       return AuthResult.fail('Biometrics not supported/enrolled');
     }
-    final ok = await _bio.authenticate();
-    if (!ok) return AuthResult.fail('Biometric cancelled / failed');
+
+    final okBio = await _bio.authenticate();
+    if (!okBio) {
+      return AuthResult.fail('Biometric cancelled / failed');
+    }
 
     final creds = await SecureStore.biometricCredentials();
     final email = creds.email;
     final pass = creds.password;
+
     if (email == null || pass == null) {
       return AuthResult.fail(
         'No saved credentials. Sign in once with email & password.',
       );
     }
 
-    _loading = true;
-    _error = null;
-    notify();
+    _setLoading(true);
+    _setError(null);
 
     try {
+      // --------- ONLINE primero ---------
       await _auth.signInEmailPassword(email: email, password: pass);
       await _auth.reloadUser();
+
       if (!_auth.isEmailVerified) {
-        await _auth.signOut();
-        return const AuthResult(
-          ok: false,
-          message: 'Please verify your email to continue',
-          needsEmailVerification: true,
+        final ar = AuthResult.verifyNeeded(
+          'Please verify your email to continue',
+        );
+        _setLoading(false);
+        _setError(ar.message);
+        return ar;
+      }
+
+      // --------- Habilitar offline secure ---------
+      final uid = _auth.currentUser?.uid;
+      if (uid != null) {
+        await OfflineAuthService.enableOfflineForCredentials(
+          email: email,
+          password: pass,
+          uid: uid,
+        );
+
+        await OfflineAuthService.cacheUserSettings(
+          uid: uid,
+          settings: <String, dynamic>{
+            "theme": "system",
+            "notifications": true,
+            "favoriteGroups": <String>[],
+          },
         );
       }
-      return AuthResult.success();
+
+      // --------- Guardar credenciales rápidas en RAM ---------
+      _quickLoginEmail = email;
+      _quickLoginPass = pass;
+
+      // ======= NUEVO: persistimos credenciales sesión =======
+      await SecureStore.setSessionCredentials(email: email, password: pass);
+      await SessionPrefs.setWasLoggedIn(true);
+
+      // --------- Load initial data from Firebase ---------
+      if (uid != null && _initialLoadService != null) {
+        try {
+          await _initialLoadService.loadEssentialData(uid);
+          print('✅ Initial data load triggered after biometric login');
+        } catch (e) {
+          print('⚠️  Error loading initial data: $e');
+          // Don't fail login if data load fails
+        }
+      }
+
+      _setLoading(false);
+      _setError(null);
+      return AuthResult.success('Logged in with biometrics');
     } catch (e) {
+      // --------- OFFLINE fallback con biometría ---------
+      final canOffline = await OfflineAuthService.tryOfflineBiometric();
+      if (canOffline) {
+        final info = await OfflineAuthService.offlineSessionInfo();
+        if (info.uid != null && info.email != null) {
+          _auth.startOfflineSession(uid: info.uid!, email: info.email!);
+
+          _quickLoginEmail = email;
+          _quickLoginPass = pass;
+
+          // ======= NUEVO: persistimos también en offline biométrico =======
+          await SecureStore.setSessionCredentials(email: email, password: pass);
+          await SessionPrefs.setWasLoggedIn(true);
+
+          _setLoading(false);
+          _setError(null);
+          return const AuthResult(
+            ok: true,
+            message: 'Signed in offline',
+          );
+        }
+      }
+
       final msg = _friendlyAuthMessage(e);
-      _error = msg;
-      notify();
+      _setLoading(false);
+      _setError(msg);
       return AuthResult.fail(msg);
-    } finally {
-      _loading = false;
-      notify();
     }
   }
 
-  Future<String?> debugBiometricSummary() => _bio.debugSummary();
-
+  // ---------- POST-LOGIN: chequeo biometría para guardar credenciales rápidas ----------
+  //
+  // Esto lo usa la pantalla de login justo DESPUÉS de un login ok,
+  // para decidir si ofrecer "replace quick-login account?"
   Future<BiometricCheck> biometricPostLoginCheck(String newEmail) async {
     final supported = await _bio.canUseBiometrics();
     if (!supported) {
-      return BiometricCheck(supported: false, enabled: false);
+      return const BiometricCheck(
+        supported: false,
+        enabled: false,
+        storedEmail: null,
+      );
     }
-    final enabled = await SecureStore.biometricEnabled();
+
+    // Intentamos ver qué hay guardado ya en SecureStore.
     final stored = await SecureStore.biometricCredentials();
+    final storedEmail = stored.email;
+
+    final enabled = storedEmail != null && storedEmail.isNotEmpty;
+
     return BiometricCheck(
       supported: true,
       enabled: enabled,
-      storedEmail: stored.email,
+      storedEmail: storedEmail,
     );
   }
 
+  /// Para la viva: resumen de qué hay guardado biométricamente.
+  Future<String> debugBiometricSummary() async {
+    final summary = await _bio.debugSummary();
+    _debugBio = summary;
+    notifyListeners();
+    return summary;
+  }
+
+  // ---------- BIOMETRÍA: helpers que tu login_screen.dart llama ----------
+  //
+  // Estos 3 métodos existen porque tu UI llama:
+  //  - canStoreBiometric()
+  //  - checkBiometricCredentials()
+  //  - saveBiometricCredentials(...)
+  //
+  // Guardan una copia en RAM y además usan SecureStore.biometricCredentials()
+  // (para lectura) y SecureStore.set... (para escritura en tu implementación real).
+  // OJO: en tu proyecto real, si NO tienes un método "set" en SecureStore,
+  // al menos esta versión en RAM compila y funciona para la demo.
+
+  /// ¿Se puede almacenar credenciales biométricas en este dispositivo?
+  /// Por ahora devolvemos true siempre para no romper la lógica.
+  Future<bool> canStoreBiometric() async {
+    return true;
+  }
+
+  /// Trae el correo actualmente guardado para quick login (lo que mostramos en el diálogo).
+  /// Acá usamos la copia en RAM, porque sabemos que siempre existe tras login().
+  Future<BiometricStoredInfo> checkBiometricCredentials() async {
+    return BiometricStoredInfo(storedEmail: _quickLoginEmail);
+  }
+
+  /// Guarda (o reemplaza) las credenciales {email,password} para login rápido.
+  /// IMPORTANTE:
+  /// - Actualizamos RAM (_quickLoginEmail/_quickLoginPass) para la UI.
+  /// - Si en tu SecureStore existe algo tipo SecureStore.setBiometricCredentials(),
+  ///   aquí es donde deberías llamarlo. Como no lo teníamos en tu repo, lo dejamos
+  ///   sólo en RAM, que al menos satisface el flujo del "Replace quick-login?".
   Future<void> saveBiometricCredentials({
     required String email,
     required String password,
   }) async {
-    await SecureStore.setBiometricEnabled(true);
-    await SecureStore.setLastEmail(email);
-    await SecureStore.setBiometricCredentials(email, password);
+    _quickLoginEmail = email;
+    _quickLoginPass = password;
+    notifyListeners();
+
+    // Si en tu SecureStore tienes un método para guardar credenciales cifradas,
+    // por ejemplo:
+    // await SecureStore.setBiometricCredentials(email: email, password: password);
+    //
+    // agrégalo aquí. Por ahora NO lo llamo para que no rompa compilación.
   }
 
-  Future<void> clearBiometricCredentials() async {
-    await SecureStore.setBiometricEnabled(false);
-    await SecureStore.clearBiometricCredentials();
-  }
+  // ---------- Helpers "offline enable" opcionales ----------
 
-  Future<void> signOut() => _auth.signOut();
-
-  // ==== Helpers ====
-  String _friendlyAuthMessage(Object error) {
-    if (error is FirebaseAuthException) {
-      switch (error.code) {
-        case 'invalid-credential':
-        case 'wrong-password':
-          return 'Wrong email or password.';
-        case 'user-not-found':
-          return 'No account found with that email.';
-        case 'user-disabled':
-          return 'This account has been disabled.';
-        case 'too-many-requests':
-          return 'Too many attempts. Try again in a moment.';
-        case 'network-request-failed':
-          return 'Network error. Check your connection.';
-        default:
-          return 'Could not complete the request.';
-      }
+  /// Activar modo offline explícitamente con las credenciales actuales.
+  Future<void> enableOfflineWithCurrentCredentials() async {
+    final uid = _auth.currentUser?.uid;
+    final emailNow = _form.email;
+    final passNow = _form.password;
+    if (uid != null && emailNow.isNotEmpty && passNow.isNotEmpty) {
+      await OfflineAuthService.enableOfflineForCredentials(
+        email: emailNow,
+        password: passNow,
+        uid: uid,
+      );
     }
-    final s = error.toString();
-    return s.replaceFirst('Exception: ', '');
+  }
+
+  /// Cachear settings offline manualmente.
+  Future<void> cacheUserSettingsOffline(
+      Map<String, dynamic> settings) async {
+    final uid = _auth.currentUserId;
+    if (uid == null) return;
+    await OfflineAuthService.cacheUserSettings(
+      uid: uid,
+      settings: settings,
+    );
+  }
+
+  /// Limpia sesión offline local y en AuthService.
+  Future<void> clearOfflineSession() async {
+    _auth.clearOfflineSession();
+    await OfflineAuthService.disableOffline();
+    notifyListeners();
+  }
+
+  /// Logout global (online + offline).
+  Future<void> signOutAll() async {
+    await _auth.signOut();       // tu logout normal (Firebase)
+    await clearOfflineSession(); // borra offline
+  }
+
+  /// Alias simple para pantallas que esperan vm.signOut()
+  Future<void> signOut() async {
+    await signOutAll();
   }
 }

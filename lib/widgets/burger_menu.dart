@@ -1,154 +1,189 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/auth/auth_service.dart';
+
 import '../themes/app_typography.dart';
 import '../themes/app_icons.dart';
+
+import '../services/auth/auth_service.dart';
+import '../services/profile/profile_notifier.dart';
 
 class BurgerMenu extends StatelessWidget {
   const BurgerMenu({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-
+    final colors = Theme.of(context).colorScheme;
     final currentRoute = ModalRoute.of(context)?.settings.name;
+
+    final auth = context.read<AuthService>();
+    final email = auth.currentUser?.email ?? '';
+    final nick = auth.currentUser?.displayName ?? '';
+    final fallbackNick = auth.currentUser?.displayName ?? 'Student';
+
+    final profile = context.watch<ProfileNotifier>();
+
+    final shownNick = (nick.isNotEmpty)
+        ? nick
+        : (fallbackNick.isNotEmpty ? fallbackNick : email);
+
+    ImageProvider? avatarImage;
+    final avatarPath = profile.avatarLocalPath;
+
+    if (avatarPath != null && avatarPath.startsWith('asset:')) {
+      avatarImage = AssetImage(
+        avatarPath.replaceFirst('asset:', ''),
+      );
+    } else if (avatarPath != null && avatarPath.isNotEmpty) {
+      avatarImage = FileImage(File(avatarPath));
+    } else {
+      avatarImage = const AssetImage('assets/avatars/polarbear_avatar.png');
+    }
 
     return Drawer(
       child: Column(
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-            decoration: BoxDecoration(color: colors.onPrimary),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            decoration: BoxDecoration(color: colors.onSecondaryContainer),
             child: SafeArea(
               bottom: false,
-              child: Text(
-                "AceUp",
-                style: AppTypography.logo.copyWith(color: colors.tertiary),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        shownNick.isNotEmpty ? "$shownNick's" : "",
+                        style: AppTypography.h5.copyWith(color: colors.tertiary, height: 0.9),
+                      ),
+                      Text(
+                        "AceUp",
+                        style: AppTypography.logo.copyWith(color: colors.tertiary, height: 0.9),
+                      ),
+                    ],
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/account');
+                    },
+                    child: CircleAvatar(
+                      radius: 28,
+                      backgroundImage: avatarImage,
+                      child: Text(
+                        shownNick.isNotEmpty
+                            ? shownNick[0].toUpperCase()
+                            : '?',
+                        style: AppTypography.h3.copyWith(
+                          color: colors.surface,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
 
           Expanded(
-            child: ListView(
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Text(
-                    "My Schedules",
-                    style: AppTypography.h4.copyWith(color: colors.onPrimary),
+            child: SafeArea(
+              top: false,
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  const SizedBox(height: 8),
+                  _sectionHeader(context, "My Schedules"),
+                  _menuItem(
+                    context: context,
+                    title: "Today",
+                    icon: AppIcons.calendarDay,
+                    route: '/today',
+                    isSelected: currentRoute == '/today',
                   ),
-                ),
-                _buildMenuItem(
-                  context: context,
-                  title: "Today",
-                  icon: AppIcons.calendarDay,
-                  route: '/today',
-                  isSelected: currentRoute == '/today',
-                  colors: colors,
-                ),
-                _buildMenuItem(
-                  context: context,
-                  title: "Week View",
-                  icon: AppIcons.calendarWeek,
-                  route: null,
-                  isSelected: false,
-                  colors: colors,
-                  isComingSoon: true,
-                ),
-                _buildMenuItem(
-                  context: context,
-                  title: "Calendar",
-                  icon: AppIcons.calendarMonth,
-                  route: null,
-                  isSelected: false,
-                  colors: colors,
-                  isComingSoon: true,
-                ),
-                _buildMenuItem(
-                  context: context,
-                  title: "Shared",
-                  icon: AppIcons.shared,
-                  route: '/shared',
-                  isSelected: currentRoute == '/shared',
-                  colors: colors,
-                ),
-
-                const SizedBox(height: 16),
-
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  child: Text(
-                    "My Data",
-                    style: AppTypography.h4.copyWith(color: colors.onPrimary),
+                  _menuItem(
+                    context: context,
+                    title: "Week View",
+                    icon: AppIcons.calendarWeek,
+                    route: '/week-view',         
+                    isSelected: currentRoute == '/week-view',
                   ),
-                ),
-                _buildMenuItem(
-                  context: context,
-                  title: "Planner",
-                  icon: AppIcons.planner,
-                  route: null,
-                  isSelected: false,
-                  colors: colors,
-                  isComingSoon: true,
-                ),
-                _buildMenuItem(
-                  context: context,
-                  title: "Assignments",
-                  icon: AppIcons.assignments,
-                  route: '/assignments',
-                  isSelected: currentRoute == '/assignments',
-                  colors: colors,
-                ),
-                _buildMenuItem(
-                  context: context,
-                  title: "Teachers",
-                  icon: AppIcons.teacher,
-                  route: null,
-                  isSelected: false,
-                  colors: colors,
-                  isComingSoon: true,
-                ),
-                _buildMenuItem(
-                  context: context,
-                  title: "Holidays",
-                  icon: AppIcons.holidays,
-                  route: '/holidays',
-                  isSelected: currentRoute == '/holidays',
-                  colors: colors,
-                ),
-              ],
+                  _menuItem(
+                    context: context,
+                    title: "Calendar",
+                    icon: AppIcons.calendarMonth,
+                    route: '/calendar',
+                    isSelected: currentRoute == '/calendar',
+                  ),
+                  _menuItem(
+                    context: context,
+                    title: "Shared",
+                    icon: AppIcons.shared,
+                    route: '/shared',
+                    isSelected: currentRoute == '/shared',
+                  ),
+
+                  const SizedBox(height: 16),
+                  _sectionHeader(context, "My Data"),
+                  _menuItem(
+                    context: context,
+                    title: "Planner",
+                    icon: AppIcons.planner,
+                    route: '/planner',
+                    isSelected: currentRoute == '/planner',
+                  ),
+                  _menuItem(
+                    context: context,
+                    title: "Assignments",
+                    icon: AppIcons.assignments,
+                    route: '/assignments',
+                    isSelected: currentRoute == '/assignments',
+                  ),
+                  _menuItem(
+                    context: context,
+                    title: "Teachers",
+                    icon: AppIcons.teacher,
+                    route: null,
+                    isSelected: false,
+                    isComingSoon: true,
+                  ),
+                  _menuItem(
+                    context: context,
+                    title: "Holidays",
+                    icon: AppIcons.holidays,
+                    route: '/holidays',
+                    isSelected: currentRoute == '/holidays',
+                  ),
+                  _menuItem(
+                    context: context,
+                    title: "Uni Events",
+                    icon: AppIcons.icons,
+                    route: '/uni-events',
+                    isSelected: currentRoute == '/uni-events',
+                  ),
+                  _menuItem(
+                    context: context,
+                    title: "Storage Stats",
+                    icon: Icons.storage,
+                    route: '/group-stats',
+                    isSelected: currentRoute == '/group-stats',
+                  ),
+                  SizedBox(height: 80.0)
+                ],
+              ),
             ),
           ),
-
-          Container(
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(
-                  color: colors.outlineVariant,
-                  width: 1,
-                ),
-              ),
-            ),
-            child:
-            SafeArea(
-              top: false,
-              child:
-              ListTile(
-                leading: Icon(AppIcons.logout, color: colors.primary),
-                title: Text(
-                  'Logout',
-                  style: AppTypography.actionL.copyWith(color: colors.onSurface),
-                ),
-                onTap: () async {
-                  await context.read<AuthService>().signOut();
-                  if (!context.mounted) return;
-                  Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
-                },
-              ),
+          SafeArea(
+            top: false,
+            child: _menuItem(
+              context: context,
+              title: "Settings",
+              icon: AppIcons.settings,
+              route: '/settings',
+              isSelected: currentRoute == '/settings',
             ),
           ),
         ],
@@ -156,16 +191,32 @@ class BurgerMenu extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuItem({
+  Widget _sectionHeader(BuildContext context, String title) {
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Text(
+        title,
+        style: AppTypography.h4.copyWith(color: colors.onSecondaryContainer),
+      ),
+    );
+  }
+
+  Widget _menuItem({
     required BuildContext context,
     required String title,
     required IconData icon,
     required String? route,
     required bool isSelected,
-    required ColorScheme colors,
     bool isComingSoon = false,
   }) {
+    final colors = Theme.of(context).colorScheme;
+
     return ListTile(
+      dense: true,
+      visualDensity: VisualDensity.compact,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      minLeadingWidth: 28,
       leading: Icon(
         icon,
         size: 20,
@@ -192,7 +243,11 @@ class BurgerMenu extends StatelessWidget {
             ),
           );
         } else if (route != null && !isSelected) {
-          Navigator.pushReplacementNamed(context, route);
+          if (route == '/settings') {
+            Navigator.pushNamed(context, route);
+          } else {
+            Navigator.pushReplacementNamed(context, route);
+          }
         }
       },
     );

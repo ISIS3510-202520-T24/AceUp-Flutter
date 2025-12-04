@@ -50,3 +50,7 @@ app.*.map.json
 **/macos/Flutter/GeneratedPluginRegistrant.*
 **/windows/GeneratedPluginRegistrant.*
 **/linux/GeneratedPluginRegistrant.*
+
+# Markdown files (except README)
+*.md
+!README.md

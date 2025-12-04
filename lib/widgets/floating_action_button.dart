@@ -73,7 +73,6 @@ class _FABState extends State<FAB> with SingleTickerProviderStateMixin {
     if (_overlayEntry != null) return;
 
     final overlay = Overlay.of(context);
-    if (overlay == null) return;
 
     _overlayEntry = OverlayEntry(
       builder: (context) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../themes/app_icons.dart';
 import '../themes/app_typography.dart';
 
 class AppDropdownField<T> extends StatelessWidget {
@@ -24,7 +25,8 @@ class AppDropdownField<T> extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return DropdownButtonFormField<T>(
-      value: value,
+      icon: Icon(AppIcons.arrowDown),
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         labelStyle: AppTypography.h5.copyWith(color: colors.onSecondary),

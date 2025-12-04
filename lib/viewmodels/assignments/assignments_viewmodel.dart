@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
 import '../../models/assignments/assignment_model.dart';
-import '../../services/assignments/assignment_service.dart';
+import '../../data/repositories/academic_repository.dart';
 import '../../services/auth/auth_service.dart';
+import '../../core/constants/enums.dart';
 
 enum AssignmentsTab { pending, completed }
 
-enum AssignmentsViewState { idle, loading, error }
-
 class AssignmentsViewModel extends ChangeNotifier {
-  final AssignmentService _assignmentService = AssignmentService();
+  final AcademicRepository _repository;
   final AuthService _authService = AuthService();
 
   AssignmentsTab _selectedTab = AssignmentsTab.pending;
   AssignmentsTab get selectedTab => _selectedTab;
 
-  AssignmentsViewState _state = AssignmentsViewState.idle;
-  AssignmentsViewState get state => _state;
+  ViewState _state = ViewState.idle;
+  ViewState get state => _state;
 
   List<Assignment> _pendingAssignments = [];
   List<Assignment> _completedAssignments = [];
@@ -30,7 +29,8 @@ class AssignmentsViewModel extends ChangeNotifier {
 
   final List<String> tabLabels = ['Pending', 'Completed'];
 
-  AssignmentsViewModel() {
+  AssignmentsViewModel({required AcademicRepository repository})
+      : _repository = repository {
     _loadAllAssignments();
   }
 
@@ -50,23 +50,23 @@ class AssignmentsViewModel extends ChangeNotifier {
     final userId = _authService.currentUser?.uid;
     if (userId == null) {
       _errorMessage = 'User not logged in';
-      _state = AssignmentsViewState.error;
+      _state = ViewState.error;
       notifyListeners();
       return;
     }
 
-    _state = AssignmentsViewState.loading;
+    _state = ViewState.loading;
     notifyListeners();
 
     try {
-      _pendingAssignments = await _assignmentService.getPendingAssignments(userId);
-      _completedAssignments = await _assignmentService.getCompletedAssignments(userId);
+      _pendingAssignments = await _repository.getPendingAssignments(userId);
+      _completedAssignments = await _repository.getCompletedAssignments(userId);
 
-      _state = AssignmentsViewState.idle;
+      _state = ViewState.idle;
       _errorMessage = null;
     } catch (e) {
       _errorMessage = e.toString();
-      _state = AssignmentsViewState.error;
+      _state = ViewState.error;
       print('Error loading all assignments: $e');
     }
 
@@ -80,40 +80,39 @@ class AssignmentsViewModel extends ChangeNotifier {
     }
 
     try {
-      final newStatus = assignment.isPending ? 'Completed' : 'Pending';
+      final newStatus = assignment.isCompleted ? false : true;
 
-      await _assignmentService.updateAssignmentStatus(
+      await _repository.updateAssignmentStatus(assignment.id, newStatus);
+
+      await _loadAllAssignments();
+    } catch (e) {
+      _errorMessage = 'Failed to update assignment: $e';
+      _state = ViewState.error;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteAssignment(Assignment assignment) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null || assignment.termId == null || assignment.subjectId == null) {
+      _errorMessage = 'Cannot delete assignment: missing required information';
+      _state = ViewState.error;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await _repository.deleteAssignment(
+        assignment.id,
         userId,
         assignment.termId!,
         assignment.subjectId!,
-        assignment.id,
-        newStatus,
       );
 
-      // Update local state immediately for better UX
-      if (assignment.isPending) {
-        // Move from pending to completed
-        _pendingAssignments.removeWhere((a) => a.id == assignment.id);
-        _completedAssignments.add(assignment.copyWith(status: newStatus));
-
-        // Sort completed by distance from today (closest first)
-        final now = DateTime.now();
-        _completedAssignments.sort((a, b) {
-          final distanceA = a.dueDate.difference(now).inDays.abs();
-          final distanceB = b.dueDate.difference(now).inDays.abs();
-          return distanceA.compareTo(distanceB);
-        });
-      } else {
-        // Move from completed to pending
-        _completedAssignments.removeWhere((a) => a.id == assignment.id);
-        _pendingAssignments.add(assignment.copyWith(status: newStatus));
-        _pendingAssignments.sort((a, b) => a.dueDate.compareTo(b.dueDate));
-      }
-
-      notifyListeners();
+      await _loadAllAssignments();
     } catch (e) {
-      print('Error toggling assignment status: $e');
-      _errorMessage = 'Failed to update assignment';
+      _errorMessage = 'Failed to delete assignment: $e';
+      _state = ViewState.error;
       notifyListeners();
     }
   }

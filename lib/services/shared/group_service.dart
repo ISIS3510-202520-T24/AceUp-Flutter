@@ -2,7 +2,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../../models/group_model.dart';
+import '../../models/shared/group_model.dart';
 import '../../models/user_model.dart';
 import '../../models/calendar_event_model.dart';
 import '../../models/free_block_model.dart';
@@ -52,14 +52,14 @@ class GroupService {
 
   // --- MÉTODOS DE USUARIO ---
 
-  Future<List<AppUser>> getAllUsers() async {
+  Future<List<User>> getAllUsers() async {
     QuerySnapshot snapshot = await _firestore.collection('users').get();
-    return snapshot.docs.map((doc) => AppUser.fromFirestore(doc)).toList();
+    return snapshot.docs.map((doc) => User.fromFirestore(doc)).toList();
   }
 
   /// Versión optimizada para grupos: solo carga clases (sin personal/assignments/exams)
   /// No requiere color porque la vista de grupos no muestra colores por usuario
-  Future<List<CalendarEvent>> getClassEventsOnlyForUser(AppUser user) async {
+  Future<List<CalendarEvent>> getClassEventsOnlyForUser(User user) async {
     List<CalendarEvent> allEvents = [];
     final userId = user.uid;
 
@@ -102,7 +102,7 @@ class GroupService {
                 endTimeStr: endTimeStr,
                 classId: classDoc.id,
                 userId: userId,
-                userName: user.nick,
+                userName: user.nickname,
                 color: Colors.green,
               );
               
@@ -118,7 +118,7 @@ class GroupService {
     }
   }
 
-  Future<List<CalendarEvent>> getCalendarEventsForUser(AppUser user, Color color) async {
+  Future<List<CalendarEvent>> getCalendarEventsForUser(User user, Color color) async {
     List<CalendarEvent> allEvents = [];
     final userId = user.uid;
 
@@ -145,7 +145,7 @@ class GroupService {
         endTime: _safeTimestampToDate(data['endTime']),
         type: EventType.personal,
         ownerId: userId,
-        ownerName: user.nick,
+        ownerName: user.nickname,
         color: color,
       );
     }));
@@ -178,7 +178,7 @@ class GroupService {
             endTime: _safeTimestampToDate(data['endTime']),
             type: EventType.exam,
             ownerId: userId,
-            ownerName: user.nick,
+            ownerName: user.nickname,
             color: color,
           );
         }));
@@ -195,7 +195,7 @@ class GroupService {
             endTime: dueDate.add(const Duration(hours: 1)), // Duración de 1 hora para assignments
             type: EventType.assignment,
             ownerId: userId,
-            ownerName: user.nick,
+            ownerName: user.nickname,
             color: color,
           );
         }));
@@ -219,7 +219,7 @@ class GroupService {
               endTimeStr: endTimeStr,
               classId: classDoc.id,
               userId: userId,
-              userName: user.nick,
+              userName: user.nickname,
               color: color,
             );
             
@@ -320,12 +320,12 @@ class GroupService {
   }
 }
 
-  Future<List<CalendarEvent>> getEventsForGroup(String groupId, List<AppUser> allUsers, Map<String, Color> userColorMap) async {
+  Future<List<CalendarEvent>> getEventsForGroup(String groupId, List<User> allUsers, Map<String, Color> userColorMap) async {
     QuerySnapshot snapshot = await _firestore.collection('groups').doc(groupId).collection('events').get();
     return snapshot.docs.map((doc) {
       final data = doc.data() as Map<String, dynamic>;
       final ownerId = data['createdBy'] ?? '';
-      final owner = allUsers.firstWhere((u) => u.uid == ownerId, orElse: () => AppUser(uid: '', nick: 'Unknown', email: ''));
+      final owner = allUsers.firstWhere((u) => u.uid == ownerId, orElse: () => User(uid: '', nickname: 'Unknown', email: '', createdAt: DateTime.now()));
 
       return CalendarEvent(
         id: doc.id,
@@ -334,7 +334,7 @@ class GroupService {
         endTime: (data['endTime'] as Timestamp).toDate(),
         type: EventType.group,
         ownerId: ownerId,
-        ownerName: owner.nick,
+        ownerName: owner.nickname,
         color: userColorMap[ownerId] ?? Colors.grey,
       );
     }).toList();

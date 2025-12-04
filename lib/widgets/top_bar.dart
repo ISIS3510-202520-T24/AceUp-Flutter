@@ -37,7 +37,7 @@ class TopBar extends StatelessWidget implements PreferredSizeWidget {
       leadingWidth: 80.0,
       title: Text(
         title,
-        style: AppTypography.h3.copyWith(color: colors.onPrimary),
+        style: AppTypography.h3.copyWith(color: colors.onSecondaryContainer),
       ),
       centerTitle: true,
       leading: _buildLeftControl(context, colors),

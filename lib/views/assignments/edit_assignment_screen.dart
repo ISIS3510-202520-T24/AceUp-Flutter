@@ -1,31 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 
 import '../../models/assignments/assignment_model.dart';
+import '../../themes/app_colors.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/assignments/edit_assignment_viewmodel.dart';
+import '../../data/repositories/academic_repository.dart';
+import '../../widgets/date_time_pickers.dart';
 import '../../widgets/form_field.dart';
 import '../../widgets/dropdown_field.dart';
 import '../../widgets/top_bar.dart';
 
 class EditAssignmentScreen extends StatelessWidget {
   final Assignment? assignment;
+  final String? subjectId;
+  final String? termId;
 
-  const EditAssignmentScreen({super.key, this.assignment});
+  const EditAssignmentScreen({
+    super.key,
+    this.assignment,
+    this.subjectId,
+    this.termId,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => EditAssignmentViewModel(assignment),
-      child: const _EditAssignmentContent(),
+      create: (_) => EditAssignmentViewModel(
+        repository: context.read<AcademicRepository>(),
+        assignmentId: assignment?.id,
+        subjectId: subjectId,
+        termId: termId,
+      ),
+      child: const _EditAssignmentScreenContent(),
     );
   }
 }
 
-class _EditAssignmentContent extends StatelessWidget {
-  const _EditAssignmentContent();
+class _EditAssignmentScreenContent extends StatelessWidget {
+  const _EditAssignmentScreenContent();
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +47,8 @@ class _EditAssignmentContent extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colors.surface,
-      appBar: TopBar (
-        title: 'Assignment',
+      appBar: TopBar(
+        title: viewModel.isEditMode ? 'Edit Assignment' : 'New Assignment',
         leftControlType: LeftControlType.cancel,
         rightControlType: RightControlType.save,
         onRightPressed: () => _saveAssignment(context, viewModel),
@@ -46,12 +59,25 @@ class _EditAssignmentContent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Subject Dropdown
-            AppDropdownField<String>(
-              value: viewModel.selectedSubject,
-              items: viewModel.subjects.map((s) => s.name).toList(),
-              getLabel: (subject) => subject,
-              onChanged: (value) => viewModel.setSubject(value),
-            ),
+            if (viewModel.subjects.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Loading subjects...',
+                  style: AppTypography.bodyM.copyWith(color: colors.onSurface),
+                ),
+              )
+            else
+              AppDropdownField<String>(
+                value: viewModel.selectedSubject,
+                items: viewModel.subjects.map((s) => s.name).toList(),
+                getLabel: (subject) => subject,
+                onChanged: (value) => viewModel.setSubject(value),
+              ),
             const SizedBox(height: 16),
 
             // Title Field with completion checkbox
@@ -64,18 +90,23 @@ class _EditAssignmentContent extends StatelessWidget {
                     type: FormFieldType.text,
                   ),
                 ),
-                if (viewModel.isEditMode) ...[
-                  const SizedBox(width: 8),
-                  Checkbox(
-                    value: viewModel.isCompleted,
-                    onChanged: (value) {
-                      viewModel.toggleAssignmentStatus();
-                    },
-                    activeColor: colors.primary,
-                    checkColor: colors.onPrimary,
-                    side: BorderSide(color: colors.primary, width: 2),
-                  ),
-                ],
+                const SizedBox(width: 8),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Checkbox(
+                      value: viewModel.isCompleted,
+                      onChanged: (value) => viewModel.toggleCompleted(),
+                      activeColor: colors.primary,
+                      checkColor: colors.onPrimary,
+                      side: BorderSide(color: colors.primary, width: 2),
+                    ),
+                    Text(
+                      'Done',
+                      style: AppTypography.actionS.copyWith(color: colors.outline)
+                    ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -89,7 +120,6 @@ class _EditAssignmentContent extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Due Date and Time Row
             Row(
               children: [
                 Icon(
@@ -97,19 +127,20 @@ class _EditAssignmentContent extends StatelessWidget {
                   size: 18,
                   color: colors.outline,
                 ),
+                SizedBox(width: 12),
                 Expanded(
-                  child: _DatePickerField(
+                  child: DatePickerField(
                     label: 'Due date',
-                    date: viewModel.selectedDueDate,
-                    onTap: () => _selectDueDate(context, viewModel),
+                    selectedDate: viewModel.selectedDueDate,
+                    onDateSelected: (date) => viewModel.setDueDate(date),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _TimePickerField(
+                  child: TimePickerField(
                     label: 'Time',
-                    time: viewModel.selectedDueTime,
-                    onTap: () => _selectDueTime(context, viewModel),
+                    selectedTime: viewModel.selectedDueTime,
+                    onTimeSelected: (time) => viewModel.setDueTime(time),
                   ),
                 ),
               ],
@@ -125,19 +156,20 @@ class _EditAssignmentContent extends StatelessWidget {
                     size: 18,
                     color: colors.outline,
                   ),
+                  SizedBox(width: 12),
                   Expanded(
-                    child: _DatePickerField(
+                    child: DatePickerField(
                       label: 'Reminder',
-                      date: viewModel.selectedReminderDate,
-                      onTap: () => _selectReminderDate(context, viewModel),
-                    ),
+                      selectedDate: viewModel.selectedDueDate,
+                      onDateSelected: (date) => viewModel.setDueDate(date),
+                    )
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _TimePickerField(
+                    child: TimePickerField(
                       label: 'Time',
-                      time: viewModel.selectedReminderTime,
-                      onTap: () => _selectReminderTime(context, viewModel),
+                      selectedTime: viewModel.selectedReminderTime,
+                      onTimeSelected: (time) => viewModel.setDueTime(time),
                     ),
                   ),
                 ],
@@ -153,19 +185,33 @@ class _EditAssignmentContent extends StatelessWidget {
                   size: 18,
                   color: colors.outline,
                 ),
+                SizedBox(width: 12),
                 Expanded(
-                  child: AppDropdownField<int>(
-                    value: viewModel.selectedWeight,
-                    items: viewModel.weights,
-                    getLabel: (weight) => '$weight%',
-                    onChanged: (value) {
-                      if (value != null) viewModel.setWeight(value);
-                    },
-                  ),
+                  child: viewModel.weightOptions.isEmpty
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: colors.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: colors.outline),
+                          ),
+                          child: Text(
+                            'No weights',
+                            style: AppTypography.bodyM.copyWith(color: colors.onSurfaceVariant),
+                          ),
+                        )
+                      : AppDropdownField<String>(
+                          label: 'Weight',
+                          value: viewModel.selectedWeightDisplayName,
+                          items: viewModel.weightOptions.map((w) => w.displayName).toList(),
+                          getLabel: (weight) => weight,
+                          onChanged: (value) => viewModel.setWeightByDisplayName(value),
+                        ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: AppDropdownField<String>(
+                    label: 'Priority',
                     value: viewModel.selectedPriority,
                     items: viewModel.priorities,
                     getLabel: (priority) => priority,
@@ -176,37 +222,45 @@ class _EditAssignmentContent extends StatelessWidget {
                 ),
               ],
             ),
-
-            // Grade Field (active when completed)
             const SizedBox(height: 16),
+
             Row(
               children: [
                 Icon(
                   AppIcons.grade,
                   size: 18,
-                  color: colors.outline,
+                  color: viewModel.isCompleted ? colors.outline : colors.shadow,
                 ),
+                SizedBox(width: 12),
                 Expanded(
                   child: AppFormField(
                     controller: viewModel.gradeController,
-                    label: 'Grade',
-                    hint: 'Enter grade',
+                    hint: 'Grade',
                     type: FormFieldType.number,
                     enabled: viewModel.isCompleted,
                   ),
                 ),
                 const SizedBox(width: 8),
-                Checkbox(
-                  value: viewModel.isGraded,
-                  onChanged: viewModel.isCompleted ? (value) {
-                    viewModel.toggleGraded();
-                  } : null,
-                  activeColor: colors.primary,
-                  checkColor: colors.onPrimary,
-                  side: BorderSide(
-                    color: viewModel.isCompleted ? colors.primary : colors.shadow,
-                    width: 2,
-                  ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Checkbox(
+                      value: viewModel.isGraded,
+                      onChanged: viewModel.isCompleted ? (value) {
+                        viewModel.toggleGraded();
+                      } : null,
+                      activeColor: colors.primary,
+                      checkColor: colors.onPrimary,
+                      side: BorderSide(
+                        color: viewModel.isCompleted ? colors.primary : colors.shadow,
+                        width: 2,
+                      ),
+                    ),
+                    Text(
+                      'Graded',
+                      style: AppTypography.actionS.copyWith(color: colors.outline)
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -222,7 +276,7 @@ class _EditAssignmentContent extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.error_outline, color: colors.error),
+                    Icon(AppIcons.error, color: colors.error),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -241,17 +295,17 @@ class _EditAssignmentContent extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colors.secondary.withValues(alpha: 0.1),
+                  color: AppColors.warningMedium.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.info_outline, color: colors.secondary),
+                    Icon(AppIcons.priority, color: AppColors.warningMedium),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Please fill in the title and select a subject to save',
-                        style: AppTypography.bodyS.copyWith(color: colors.secondary),
+                        viewModel.validationMessage,
+                        style: AppTypography.bodyS.copyWith(color: AppColors.warningMedium),
                       ),
                     ),
                   ],
@@ -264,148 +318,27 @@ class _EditAssignmentContent extends StatelessWidget {
     );
   }
 
-  Future<void> _selectDueDate(BuildContext context, EditAssignmentViewModel viewModel) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: viewModel.selectedDueDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-    );
-    if (picked != null) {
-      viewModel.setDueDate(picked);
+  Future<void> _saveAssignment(
+      BuildContext context, EditAssignmentViewModel viewModel) async {
+    if (!viewModel.canSave) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all required fields')),
+      );
+      return;
     }
-  }
 
-  Future<void> _selectDueTime(BuildContext context, EditAssignmentViewModel viewModel) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: viewModel.selectedDueTime,
-    );
-    if (picked != null) {
-      viewModel.setDueTime(picked);
-    }
-  }
-
-  Future<void> _selectReminderDate(BuildContext context, EditAssignmentViewModel viewModel) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: viewModel.selectedReminderDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-    );
-    if (picked != null) {
-      viewModel.setReminderDate(picked);
-    }
-  }
-
-  Future<void> _selectReminderTime(BuildContext context, EditAssignmentViewModel viewModel) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: viewModel.selectedReminderTime ?? TimeOfDay.now(),
-    );
-    if (picked != null) {
-      viewModel.setReminderTime(picked);
-    }
-  }
-
-  Future<void> _saveAssignment(BuildContext context, EditAssignmentViewModel viewModel) async {
     final success = await viewModel.saveAssignment();
-    if (success && context.mounted) {
+
+    if (!context.mounted) return;
+
+    if (success) {
       Navigator.of(context).pop(true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(viewModel.errorMessage ?? 'Failed to save assignment'),
+        ),
+      );
     }
-  }
-}
-
-// Custom Date Picker Field Widget
-class _DatePickerField extends StatelessWidget {
-  final String label;
-  final DateTime? date;
-  final VoidCallback onTap;
-
-  const _DatePickerField({
-    required this.label,
-    required this.date,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final dateText = date != null ? DateFormat('MMM d, yyyy').format(date!) : label;
-
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colors.outline),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              dateText,
-              style: AppTypography.bodyM.copyWith(
-                color: date != null ? colors.onSurface : colors.secondary,
-              ),
-            ),
-            Icon(
-              AppIcons.calendarDay,
-              size: 18,
-              color: colors.outline,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Custom Time Picker Field Widget
-class _TimePickerField extends StatelessWidget {
-  final String label;
-  final TimeOfDay? time;
-  final VoidCallback onTap;
-
-  const _TimePickerField({
-    required this.label,
-    required this.time,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final timeText = time != null ? time!.format(context) : label;
-
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colors.outline),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              timeText,
-              style: AppTypography.bodyM.copyWith(
-                color: time != null ? colors.onSurface : colors.secondary,
-              ),
-            ),
-            Icon(
-              AppIcons.clock,
-              size: 18,
-              color: colors.outline,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

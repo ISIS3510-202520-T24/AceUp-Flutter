@@ -27,7 +27,15 @@ class HolidayService {
         final List<dynamic> jsonData = json.decode(response.body);
 
         return jsonData
-            .map((json) => Holiday.fromJson(json as Map<String, dynamic>))
+            .asMap()
+            .entries
+            .map((entry) {
+              final index = entry.key;
+              final json = entry.value as Map<String, dynamic>;
+              // Generate unique ID using country code, year, and index
+              final id = 'api_${countryCode}_${year}_$index';
+              return Holiday.fromApiResponse(json, id);
+            })
             .toList();
       } else if (response.statusCode == 404) {
         throw Exception('Country not found or no holidays available for this year. Please check the country code.');
@@ -52,7 +60,7 @@ class HolidayService {
         getHolidaysForCountry(countryCode, nextYear),
       ]);
       final allHolidays = [...results[0], ...results[1]];
-      allHolidays.sort((a, b) => a.date.compareTo(b.date));
+      allHolidays.sort((a, b) => a.startDate.compareTo(b.startDate));
 
       return allHolidays;
     } catch (e) {
@@ -65,9 +73,9 @@ class HolidayService {
       final holidays = await getHolidaysForCountry(countryCode, date.year);
 
       return holidays.any((holiday) =>
-      holiday.date.year == date.year &&
-          holiday.date.month == date.month &&
-          holiday.date.day == date.day
+      holiday.startDate.year == date.year &&
+          holiday.startDate.month == date.month &&
+          holiday.startDate.day == date.day
       );
     } catch (e) {
       throw Exception('Error checking if date is holiday: $e');
@@ -84,7 +92,7 @@ class HolidayService {
       final holidays = await getHolidaysForCountry(countryCode, currentYear);
 
       // Filter upcoming holidays
-      final upcoming = holidays.where((h) => h.date.isAfter(now)).toList();
+      final upcoming = holidays.where((h) => h.startDate.isAfter(now)).toList();
 
       // If less than 5, get some from next year
       if (upcoming.length < 5) {
