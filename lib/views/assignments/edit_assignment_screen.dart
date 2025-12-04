@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 
 import '../../models/assignments/assignment_model.dart';
+import '../../themes/app_colors.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/assignments/edit_assignment_viewmodel.dart';
 import '../../data/repositories/academic_repository.dart';
+import '../../widgets/date_time_pickers.dart';
 import '../../widgets/form_field.dart';
 import '../../widgets/dropdown_field.dart';
 import '../../widgets/top_bar.dart';
@@ -46,7 +47,6 @@ class _EditAssignmentScreenContent extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: colors.surface,
       appBar: TopBar(
         title: viewModel.isEditMode ? 'Edit Assignment' : 'New Assignment',
         leftControlType: LeftControlType.cancel,
@@ -92,6 +92,7 @@ class _EditAssignmentScreenContent extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Checkbox(
                       value: viewModel.isCompleted,
@@ -128,18 +129,18 @@ class _EditAssignmentScreenContent extends StatelessWidget {
                 ),
                 SizedBox(width: 12),
                 Expanded(
-                  child: _DatePickerField(
+                  child: DatePickerField(
                     label: 'Due date',
-                    date: viewModel.selectedDueDate,
-                    onTap: () => _selectDueDate(context, viewModel),
+                    selectedDate: viewModel.selectedDueDate,
+                    onDateSelected: (date) => viewModel.setDueDate(date),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _TimePickerField(
+                  child: TimePickerField(
                     label: 'Time',
-                    time: viewModel.selectedDueTime,
-                    onTap: () => _selectDueTime(context, viewModel),
+                    selectedTime: viewModel.selectedDueTime,
+                    onTimeSelected: (time) => viewModel.setDueTime(time),
                   ),
                 ),
               ],
@@ -157,18 +158,18 @@ class _EditAssignmentScreenContent extends StatelessWidget {
                   ),
                   SizedBox(width: 12),
                   Expanded(
-                    child: _DatePickerField(
+                    child: DatePickerField(
                       label: 'Reminder',
-                      date: viewModel.selectedReminderDate,
-                      onTap: () => _selectReminderDate(context, viewModel),
-                    ),
+                      selectedDate: viewModel.selectedDueDate,
+                      onDateSelected: (date) => viewModel.setDueDate(date),
+                    )
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _TimePickerField(
+                    child: TimePickerField(
                       label: 'Time',
-                      time: viewModel.selectedReminderTime,
-                      onTap: () => _selectReminderTime(context, viewModel),
+                      selectedTime: viewModel.selectedReminderTime,
+                      onTimeSelected: (time) => viewModel.setDueTime(time),
                     ),
                   ),
                 ],
@@ -241,6 +242,7 @@ class _EditAssignmentScreenContent extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Checkbox(
                       value: viewModel.isGraded,
@@ -293,17 +295,17 @@ class _EditAssignmentScreenContent extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: colors.secondary.withValues(alpha: 0.1),
+                  color: AppColors.warningMedium.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(AppIcons.priority, color: colors.secondary),
+                    Icon(AppIcons.priority, color: AppColors.warningMedium),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         viewModel.validationMessage,
-                        style: AppTypography.bodyS.copyWith(color: colors.secondary),
+                        style: AppTypography.bodyS.copyWith(color: AppColors.warningMedium),
                       ),
                     ),
                   ],
@@ -314,52 +316,6 @@ class _EditAssignmentScreenContent extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  Future<void> _selectDueDate(
-      BuildContext context, EditAssignmentViewModel viewModel) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: viewModel.selectedDueDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-    );
-    if (picked != null) {
-      viewModel.setDueDate(picked);
-    }
-  }
-
-  Future<void> _selectDueTime(
-      BuildContext context, EditAssignmentViewModel viewModel) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: viewModel.selectedDueTime,
-    );
-    if (picked != null) {
-      viewModel.setDueTime(picked);
-    }
-  }
-
-  Future<void> _selectReminderDate(BuildContext context, EditAssignmentViewModel viewModel) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: viewModel.selectedReminderDate ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-    );
-    if (picked != null) {
-      viewModel.setReminderDate(picked);
-    }
-  }
-
-  Future<void> _selectReminderTime(BuildContext context, EditAssignmentViewModel viewModel) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: viewModel.selectedReminderTime ?? TimeOfDay.now(),
-    );
-    if (picked != null) {
-      viewModel.setReminderTime(picked);
-    }
   }
 
   Future<void> _saveAssignment(
@@ -384,99 +340,5 @@ class _EditAssignmentScreenContent extends StatelessWidget {
         ),
       );
     }
-  }
-}
-
-// Custom Date Picker Field Widget
-class _DatePickerField extends StatelessWidget {
-  final String label;
-  final DateTime? date;
-  final VoidCallback onTap;
-
-  const _DatePickerField({
-    required this.label,
-    required this.date,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final dateText = date != null ? DateFormat('MMM d, yyyy').format(date!) : label;
-
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colors.outline),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              dateText,
-              style: AppTypography.bodyM.copyWith(
-                color: date != null ? colors.onSurface : colors.secondary,
-              ),
-            ),
-            Icon(
-              AppIcons.calendarDay,
-              size: 18,
-              color: colors.outline,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Custom Time Picker Field Widget
-class _TimePickerField extends StatelessWidget {
-  final String label;
-  final TimeOfDay? time;
-  final VoidCallback onTap;
-
-  const _TimePickerField({
-    required this.label,
-    required this.time,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final timeText = time != null ? time!.format(context) : label;
-
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colors.outline),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              timeText,
-              style: AppTypography.bodyM.copyWith(
-                color: time != null ? colors.onSurface : colors.secondary,
-              ),
-            ),
-            Icon(
-              AppIcons.clock,
-              size: 18,
-              color: colors.outline,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

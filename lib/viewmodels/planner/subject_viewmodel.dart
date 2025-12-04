@@ -272,6 +272,56 @@ class SubjectViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> deleteClassTemplate(ClassTemplate classTemplate) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'Cannot delete class: user not logged in';
+      _state = ViewState.error;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await _repository.deleteClassTemplate(
+        classTemplate.id,
+        userId,
+        termId,
+        subjectId,
+      );
+
+      await _loadClassTemplates();
+    } catch (e) {
+      _errorMessage = 'Failed to delete class: $e';
+      _state = ViewState.error;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteExam(Exam exam) async {
+    final userId = _authService.currentUser?.uid;
+    if (userId == null) {
+      _errorMessage = 'Cannot delete exam: user not logged in';
+      _state = ViewState.error;
+      notifyListeners();
+      return;
+    }
+
+    try {
+      await _repository.deleteExam(
+        exam.id,
+        userId,
+        termId,
+        subjectId,
+      );
+
+      await _loadExams();
+    } catch (e) {
+      _errorMessage = 'Failed to delete exam: $e';
+      _state = ViewState.error;
+      notifyListeners();
+    }
+  }
+
   void toggleUseGrades() {
     _useGrades = !_useGrades;
     _saveGradesData();

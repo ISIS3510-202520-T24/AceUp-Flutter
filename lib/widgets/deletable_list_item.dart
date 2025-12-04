@@ -38,6 +38,7 @@ class DeletableListItem extends StatelessWidget {
 
     showMenu(
       context: context,
+      color: colors.surfaceDim,
       position: RelativeRect.fromRect(
         Rect.fromLTWH(position.dx, position.dy, 0, 0),
         Rect.fromLTWH(0, 0, overlay.size.width, overlay.size.height),
@@ -49,14 +50,14 @@ class DeletableListItem extends StatelessWidget {
             children: [
               Icon(
                 AppIcons.delete,
-                color: colors.onError,
+                color: colors.error,
                 size: 20,
               ),
               const SizedBox(width: 12),
               Text(
                 'Delete $itemType',
                 style: AppTypography.bodyM.copyWith(
-                  color: colors.onError,
+                  color: colors.error,
                 ),
               ),
             ],

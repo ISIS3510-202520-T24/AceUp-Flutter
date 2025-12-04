@@ -7,13 +7,11 @@ import '../../models/planner/exam_model.dart';
 import '../../services/auth/auth_service.dart';
 import '../../core/constants/enums.dart';
 
-// ignore_for_file: creation_with_non_type
-
 class EditExamViewModel extends ChangeNotifier {
   final AuthService _authService;
   final AcademicRepository _academicRepo;
   final TeacherRepository _teacherRepo;
-  final _uuid = const Uuid();
+  final _uuid = const Uuid(); // ignore: creation_with_non_type
   final String? termId;
   final String? subjectId;
   final String? examId;

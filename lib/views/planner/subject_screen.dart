@@ -286,54 +286,61 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
     Color subjectColor,
     ColorScheme colors,
   ) {
+    final viewModel = context.read<SubjectViewModel>();
     final dayAbbreviations = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Colored circle
-          Container(
-            width: 12,
-            height: 12,
-            margin: const EdgeInsets.only(top: 4),
-            decoration: BoxDecoration(
-              color: subjectColor,
-              shape: BoxShape.circle,
+    return DeletableListItem(
+      itemType: 'Class',
+      itemName: classTemplate.name,
+      onDelete: () => viewModel.deleteClassTemplate(classTemplate),
+      onTap: () => _handleEditClassAction(context, viewModel, classTemplate),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Colored circle
+            Container(
+              width: 12,
+              height: 12,
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                color: subjectColor,
+                shape: BoxShape.circle,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
+            const SizedBox(width: 12),
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Time range
-                Text(
-                  '${classTemplate.startTime} - ${classTemplate.endTime}',
-                  style: AppTypography.bodyM.copyWith(
-                    color: colors.onSurface,
-                    fontWeight: FontWeight.w600,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Time range
+                  Text(
+                    '${classTemplate.startTime} - ${classTemplate.endTime}',
+                    style: AppTypography.bodyM.copyWith(
+                      color: colors.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
+                  const SizedBox(height: 4),
 
-                // Days
-                Text(
-                  classTemplate.recurrence.selectedDays.map((day) {
-                    // day is 0-6 where 0=Sunday, adjust to get correct abbreviation
-                    final index = day == 0 ? 6 : day - 1; // Convert Sunday from 0 to 6
-                    return dayAbbreviations[index];
-                  }).join('  '),
-                  style: AppTypography.bodyS.copyWith(
-                    color: colors.onSurfaceVariant,
+                  // Days
+                  Text(
+                    classTemplate.recurrence.selectedDays.map((day) {
+                      // day is 0-6 where 0=Sunday, adjust to get correct abbreviation
+                      final index = day == 0 ? 6 : day - 1; // Convert Sunday from 0 to 6
+                      return dayAbbreviations[index];
+                    }).join('  '),
+                    style: AppTypography.bodyS.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -344,50 +351,57 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
     Color subjectColor,
     ColorScheme colors,
   ) {
+    final viewModel = context.read<SubjectViewModel>();
     final dateFormat = DateFormat('MMM d, yyyy');
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Colored circle
-          Container(
-            width: 12,
-            height: 12,
-            margin: const EdgeInsets.only(top: 4),
-            decoration: BoxDecoration(
-              color: subjectColor,
-              shape: BoxShape.circle,
+    return DeletableListItem(
+      itemType: 'Exam',
+      itemName: exam.name,
+      onDelete: () => viewModel.deleteExam(exam),
+      onTap: () => _handleEditExamAction(context, viewModel, exam),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 16.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Colored circle
+            Container(
+              width: 12,
+              height: 12,
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                color: subjectColor,
+                shape: BoxShape.circle,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
+            const SizedBox(width: 12),
 
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Time range
-                Text(
-                  '${exam.startTime} - ${exam.endTime}',
-                  style: AppTypography.bodyM.copyWith(
-                    color: colors.onSurface,
-                    fontWeight: FontWeight.w600,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Time range
+                  Text(
+                    '${exam.startTime} - ${exam.endTime}',
+                    style: AppTypography.bodyM.copyWith(
+                      color: colors.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
+                  const SizedBox(height: 4),
 
-                // Date
-                Text(
-                  dateFormat.format(exam.date),
-                  style: AppTypography.bodyS.copyWith(
-                    color: colors.onSurfaceVariant,
+                  // Date
+                  Text(
+                    dateFormat.format(exam.date),
+                    style: AppTypography.bodyS.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -439,7 +453,6 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
           onTap: () => _handleEditAssignmentAction(context, viewModel, assignment),
           child: AssignmentCard(
             assignment: assignment,
-            showTimeInsteadOfDate: true,
             onToggleStatus: () => viewModel.toggleAssignmentStatus(assignment),
           )
         );
@@ -709,6 +722,38 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
         duration: Duration(seconds: 2),
       ),
     );
+  }
+
+  Future<void> _handleEditClassAction(BuildContext context, SubjectViewModel viewModel, ClassTemplate classTemplate) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EditClassScreen(
+          classTemplate: classTemplate,
+          subjectId: viewModel.subjectId,
+          termId: viewModel.termId,
+        ),
+      ),
+    );
+
+    if (result == true) {
+      viewModel.refreshSubject();
+    }
+  }
+
+  Future<void> _handleEditExamAction(BuildContext context, SubjectViewModel viewModel, Exam exam) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => EditExamScreen(
+          exam: exam,
+          subjectId: viewModel.subjectId,
+          termId: viewModel.termId,
+        ),
+      ),
+    );
+
+    if (result == true) {
+      viewModel.refreshSubject();
+    }
   }
 
   Future<void> _handleEditAssignmentAction(BuildContext context, SubjectViewModel viewModel, Assignment assignment) async {

@@ -114,14 +114,13 @@ class AssignmentCard extends StatelessWidget {
     }
 
     return Card(
-      child: Card(
-        elevation: 0,
-        margin: const EdgeInsets.only(bottom: 12.0),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
               Checkbox(
                 value: assignment.isCompleted,
                 onChanged: (value) {
@@ -186,7 +185,6 @@ class AssignmentCard extends StatelessWidget {
                 ],
               ),
             ],
-          ),
         ),
       ),
     );

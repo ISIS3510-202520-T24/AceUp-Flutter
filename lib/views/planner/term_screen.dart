@@ -7,6 +7,7 @@ import '../../themes/app_typography.dart';
 import '../../themes/app_icons.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/content_counter.dart';
+import '../../widgets/deletable_list_item.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
@@ -178,7 +179,12 @@ class _TermScreenContent extends StatelessWidget {
               itemCount: viewModel.subjects.length,
               itemBuilder: (context, index) {
                 final subject = viewModel.subjects[index];
-                return _buildSubjectCard(context, subject, viewModel);
+                return DeletableListItem(
+                  itemType: 'Subject',
+                  itemName: subject.name,
+                  onDelete: () => viewModel.deleteSubject(subject.id),
+                  child: _buildSubjectCard(context, subject, viewModel),
+                );
               },
             ),
           ),

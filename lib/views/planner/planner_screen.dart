@@ -7,6 +7,7 @@ import '../../themes/app_typography.dart';
 import '../../themes/app_icons.dart';
 import '../../widgets/burger_menu.dart';
 import '../../widgets/content_counter.dart';
+import '../../widgets/deletable_list_item.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/floating_action_button.dart';
 import '../../widgets/top_bar.dart';
@@ -137,7 +138,12 @@ class _PlannerScreenContent extends StatelessWidget {
               itemCount: viewModel.terms.length,
               itemBuilder: (context, index) {
                 final term = viewModel.terms[index];
-                return _buildTermCard(context, term, viewModel, colors);
+                return DeletableListItem(
+                  itemType: 'Term',
+                  itemName: term.name,
+                  onDelete: () => viewModel.deleteTerm(term.id),
+                  child: _buildTermCard(context, term, viewModel, colors),
+                );
               },
             ),
           ),
@@ -165,7 +171,6 @@ class _PlannerScreenContent extends StatelessWidget {
       },
       child: Card(
         elevation: 0,
-        margin: const EdgeInsets.only(bottom: 12),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
