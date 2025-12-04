@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart'; //ignore: uri_does_not_exist
 
+import '../../core/constants/enums.dart';
 import '../../models/schedule_event.dart';
+import '../../models/planner/term_model.dart';
+import '../../models/planner/subject_model.dart';
+import '../../models/planner/class_template_model.dart';
+import '../../models/helpers/recurrence_model.dart';
+import '../../models/helpers/weight_model.dart';
 import '../../data/repositories/academic_repository.dart';
+import '../../services/auth/auth_service.dart';
 
 class ManualScheduleEditScreen extends StatefulWidget {
   const ManualScheduleEditScreen({
@@ -297,13 +305,19 @@ class _ManualScheduleEditScreenState extends State<ManualScheduleEditScreen> {
   }
 
   Future<void> _onSavePressed() async {
-    final repo = context.read<ScheduleRepository>();
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final repo = context.read<AcademicRepository>();
+    final authService = context.read<AuthService>();
+    final userId = authService.currentUser?.uid;
 
-    final events = <ScheduleEvent>[];
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You must be logged in')),
+      );
+      return;
+    }
 
-    for (var i = 0; i < _drafts.length; i++) {
-      final draft = _drafts[i];
+    // Validate all drafts first
+    for (var draft in _drafts) {
       final title = draft.title.trim();
       if (title.isEmpty) continue;
 
@@ -327,75 +341,126 @@ class _ManualScheduleEditScreenState extends State<ManualScheduleEditScreen> {
         );
         return;
       }
-
-      final loc = draft.location.trim();
-      final prof = draft.professor.trim();
-
-      final String? locField = loc.isEmpty ? null : loc;
-      final String? profField = prof.isEmpty ? null : prof;
-
-      for (final day in draft.weekdays) {
-        events.add(
-          ScheduleEvent(
-            id: '${now}_${i}_$day',
-            title: title,
-            weekday: day,
-            startMinutes: startMinutes,
-            endMinutes: endMinutes,
-            location: locField,
-            professor: profField,
-            source: ScheduleSource.manual,
-            kind: ScheduleKind.classEvent,
-          ),
-        );
-      }
     }
 
-    if (events.isEmpty) {
+    // Get or create active term
+    final terms = await repo.getTermsForUser(userId);
+    Term? activeTerm = terms.where((t) => t.isActive).firstOrNull;
+
+    if (activeTerm == null) {
+      // Create a default term
+      final now = DateTime.now();
+      activeTerm = Term(
+        id: const Uuid().v4(), //ignore: creation_with_non_type
+        name: 'AI Imported Schedule',
+        startDate: DateTime(now.year, now.month, 1),
+        endDate: DateTime(now.year, now.month + 6, 30),
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      );
+      await repo.saveTerm(activeTerm, userId);
+    }
+
+    // Group drafts by title (each unique title becomes a subject)
+    final Map<String, List<_ScheduleDraft>> subjectGroups = {};
+    for (var draft in _drafts) {
+      final title = draft.title.trim();
+      if (title.isEmpty) continue;
+      subjectGroups.putIfAbsent(title, () => []).add(draft);
+    }
+
+    if (subjectGroups.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Add at least one class')),
       );
       return;
     }
 
-    // 🔍 Buscar clases que se solapan con las nuevas
-    final conflicts = repo.findConflicts(events);
+    // Create subjects and class templates
+    final colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
+    int colorIndex = 0;
 
-    if (conflicts.isNotEmpty) {
-      final replace = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Overlapping classes'),
-              content: Text(
-                'You already have ${conflicts.length} class(es) at that time.\n\n'
-                'Do you want to replace them with this new schedule?',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: const Text('Replace'),
-                ),
-              ],
-            ),
-          ) ??
-          false;
+    for (var entry in subjectGroups.entries) {
+      final subjectName = entry.key;
+      final drafts = entry.value;
 
-      if (!replace) {
-        // Usuario canceló, no guardamos nada
-        return;
+      // Create subject
+      final subject = Subject(
+        id: const Uuid().v4(), //ignore: creation_with_non_type
+        name: subjectName,
+        color: colors[colorIndex % colors.length],
+        credits: 3, // Default
+        weights: [
+          Weight(
+            id: const Uuid().v4(), //ignore: creation_with_non_type
+            name: 'Assignments',
+            percentage: 100,
+            subweights: [],
+          ),
+        ],
+        useFinalGradeOverride: false,
+        finalGrade: null,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await repo.saveSubject(subject, userId, activeTerm.id);
+      colorIndex++;
+
+      // Create class templates for each draft
+      for (var draft in drafts) {
+        final startMinutes = _parseTimeToMinutes(draft.startText)!;
+        final endMinutes = _parseTimeToMinutes(draft.endText)!;
+
+        // Parse location into building and room
+        String? building;
+        String? room;
+        final loc = draft.location.trim();
+        if (loc.isNotEmpty) {
+          final parts = loc.split('-');
+          if (parts.length >= 2) {
+            building = parts[0].trim();
+            room = parts.skip(1).join('-').trim();
+          } else {
+            building = loc;
+          }
+        }
+
+        // Create class template with weekly recurrence
+        final classTemplate = ClassTemplate(
+          id: const Uuid().v4(), //ignore: creation_with_non_type
+          name: draft.title,
+          icon: 'chalkboard', // Default icon
+          startDate: activeTerm.startDate,
+          endDate: activeTerm.endDate,
+          startTime: draft.startText,
+          endTime: draft.endText,
+          recurrence: Recurrence(
+            interval: 1,
+            unit: RecurrenceUnit.weeks,
+            selectedDays: draft.weekdays.toList()..sort(),
+          ),
+          building: building,
+          room: room,
+          teacherId: null, // Can be linked later
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          subjectId: subject.id,
+        );
+
+        await repo.saveClassTemplate(classTemplate, userId, activeTerm.id, subject.id);
       }
-
-      // Reemplazamos las clases que chocan
-      repo.replaceConflictingEvents(events);
-    } else {
-      // No hay conflictos, simplemente añadimos
-      repo.addEvents(events);
     }
 
-    Navigator.of(context).pop();
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Successfully imported ${subjectGroups.length} subject(s)!'),
+      ),
+    );
+
+    Navigator.of(context).pop(true);
   }
 }

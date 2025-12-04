@@ -14,6 +14,7 @@ import '../../widgets/weekly_calendar_view.dart';
 import '../holidays/edit_holiday_screen.dart';
 import '../planner/edit_class_screen.dart';
 import '../planner/edit_exam_screen.dart';
+import 'ai_import_schedule_screen.dart';
 
 class WeekViewScreen extends StatelessWidget {
   const WeekViewScreen({super.key});
@@ -43,6 +44,11 @@ class _WeekViewScreenContent extends StatelessWidget {
       body: _buildBody(context, viewModel),
       floatingActionButton: FAB(
         options: [
+          FabOption(
+            icon: AppIcons.scan,
+            label: 'AI Import',
+            onPressed: () => _handleAIImportAction(context, viewModel),
+          ),
           FabOption(
             icon: AppIcons.chalkboard,
             label: 'New Class',
@@ -381,6 +387,18 @@ class _WeekViewScreenContent extends StatelessWidget {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => EditClassScreen(),
+      ),
+    );
+
+    if (result == true && context.mounted) {
+      context.read<WeekViewViewModel>().refreshWeekView();
+    }
+  }
+
+  Future<void> _handleAIImportAction(BuildContext context, WeekViewViewModel viewModel) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const AiImportScheduleScreen(),
       ),
     );
 
