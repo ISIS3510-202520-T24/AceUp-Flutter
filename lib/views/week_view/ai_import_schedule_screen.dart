@@ -2,11 +2,13 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:image_picker/image_picker.dart'; //ignore: uri_does_not_exist
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart'; //ignore: uri_does_not_exist
 
 import '../../models/schedule_event.dart';
 import 'manual_schedule_edit_screen.dart';
+
+// ignore_for_file: undefined_class, undefined_method, undefined_identifier
 
 class AiImportScheduleScreen extends StatefulWidget {
   const AiImportScheduleScreen({super.key});

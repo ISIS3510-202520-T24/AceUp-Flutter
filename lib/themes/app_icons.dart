@@ -22,6 +22,7 @@ class AppIcons {
   static IconData add = FontAwesomeIcons.plus;
   static IconData delete = FontAwesomeIcons.trashCan;
   static IconData error = FontAwesomeIcons.solidCircleXmark;
+  static IconData scan = FontAwesomeIcons.expand;
 
 
   /// Menu items
