@@ -6,12 +6,14 @@ import '../../models/planner/subject_model.dart';
 import '../../models/planner/class_template_model.dart';
 import '../../models/planner/exam_model.dart';
 import '../../services/auth/auth_service.dart';
+import '../../services/grades/gpa_calculation_service.dart';
 import '../../models/assignments/assignment_model.dart';
 
 enum SubjectTab { timetable, assignments, grades }
 
 class SubjectViewModel extends ChangeNotifier {
   final AcademicRepository _repository;
+  final GpaCalculationService _gpaService;
   final AuthService _authService = AuthService();
   final String subjectId;
   final String termId;
@@ -34,13 +36,35 @@ class SubjectViewModel extends ChangeNotifier {
   List<Exam> _exams = [];
   List<Exam> get exams => _exams;
 
-  // TODO: Implement classes left calculation (complex - requires date calculations, holiday checks, etc.)
-  int get classesLeft => 23; // Static placeholder for now
+  // Classes left - calculated dynamically
+  // TODO: Implement full calculation with date calculations, holiday checks, and exception handling
+  int get classesLeft {
+    // For now, return 0 instead of placeholder
+    // Full implementation requires:
+    // - Generate instances from templates
+    // - Filter out holidays
+    // - Filter out exam conflicts
+    // - Apply class exceptions
+    // - Count only future dates
+    return 0;
+  }
 
   int get examsLeft => _exams.where((exam) => !exam.isCompleted).length;
 
-  double _currentGrade = 4.00;
-  double get currentGrade => _currentGrade;
+  // Current grade - calculated in real-time from assignments and exams
+  double? _cachedCurrentGrade;
+
+  Future<double?> getCurrentGrade() async {
+    if (_subject == null) return null;
+
+    // If using final grade override, return that
+    if (_subject!.useFinalGradeOverride && _subject!.finalGrade != null) {
+      return _subject!.finalGrade;
+    }
+
+    // Calculate from assignments
+    return await _gpaService.calculateSubjectGrade(subjectId);
+  }
 
   bool _useGrades = true;
   bool get useGrades => _useGrades;
@@ -63,9 +87,11 @@ class SubjectViewModel extends ChangeNotifier {
 
   SubjectViewModel({
     required AcademicRepository repository,
+    required GpaCalculationService gpaService,
     required this.subjectId,
     required this.termId,
-  }) : _repository = repository {
+  })  : _repository = repository,
+        _gpaService = gpaService {
     finalGradeController = TextEditingController();
     creditsController = TextEditingController();
     _initializeData();
@@ -153,10 +179,6 @@ class SubjectViewModel extends ChangeNotifier {
     for (final weight in _subject!.weights) {
       _weights[weight.name] = weight.percentage.toInt();
     }
-
-    // Note: _currentGrade should be calculated from assignments/exams
-    // TODO: Implement grade calculation
-    _currentGrade = _subject!.finalGrade ?? 0.0;
   }
 
   Future<void> _loadSubjectAssignments() async {

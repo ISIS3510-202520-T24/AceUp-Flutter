@@ -7,6 +7,7 @@ import '../../data/repositories/academic_repository.dart';
 import '../../models/assignments/assignment_model.dart';
 import '../../models/planner/class_template_model.dart';
 import '../../models/planner/exam_model.dart';
+import '../../services/grades/gpa_calculation_service.dart';
 import '../../themes/app_icons.dart';
 import '../../themes/app_typography.dart';
 import '../../viewmodels/planner/subject_viewmodel.dart';
@@ -38,6 +39,7 @@ class SubjectScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => SubjectViewModel(
         repository: context.read<AcademicRepository>(),
+        gpaService: context.read<GpaCalculationService>(),
         subjectId: subjectId,
         termId: termId,
       ),
@@ -468,15 +470,21 @@ class _SubjectScreenContentState extends State<_SubjectScreenContent>
     return SingleChildScrollView(
       child: Column(
         children: [
-          ContentCounter(
-            firstItem: CounterItem(
-              title: 'Current Grade: ',
-              value: null,
-            ),
-            secondItem: CounterItem(
-              title: null,
-              value: viewModel.currentGrade.toStringAsFixed(2),
-            ),
+          FutureBuilder<double?>(
+            future: viewModel.getCurrentGrade(),
+            builder: (context, snapshot) {
+              final grade = snapshot.data;
+              return ContentCounter(
+                firstItem: CounterItem(
+                  title: 'Current Grade: ',
+                  value: null,
+                ),
+                secondItem: CounterItem(
+                  title: null,
+                  value: grade != null ? grade.toStringAsFixed(2) : 'N/A',
+                ),
+              );
+            },
           ),
 
           // Use Grades Toggle
