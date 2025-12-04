@@ -46,6 +46,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'services/schedule_repository.dart';
 import 'views/schedule/schedule_screen_wrapper.dart';
+import 'views/calendar/calendar_screen.dart';
 
 // Core
 import 'core/observer/vm_scope.dart';
@@ -318,6 +319,7 @@ class AceUpApp extends StatelessWidget {
         child: const SignUpScreen(),
       );
     },
+    '/calendar': (context) => const CalendarScreen(),
   },
 );
   }

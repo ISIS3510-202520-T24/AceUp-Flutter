@@ -9057,6 +9057,776 @@ class SyncQueueCompanion extends UpdateCompanion<SyncQueueEntity> {
   }
 }
 
+class $CalendarEventsTableTable extends CalendarEventsTable
+    with TableInfo<$CalendarEventsTableTable, CalendarEventEntity> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CalendarEventsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+      'title', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 255),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _startTimeMeta =
+      const VerificationMeta('startTime');
+  @override
+  late final GeneratedColumn<DateTime> startTime = GeneratedColumn<DateTime>(
+      'start_time', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _endTimeMeta =
+      const VerificationMeta('endTime');
+  @override
+  late final GeneratedColumn<DateTime> endTime = GeneratedColumn<DateTime>(
+      'end_time', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _isAllDayMeta =
+      const VerificationMeta('isAllDay');
+  @override
+  late final GeneratedColumn<bool> isAllDay = GeneratedColumn<bool>(
+      'is_all_day', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_all_day" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<int> type = GeneratedColumn<int>(
+      'type', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _ownerIdMeta =
+      const VerificationMeta('ownerId');
+  @override
+  late final GeneratedColumn<String> ownerId = GeneratedColumn<String>(
+      'owner_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _ownerNameMeta =
+      const VerificationMeta('ownerName');
+  @override
+  late final GeneratedColumn<String> ownerName = GeneratedColumn<String>(
+      'owner_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _colorValueMeta =
+      const VerificationMeta('colorValue');
+  @override
+  late final GeneratedColumn<int> colorValue = GeneratedColumn<int>(
+      'color_value', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _locationMeta =
+      const VerificationMeta('location');
+  @override
+  late final GeneratedColumn<String> location = GeneratedColumn<String>(
+      'location', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _reminderTimeMeta =
+      const VerificationMeta('reminderTime');
+  @override
+  late final GeneratedColumn<DateTime> reminderTime = GeneratedColumn<DateTime>(
+      'reminder_time', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _isSyncedMeta =
+      const VerificationMeta('isSynced');
+  @override
+  late final GeneratedColumn<bool> isSynced = GeneratedColumn<bool>(
+      'is_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_synced" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _pendingSyncMeta =
+      const VerificationMeta('pendingSync');
+  @override
+  late final GeneratedColumn<bool> pendingSync = GeneratedColumn<bool>(
+      'pending_sync', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("pending_sync" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        title,
+        description,
+        startTime,
+        endTime,
+        isAllDay,
+        type,
+        ownerId,
+        ownerName,
+        colorValue,
+        location,
+        reminderTime,
+        isSynced,
+        pendingSync,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'calendar_events';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<CalendarEventEntity> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+          _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('start_time')) {
+      context.handle(_startTimeMeta,
+          startTime.isAcceptableOrUnknown(data['start_time']!, _startTimeMeta));
+    } else if (isInserting) {
+      context.missing(_startTimeMeta);
+    }
+    if (data.containsKey('end_time')) {
+      context.handle(_endTimeMeta,
+          endTime.isAcceptableOrUnknown(data['end_time']!, _endTimeMeta));
+    } else if (isInserting) {
+      context.missing(_endTimeMeta);
+    }
+    if (data.containsKey('is_all_day')) {
+      context.handle(_isAllDayMeta,
+          isAllDay.isAcceptableOrUnknown(data['is_all_day']!, _isAllDayMeta));
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('owner_id')) {
+      context.handle(_ownerIdMeta,
+          ownerId.isAcceptableOrUnknown(data['owner_id']!, _ownerIdMeta));
+    } else if (isInserting) {
+      context.missing(_ownerIdMeta);
+    }
+    if (data.containsKey('owner_name')) {
+      context.handle(_ownerNameMeta,
+          ownerName.isAcceptableOrUnknown(data['owner_name']!, _ownerNameMeta));
+    } else if (isInserting) {
+      context.missing(_ownerNameMeta);
+    }
+    if (data.containsKey('color_value')) {
+      context.handle(
+          _colorValueMeta,
+          colorValue.isAcceptableOrUnknown(
+              data['color_value']!, _colorValueMeta));
+    } else if (isInserting) {
+      context.missing(_colorValueMeta);
+    }
+    if (data.containsKey('location')) {
+      context.handle(_locationMeta,
+          location.isAcceptableOrUnknown(data['location']!, _locationMeta));
+    }
+    if (data.containsKey('reminder_time')) {
+      context.handle(
+          _reminderTimeMeta,
+          reminderTime.isAcceptableOrUnknown(
+              data['reminder_time']!, _reminderTimeMeta));
+    }
+    if (data.containsKey('is_synced')) {
+      context.handle(_isSyncedMeta,
+          isSynced.isAcceptableOrUnknown(data['is_synced']!, _isSyncedMeta));
+    }
+    if (data.containsKey('pending_sync')) {
+      context.handle(
+          _pendingSyncMeta,
+          pendingSync.isAcceptableOrUnknown(
+              data['pending_sync']!, _pendingSyncMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CalendarEventEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CalendarEventEntity(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      title: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description']),
+      startTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}start_time'])!,
+      endTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}end_time'])!,
+      isAllDay: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_all_day'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}type'])!,
+      ownerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}owner_id'])!,
+      ownerName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}owner_name'])!,
+      colorValue: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}color_value'])!,
+      location: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}location']),
+      reminderTime: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}reminder_time']),
+      isSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_synced'])!,
+      pendingSync: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}pending_sync'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $CalendarEventsTableTable createAlias(String alias) {
+    return $CalendarEventsTableTable(attachedDatabase, alias);
+  }
+}
+
+class CalendarEventEntity extends DataClass
+    implements Insertable<CalendarEventEntity> {
+  final String id;
+  final String title;
+  final String? description;
+  final DateTime startTime;
+  final DateTime endTime;
+  final bool isAllDay;
+  final int type;
+  final String ownerId;
+  final String ownerName;
+  final int colorValue;
+  final String? location;
+  final DateTime? reminderTime;
+  final bool isSynced;
+  final bool pendingSync;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const CalendarEventEntity(
+      {required this.id,
+      required this.title,
+      this.description,
+      required this.startTime,
+      required this.endTime,
+      required this.isAllDay,
+      required this.type,
+      required this.ownerId,
+      required this.ownerName,
+      required this.colorValue,
+      this.location,
+      this.reminderTime,
+      required this.isSynced,
+      required this.pendingSync,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['start_time'] = Variable<DateTime>(startTime);
+    map['end_time'] = Variable<DateTime>(endTime);
+    map['is_all_day'] = Variable<bool>(isAllDay);
+    map['type'] = Variable<int>(type);
+    map['owner_id'] = Variable<String>(ownerId);
+    map['owner_name'] = Variable<String>(ownerName);
+    map['color_value'] = Variable<int>(colorValue);
+    if (!nullToAbsent || location != null) {
+      map['location'] = Variable<String>(location);
+    }
+    if (!nullToAbsent || reminderTime != null) {
+      map['reminder_time'] = Variable<DateTime>(reminderTime);
+    }
+    map['is_synced'] = Variable<bool>(isSynced);
+    map['pending_sync'] = Variable<bool>(pendingSync);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  CalendarEventsTableCompanion toCompanion(bool nullToAbsent) {
+    return CalendarEventsTableCompanion(
+      id: Value(id),
+      title: Value(title),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      startTime: Value(startTime),
+      endTime: Value(endTime),
+      isAllDay: Value(isAllDay),
+      type: Value(type),
+      ownerId: Value(ownerId),
+      ownerName: Value(ownerName),
+      colorValue: Value(colorValue),
+      location: location == null && nullToAbsent
+          ? const Value.absent()
+          : Value(location),
+      reminderTime: reminderTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reminderTime),
+      isSynced: Value(isSynced),
+      pendingSync: Value(pendingSync),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory CalendarEventEntity.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CalendarEventEntity(
+      id: serializer.fromJson<String>(json['id']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String?>(json['description']),
+      startTime: serializer.fromJson<DateTime>(json['startTime']),
+      endTime: serializer.fromJson<DateTime>(json['endTime']),
+      isAllDay: serializer.fromJson<bool>(json['isAllDay']),
+      type: serializer.fromJson<int>(json['type']),
+      ownerId: serializer.fromJson<String>(json['ownerId']),
+      ownerName: serializer.fromJson<String>(json['ownerName']),
+      colorValue: serializer.fromJson<int>(json['colorValue']),
+      location: serializer.fromJson<String?>(json['location']),
+      reminderTime: serializer.fromJson<DateTime?>(json['reminderTime']),
+      isSynced: serializer.fromJson<bool>(json['isSynced']),
+      pendingSync: serializer.fromJson<bool>(json['pendingSync']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String?>(description),
+      'startTime': serializer.toJson<DateTime>(startTime),
+      'endTime': serializer.toJson<DateTime>(endTime),
+      'isAllDay': serializer.toJson<bool>(isAllDay),
+      'type': serializer.toJson<int>(type),
+      'ownerId': serializer.toJson<String>(ownerId),
+      'ownerName': serializer.toJson<String>(ownerName),
+      'colorValue': serializer.toJson<int>(colorValue),
+      'location': serializer.toJson<String?>(location),
+      'reminderTime': serializer.toJson<DateTime?>(reminderTime),
+      'isSynced': serializer.toJson<bool>(isSynced),
+      'pendingSync': serializer.toJson<bool>(pendingSync),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  CalendarEventEntity copyWith(
+          {String? id,
+          String? title,
+          Value<String?> description = const Value.absent(),
+          DateTime? startTime,
+          DateTime? endTime,
+          bool? isAllDay,
+          int? type,
+          String? ownerId,
+          String? ownerName,
+          int? colorValue,
+          Value<String?> location = const Value.absent(),
+          Value<DateTime?> reminderTime = const Value.absent(),
+          bool? isSynced,
+          bool? pendingSync,
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      CalendarEventEntity(
+        id: id ?? this.id,
+        title: title ?? this.title,
+        description: description.present ? description.value : this.description,
+        startTime: startTime ?? this.startTime,
+        endTime: endTime ?? this.endTime,
+        isAllDay: isAllDay ?? this.isAllDay,
+        type: type ?? this.type,
+        ownerId: ownerId ?? this.ownerId,
+        ownerName: ownerName ?? this.ownerName,
+        colorValue: colorValue ?? this.colorValue,
+        location: location.present ? location.value : this.location,
+        reminderTime:
+            reminderTime.present ? reminderTime.value : this.reminderTime,
+        isSynced: isSynced ?? this.isSynced,
+        pendingSync: pendingSync ?? this.pendingSync,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  CalendarEventEntity copyWithCompanion(CalendarEventsTableCompanion data) {
+    return CalendarEventEntity(
+      id: data.id.present ? data.id.value : this.id,
+      title: data.title.present ? data.title.value : this.title,
+      description:
+          data.description.present ? data.description.value : this.description,
+      startTime: data.startTime.present ? data.startTime.value : this.startTime,
+      endTime: data.endTime.present ? data.endTime.value : this.endTime,
+      isAllDay: data.isAllDay.present ? data.isAllDay.value : this.isAllDay,
+      type: data.type.present ? data.type.value : this.type,
+      ownerId: data.ownerId.present ? data.ownerId.value : this.ownerId,
+      ownerName: data.ownerName.present ? data.ownerName.value : this.ownerName,
+      colorValue:
+          data.colorValue.present ? data.colorValue.value : this.colorValue,
+      location: data.location.present ? data.location.value : this.location,
+      reminderTime: data.reminderTime.present
+          ? data.reminderTime.value
+          : this.reminderTime,
+      isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
+      pendingSync:
+          data.pendingSync.present ? data.pendingSync.value : this.pendingSync,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalendarEventEntity(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('isAllDay: $isAllDay, ')
+          ..write('type: $type, ')
+          ..write('ownerId: $ownerId, ')
+          ..write('ownerName: $ownerName, ')
+          ..write('colorValue: $colorValue, ')
+          ..write('location: $location, ')
+          ..write('reminderTime: $reminderTime, ')
+          ..write('isSynced: $isSynced, ')
+          ..write('pendingSync: $pendingSync, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      title,
+      description,
+      startTime,
+      endTime,
+      isAllDay,
+      type,
+      ownerId,
+      ownerName,
+      colorValue,
+      location,
+      reminderTime,
+      isSynced,
+      pendingSync,
+      createdAt,
+      updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CalendarEventEntity &&
+          other.id == this.id &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.startTime == this.startTime &&
+          other.endTime == this.endTime &&
+          other.isAllDay == this.isAllDay &&
+          other.type == this.type &&
+          other.ownerId == this.ownerId &&
+          other.ownerName == this.ownerName &&
+          other.colorValue == this.colorValue &&
+          other.location == this.location &&
+          other.reminderTime == this.reminderTime &&
+          other.isSynced == this.isSynced &&
+          other.pendingSync == this.pendingSync &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class CalendarEventsTableCompanion
+    extends UpdateCompanion<CalendarEventEntity> {
+  final Value<String> id;
+  final Value<String> title;
+  final Value<String?> description;
+  final Value<DateTime> startTime;
+  final Value<DateTime> endTime;
+  final Value<bool> isAllDay;
+  final Value<int> type;
+  final Value<String> ownerId;
+  final Value<String> ownerName;
+  final Value<int> colorValue;
+  final Value<String?> location;
+  final Value<DateTime?> reminderTime;
+  final Value<bool> isSynced;
+  final Value<bool> pendingSync;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const CalendarEventsTableCompanion({
+    this.id = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.startTime = const Value.absent(),
+    this.endTime = const Value.absent(),
+    this.isAllDay = const Value.absent(),
+    this.type = const Value.absent(),
+    this.ownerId = const Value.absent(),
+    this.ownerName = const Value.absent(),
+    this.colorValue = const Value.absent(),
+    this.location = const Value.absent(),
+    this.reminderTime = const Value.absent(),
+    this.isSynced = const Value.absent(),
+    this.pendingSync = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CalendarEventsTableCompanion.insert({
+    required String id,
+    required String title,
+    this.description = const Value.absent(),
+    required DateTime startTime,
+    required DateTime endTime,
+    this.isAllDay = const Value.absent(),
+    required int type,
+    required String ownerId,
+    required String ownerName,
+    required int colorValue,
+    this.location = const Value.absent(),
+    this.reminderTime = const Value.absent(),
+    this.isSynced = const Value.absent(),
+    this.pendingSync = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        title = Value(title),
+        startTime = Value(startTime),
+        endTime = Value(endTime),
+        type = Value(type),
+        ownerId = Value(ownerId),
+        ownerName = Value(ownerName),
+        colorValue = Value(colorValue);
+  static Insertable<CalendarEventEntity> custom({
+    Expression<String>? id,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<DateTime>? startTime,
+    Expression<DateTime>? endTime,
+    Expression<bool>? isAllDay,
+    Expression<int>? type,
+    Expression<String>? ownerId,
+    Expression<String>? ownerName,
+    Expression<int>? colorValue,
+    Expression<String>? location,
+    Expression<DateTime>? reminderTime,
+    Expression<bool>? isSynced,
+    Expression<bool>? pendingSync,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (startTime != null) 'start_time': startTime,
+      if (endTime != null) 'end_time': endTime,
+      if (isAllDay != null) 'is_all_day': isAllDay,
+      if (type != null) 'type': type,
+      if (ownerId != null) 'owner_id': ownerId,
+      if (ownerName != null) 'owner_name': ownerName,
+      if (colorValue != null) 'color_value': colorValue,
+      if (location != null) 'location': location,
+      if (reminderTime != null) 'reminder_time': reminderTime,
+      if (isSynced != null) 'is_synced': isSynced,
+      if (pendingSync != null) 'pending_sync': pendingSync,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CalendarEventsTableCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? title,
+      Value<String?>? description,
+      Value<DateTime>? startTime,
+      Value<DateTime>? endTime,
+      Value<bool>? isAllDay,
+      Value<int>? type,
+      Value<String>? ownerId,
+      Value<String>? ownerName,
+      Value<int>? colorValue,
+      Value<String?>? location,
+      Value<DateTime?>? reminderTime,
+      Value<bool>? isSynced,
+      Value<bool>? pendingSync,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<int>? rowid}) {
+    return CalendarEventsTableCompanion(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      isAllDay: isAllDay ?? this.isAllDay,
+      type: type ?? this.type,
+      ownerId: ownerId ?? this.ownerId,
+      ownerName: ownerName ?? this.ownerName,
+      colorValue: colorValue ?? this.colorValue,
+      location: location ?? this.location,
+      reminderTime: reminderTime ?? this.reminderTime,
+      isSynced: isSynced ?? this.isSynced,
+      pendingSync: pendingSync ?? this.pendingSync,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (startTime.present) {
+      map['start_time'] = Variable<DateTime>(startTime.value);
+    }
+    if (endTime.present) {
+      map['end_time'] = Variable<DateTime>(endTime.value);
+    }
+    if (isAllDay.present) {
+      map['is_all_day'] = Variable<bool>(isAllDay.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<int>(type.value);
+    }
+    if (ownerId.present) {
+      map['owner_id'] = Variable<String>(ownerId.value);
+    }
+    if (ownerName.present) {
+      map['owner_name'] = Variable<String>(ownerName.value);
+    }
+    if (colorValue.present) {
+      map['color_value'] = Variable<int>(colorValue.value);
+    }
+    if (location.present) {
+      map['location'] = Variable<String>(location.value);
+    }
+    if (reminderTime.present) {
+      map['reminder_time'] = Variable<DateTime>(reminderTime.value);
+    }
+    if (isSynced.present) {
+      map['is_synced'] = Variable<bool>(isSynced.value);
+    }
+    if (pendingSync.present) {
+      map['pending_sync'] = Variable<bool>(pendingSync.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CalendarEventsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('isAllDay: $isAllDay, ')
+          ..write('type: $type, ')
+          ..write('ownerId: $ownerId, ')
+          ..write('ownerName: $ownerName, ')
+          ..write('colorValue: $colorValue, ')
+          ..write('location: $location, ')
+          ..write('reminderTime: $reminderTime, ')
+          ..write('isSynced: $isSynced, ')
+          ..write('pendingSync: $pendingSync, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -9077,6 +9847,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $UserEventsTable userEvents = $UserEventsTable(this);
   late final $CachedEventsTable cachedEvents = $CachedEventsTable(this);
   late final $SyncQueueTable syncQueue = $SyncQueueTable(this);
+  late final $CalendarEventsTableTable calendarEventsTable =
+      $CalendarEventsTableTable(this);
   late final UserDao userDao = UserDao(this as AppDatabase);
   late final TermDao termDao = TermDao(this as AppDatabase);
   late final SubjectDao subjectDao = SubjectDao(this as AppDatabase);
@@ -9091,6 +9863,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final CachedEventDao cachedEventDao =
       CachedEventDao(this as AppDatabase);
   late final SyncDao syncDao = SyncDao(this as AppDatabase);
+  late final CalendarEventDao calendarEventDao =
+      CalendarEventDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -9110,7 +9884,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         weeklyAvailabilities,
         userEvents,
         cachedEvents,
-        syncQueue
+        syncQueue,
+        calendarEventsTable
       ];
 }
 
@@ -13278,6 +14053,350 @@ typedef $$SyncQueueTableProcessedTableManager = ProcessedTableManager<
     ),
     SyncQueueEntity,
     PrefetchHooks Function()>;
+typedef $$CalendarEventsTableTableCreateCompanionBuilder
+    = CalendarEventsTableCompanion Function({
+  required String id,
+  required String title,
+  Value<String?> description,
+  required DateTime startTime,
+  required DateTime endTime,
+  Value<bool> isAllDay,
+  required int type,
+  required String ownerId,
+  required String ownerName,
+  required int colorValue,
+  Value<String?> location,
+  Value<DateTime?> reminderTime,
+  Value<bool> isSynced,
+  Value<bool> pendingSync,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+typedef $$CalendarEventsTableTableUpdateCompanionBuilder
+    = CalendarEventsTableCompanion Function({
+  Value<String> id,
+  Value<String> title,
+  Value<String?> description,
+  Value<DateTime> startTime,
+  Value<DateTime> endTime,
+  Value<bool> isAllDay,
+  Value<int> type,
+  Value<String> ownerId,
+  Value<String> ownerName,
+  Value<int> colorValue,
+  Value<String?> location,
+  Value<DateTime?> reminderTime,
+  Value<bool> isSynced,
+  Value<bool> pendingSync,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+class $$CalendarEventsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $CalendarEventsTableTable> {
+  $$CalendarEventsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get startTime => $composableBuilder(
+      column: $table.startTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get endTime => $composableBuilder(
+      column: $table.endTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isAllDay => $composableBuilder(
+      column: $table.isAllDay, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get ownerId => $composableBuilder(
+      column: $table.ownerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get ownerName => $composableBuilder(
+      column: $table.ownerName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get colorValue => $composableBuilder(
+      column: $table.colorValue, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get location => $composableBuilder(
+      column: $table.location, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get reminderTime => $composableBuilder(
+      column: $table.reminderTime, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isSynced => $composableBuilder(
+      column: $table.isSynced, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get pendingSync => $composableBuilder(
+      column: $table.pendingSync, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$CalendarEventsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $CalendarEventsTableTable> {
+  $$CalendarEventsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title => $composableBuilder(
+      column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get startTime => $composableBuilder(
+      column: $table.startTime, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get endTime => $composableBuilder(
+      column: $table.endTime, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isAllDay => $composableBuilder(
+      column: $table.isAllDay, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get ownerId => $composableBuilder(
+      column: $table.ownerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get ownerName => $composableBuilder(
+      column: $table.ownerName, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get colorValue => $composableBuilder(
+      column: $table.colorValue, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get location => $composableBuilder(
+      column: $table.location, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get reminderTime => $composableBuilder(
+      column: $table.reminderTime,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isSynced => $composableBuilder(
+      column: $table.isSynced, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get pendingSync => $composableBuilder(
+      column: $table.pendingSync, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CalendarEventsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CalendarEventsTableTable> {
+  $$CalendarEventsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startTime =>
+      $composableBuilder(column: $table.startTime, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get endTime =>
+      $composableBuilder(column: $table.endTime, builder: (column) => column);
+
+  GeneratedColumn<bool> get isAllDay =>
+      $composableBuilder(column: $table.isAllDay, builder: (column) => column);
+
+  GeneratedColumn<int> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get ownerId =>
+      $composableBuilder(column: $table.ownerId, builder: (column) => column);
+
+  GeneratedColumn<String> get ownerName =>
+      $composableBuilder(column: $table.ownerName, builder: (column) => column);
+
+  GeneratedColumn<int> get colorValue => $composableBuilder(
+      column: $table.colorValue, builder: (column) => column);
+
+  GeneratedColumn<String> get location =>
+      $composableBuilder(column: $table.location, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get reminderTime => $composableBuilder(
+      column: $table.reminderTime, builder: (column) => column);
+
+  GeneratedColumn<bool> get isSynced =>
+      $composableBuilder(column: $table.isSynced, builder: (column) => column);
+
+  GeneratedColumn<bool> get pendingSync => $composableBuilder(
+      column: $table.pendingSync, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$CalendarEventsTableTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CalendarEventsTableTable,
+    CalendarEventEntity,
+    $$CalendarEventsTableTableFilterComposer,
+    $$CalendarEventsTableTableOrderingComposer,
+    $$CalendarEventsTableTableAnnotationComposer,
+    $$CalendarEventsTableTableCreateCompanionBuilder,
+    $$CalendarEventsTableTableUpdateCompanionBuilder,
+    (
+      CalendarEventEntity,
+      BaseReferences<_$AppDatabase, $CalendarEventsTableTable,
+          CalendarEventEntity>
+    ),
+    CalendarEventEntity,
+    PrefetchHooks Function()> {
+  $$CalendarEventsTableTableTableManager(
+      _$AppDatabase db, $CalendarEventsTableTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CalendarEventsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CalendarEventsTableTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CalendarEventsTableTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> title = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<DateTime> startTime = const Value.absent(),
+            Value<DateTime> endTime = const Value.absent(),
+            Value<bool> isAllDay = const Value.absent(),
+            Value<int> type = const Value.absent(),
+            Value<String> ownerId = const Value.absent(),
+            Value<String> ownerName = const Value.absent(),
+            Value<int> colorValue = const Value.absent(),
+            Value<String?> location = const Value.absent(),
+            Value<DateTime?> reminderTime = const Value.absent(),
+            Value<bool> isSynced = const Value.absent(),
+            Value<bool> pendingSync = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CalendarEventsTableCompanion(
+            id: id,
+            title: title,
+            description: description,
+            startTime: startTime,
+            endTime: endTime,
+            isAllDay: isAllDay,
+            type: type,
+            ownerId: ownerId,
+            ownerName: ownerName,
+            colorValue: colorValue,
+            location: location,
+            reminderTime: reminderTime,
+            isSynced: isSynced,
+            pendingSync: pendingSync,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            required String title,
+            Value<String?> description = const Value.absent(),
+            required DateTime startTime,
+            required DateTime endTime,
+            Value<bool> isAllDay = const Value.absent(),
+            required int type,
+            required String ownerId,
+            required String ownerName,
+            required int colorValue,
+            Value<String?> location = const Value.absent(),
+            Value<DateTime?> reminderTime = const Value.absent(),
+            Value<bool> isSynced = const Value.absent(),
+            Value<bool> pendingSync = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CalendarEventsTableCompanion.insert(
+            id: id,
+            title: title,
+            description: description,
+            startTime: startTime,
+            endTime: endTime,
+            isAllDay: isAllDay,
+            type: type,
+            ownerId: ownerId,
+            ownerName: ownerName,
+            colorValue: colorValue,
+            location: location,
+            reminderTime: reminderTime,
+            isSynced: isSynced,
+            pendingSync: pendingSync,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$CalendarEventsTableTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CalendarEventsTableTable,
+    CalendarEventEntity,
+    $$CalendarEventsTableTableFilterComposer,
+    $$CalendarEventsTableTableOrderingComposer,
+    $$CalendarEventsTableTableAnnotationComposer,
+    $$CalendarEventsTableTableCreateCompanionBuilder,
+    $$CalendarEventsTableTableUpdateCompanionBuilder,
+    (
+      CalendarEventEntity,
+      BaseReferences<_$AppDatabase, $CalendarEventsTableTable,
+          CalendarEventEntity>
+    ),
+    CalendarEventEntity,
+    PrefetchHooks Function()>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -13312,4 +14431,6 @@ class $AppDatabaseManager {
       $$CachedEventsTableTableManager(_db, _db.cachedEvents);
   $$SyncQueueTableTableManager get syncQueue =>
       $$SyncQueueTableTableManager(_db, _db.syncQueue);
+  $$CalendarEventsTableTableTableManager get calendarEventsTable =>
+      $$CalendarEventsTableTableTableManager(_db, _db.calendarEventsTable);
 }

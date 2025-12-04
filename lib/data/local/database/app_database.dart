@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 
 // Import tables
 import 'tables/tables.dart';
+import 'tables/calendar_events_table.dart';
 
 // Import DAOs
 import 'dao/user_dao.dart';
@@ -21,6 +22,7 @@ import 'dao/group_dao.dart';
 import 'dao/user_event_dao.dart';
 import 'dao/cached_event_dao.dart';
 import 'dao/sync_dao.dart';
+import 'dao/calendar_event_dao.dart';
 
 part 'app_database.g.dart';
 
@@ -41,6 +43,7 @@ part 'app_database.g.dart';
     UserEvents,
     CachedEvents,
     SyncQueue,
+    CalendarEventsTable,
   ],
   daos: [
     UserDao,
@@ -56,6 +59,7 @@ part 'app_database.g.dart';
     UserEventDao,
     CachedEventDao,
     SyncDao,
+    CalendarEventDao,
   ],
 )
 class AppDatabase extends _$AppDatabase {
